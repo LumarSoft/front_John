@@ -17,7 +17,6 @@ export interface Product {
 }
 
 export interface Company {
-  rom: string
   name: string
   founded: string
   rating: string

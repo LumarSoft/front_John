@@ -1,44 +1,39 @@
 import type { ReactNode } from 'react'
 
 interface CredItem {
-  n: string
   k: ReactNode
   v: string
 }
 
 const ITEMS: CredItem[] = [
   {
-    n: 'i.',
     k: (
       <>
-        27 <em>años</em>
+        52 <em className="not-italic text-amber">años</em>
       </>
     ),
-    v: 'Asesorando familias y empresas desde 1998 en Buenos Aires y AMBA.',
+    v: 'Asesorando familias y empresas desde 1974 en Rosario, Santa Fe.',
   },
   {
-    n: 'ii.',
     k: (
       <>
-        02 <em>compañías</em>
+        02 <em className="not-italic text-amber">compañías</em>
       </>
     ),
     v: 'Trabajamos con Triunfo y Sancor, ambas con calificación A+.',
   },
   {
-    n: 'iii.',
     k: (
       <>
-        100<em>%</em>
+        100<em className="not-italic text-amber">%</em>
       </>
     ),
     v: 'Atención directa con el productor. No tercerizamos ningún siniestro.',
   },
   {
-    n: 'iv.',
     k: (
       <>
-        SSN <em>64.231</em>
+        SSN <em className="not-italic text-amber">64.231</em>
       </>
     ),
     v: 'Matrícula vigente ante la Superintendencia de Seguros de la Nación.',
@@ -47,13 +42,15 @@ const ITEMS: CredItem[] = [
 
 export function Credenciales() {
   return (
-    <section className="container creds">
-      <div className="creds-grid">
+    <section className="container">
+      <div className="grid grid-cols-4 max-[880px]:grid-cols-2">
         {ITEMS.map((item, i) => (
-          <div className="creds-cell" key={i} style={i > 0 ? { paddingLeft: 32 } : {}}>
-            <div className="creds-num">{item.n}</div>
-            <div className="creds-k serif">{item.k}</div>
-            <div className="creds-v">{item.v}</div>
+          <div
+            key={i}
+            className={`pt-12 pb-12 pr-8 border-r border-b border-line [&:nth-child(4n)]:border-r-0 max-[880px]:[&:nth-child(4n)]:border-r max-[880px]:[&:nth-child(4n)]:border-line max-[880px]:[&:nth-child(2n)]:border-r-0 max-[880px]:pt-9 max-[880px]:pb-9 max-[880px]:pr-6 ${i > 0 ? 'pl-8 max-[880px]:pl-0' : ''}`}
+          >
+            <div className="font-bold text-[40px] tracking-[-0.045em] text-cream leading-none mb-[14px]">{item.k}</div>
+            <div className="text-[12.5px] text-cream-2 tracking-[0.01em] leading-[1.5] max-w-[240px]">{item.v}</div>
           </div>
         ))}
       </div>

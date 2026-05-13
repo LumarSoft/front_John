@@ -1,60 +1,70 @@
 export function Hero() {
   return (
-    <section className="container hero">
-      <div className="hero-grid">
+    <section className="container pt-[60px] pb-[80px] border-b border-line-2">
+      <div className="grid grid-cols-[1.15fr_1fr] gap-16 items-start max-[960px]:grid-cols-1 max-[960px]:gap-10">
         <div>
-          <div className="hero-eyebrow">Productores Asesores · Desde 1998</div>
-          <h1 className="hero-title">
+          <div className="text-[11px] tracking-[0.32em] uppercase text-amber mb-7 font-medium">
+            Productores Asesores · Desde 1974
+          </div>
+          <h1 className="font-bold text-[clamp(54px,7.2vw,108px)] leading-[0.98] tracking-[-0.05em] text-cream mb-7 mt-0">
             Patrimonios
             <br />
-            bajo <em className="italic">cuidado</em>
+            bajo <em className="italic text-amber">cuidado</em>
             <br />
-            <span className="small">desde hace 27 años.</span>
+            <span className="text-[0.62em] tracking-[-0.01em]">desde hace 52 años.</span>
           </h1>
-          <p className="hero-lead">
+          <p className="text-[17px] text-cream-2 max-w-[520px] leading-[1.6] mb-9 mt-0">
             John Pellegrini Management Group asesora a personas, profesionales y empresas en la elección y gestión de
             coberturas patrimoniales. Cotizamos en las principales compañías del país y acompañamos cada siniestro de
             principio a fin.
           </p>
-          <div className="hero-byline">
+          <div className="flex items-center gap-[14px] pt-7 border-t border-line-2">
             <div>
-              <div className="hero-byline-cap">Atendido personalmente por</div>
-              <div className="hero-byline-sig">John Pellegrini, productor matriculado.</div>
-            </div>
-          </div>
-
-          <div className="hero-ticket">
-            <div>
-              <div className="hero-ticket-k">Pólizas vigentes</div>
-              <div className="hero-ticket-v">2.418</div>
-            </div>
-            <div>
-              <div className="hero-ticket-k">Compañías</div>
-              <div className="hero-ticket-v">Triunfo · Sancor</div>
-            </div>
-            <div>
-              <div className="hero-ticket-k">Cobertura</div>
-              <div className="hero-ticket-v">
-                <em>Nacional</em>
+              <div className="text-[11px] tracking-[0.22em] uppercase text-muted font-medium">
+                Atendido personalmente por
+              </div>
+              <div className="text-[15px] text-cream tracking-[-0.015em] font-medium">
+                John Pellegrini, productor matriculado.
               </div>
             </div>
-            <button className="hero-ticket-cta">Cotizar →</button>
+          </div>
+          <div className="mt-8 border border-line-2 p-6 grid grid-cols-[1fr_1fr_1fr_auto] gap-6 items-center bg-[linear-gradient(180deg,rgba(217,164,65,0.05)_0%,transparent_100%)] max-[720px]:grid-cols-[1fr_1fr] max-[720px]:gap-[18px]">
+            <div>
+              <div className="text-[10px] tracking-[0.22em] uppercase text-muted mb-2 font-medium">
+                Pólizas vigentes
+              </div>
+              <div className="text-[19px] text-cream tracking-[-0.03em] font-semibold">2.418</div>
+            </div>
+            <div>
+              <div className="text-[10px] tracking-[0.22em] uppercase text-muted mb-2 font-medium">Compañías</div>
+              <div className="text-[19px] text-cream tracking-[-0.03em] font-semibold">Triunfo · Sancor</div>
+            </div>
+            <div>
+              <div className="text-[10px] tracking-[0.22em] uppercase text-muted mb-2 font-medium">Cobertura</div>
+              <div className="text-[19px] text-cream tracking-[-0.03em] font-semibold">
+                <em className="not-italic text-amber">Nacional</em>
+              </div>
+            </div>
+            <button className="bg-cream text-ink border-none px-7 py-[18px] text-[13px] font-bold tracking-[0.06em] uppercase transition-colors hover:bg-amber">
+              Cotizar →
+            </button>
           </div>
         </div>
 
         <div>
-          <figure className="hero-photo" style={{ margin: 0 }}>
-            <div className="hero-photo-corner">Fig. 1</div>
-            <div className="hero-photo-placeholder">
+          <figure className="relative border border-line-2 aspect-[4/5] bg-surface overflow-hidden grid place-items-center m-0 [background-image:repeating-linear-gradient(45deg,rgba(232,223,199,0.02)_0px,rgba(232,223,199,0.02)_12px,transparent_12px,transparent_24px)]">
+            <div className="text-[11.5px] text-muted tracking-[0.24em] uppercase text-center leading-[1.7] font-medium">
               [ fotografía editorial ]
               <br />
               cliente · vehículo · familia
             </div>
-            <figcaption className="hero-photo-tag">
-              <span className="hero-photo-cap">
+            <figcaption className="absolute bottom-0 left-0 right-0 bg-[rgba(11,11,12,0.86)] backdrop-blur-[6px] px-[22px] py-[18px] flex justify-between items-end border-t border-line-2 gap-[18px]">
+              <span className="text-[13.5px] text-cream leading-[1.45] max-w-[340px] tracking-[-0.005em]">
                 &ldquo;Tuvimos granizo en Pilar. En 72 horas estaba la indemnización liquidada.&rdquo;
               </span>
-              <span className="hero-photo-num">Caso 4781</span>
+              <span className="text-[10px] tracking-[0.24em] text-amber uppercase font-medium whitespace-nowrap">
+                Caso 4781
+              </span>
             </figcaption>
           </figure>
         </div>

@@ -3,7 +3,7 @@ export function Strip() {
     <div className="strip">
       <div className="container strip-inner">
         <div>
-          <span>Buenos Aires</span>
+          <span>Rosario, Santa Fe</span>
           <span>·</span>
           <span>Atención personalizada</span>
         </div>
@@ -13,7 +13,7 @@ export function Strip() {
           </span>
           <span>·</span>
           <span>
-            Vol. <b>XXVIII</b>
+            Vol. <b>LII</b>
           </span>
         </div>
       </div>
