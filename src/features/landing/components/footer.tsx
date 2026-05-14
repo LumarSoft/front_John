@@ -20,10 +20,10 @@ export function Footer() {
           <div>
             <h5 className="text-[10.5px] tracking-[0.24em] uppercase text-muted mb-4 mt-0 font-medium">Coberturas</h5>
             <a href="#coberturas" className="block py-1 hover:text-amber">
-              Automotor
+              Auto
             </a>
             <a href="#coberturas" className="block py-1 hover:text-amber">
-              Motovehículos
+              Moto
             </a>
             <a href="#coberturas" className="block py-1 hover:text-amber">
               Bicicletas

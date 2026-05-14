@@ -8,7 +8,7 @@ export function Cotizador() {
 
   return (
     <section id="coberturas" className="container py-[120px] border-b border-line-2">
-      <div className="grid grid-cols-2 gap-16 items-end mb-16 max-[880px]:grid-cols-1 max-[880px]:gap-6">
+      <div className="grid grid-cols-2 gap-16 items-end mb-16 max-[880px]:grid-cols-1 max-[880px]:gap-6 max-[880px]:mb-8">
         <div>
           <h2 className="font-bold text-[clamp(40px,5.4vw,68px)] leading-[1.02] tracking-[-0.045em] text-cream m-0">
             Sumario de <em className="not-italic text-amber">coberturas.</em>
@@ -20,7 +20,7 @@ export function Cotizador() {
         </p>
       </div>
 
-      <div className="grid grid-cols-4 gap-4 max-[1080px]:grid-cols-3 max-[720px]:grid-cols-2 max-[420px]:grid-cols-1">
+      <div className="grid grid-cols-4 gap-4 max-[1080px]:grid-cols-3 max-[720px]:grid-cols-2 max-[480px]:grid-cols-1">
         {PRODUCTS.map(item => {
           const ItemIcon = item.Icon
           return (

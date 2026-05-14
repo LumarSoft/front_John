@@ -18,7 +18,7 @@ export interface Product {
 
 export interface Company {
   name: string
-  rating: string
   blurb: string
   lines: string[]
+  logo?: string
 }

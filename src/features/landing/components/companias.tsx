@@ -1,17 +1,17 @@
-import { IconArrow } from './icons'
+import Image from 'next/image'
 import type { Company } from '../types'
 
 const COMPANIES: Company[] = [
   {
     name: 'Triunfo Seguros',
-    rating: 'Rating AA-',
+    logo: '/triunfo-seguros.png',
     blurb:
       'La elegimos para coberturas de movilidad y hogar. Destacamos sus tiempos de liquidación de siniestros y la solidez de su red de atención en todo el país.',
-    lines: ['Automotor', 'Motovehículos', 'Bicicletas', 'Hogar'],
+    lines: ['Auto', 'Moto', 'Bicicletas', 'Hogar'],
   },
   {
     name: 'Sancor Seguros',
-    rating: 'Rating AA',
+    logo: '/sancor-seguuros-.png',
     blurb:
       'Nuestra opción para patrimonio empresarial, vida y praxis profesional. Cooperativa con respaldo nacional y cobertura a medida para cada actividad.',
     lines: ['Comercio e Industria', 'Personas', 'Praxis', 'Bolso'],
@@ -20,8 +20,8 @@ const COMPANIES: Company[] = [
 
 export function Companias() {
   return (
-    <section id="companias" className="container py-[120px] border-t border-b border-line-2">
-      <div className="grid grid-cols-2 gap-16 items-end max-[880px]:grid-cols-1 max-[880px]:gap-6">
+    <section id="companias" className="container py-[120px] border-t border-line-2">
+      <div className="grid grid-cols-2 gap-16 items-end mb-16 max-[880px]:grid-cols-1 max-[880px]:gap-6 max-[880px]:mb-10">
         <div>
           <h2 className="font-bold text-[clamp(40px,5.4vw,68px)] leading-[1.02] tracking-[-0.045em] text-cream m-0">
             Las compañías detrás de <em className="not-italic text-amber">tu cobertura.</em>
@@ -32,25 +32,35 @@ export function Companias() {
           conocemos cómo operan cuando hay un siniestro.
         </p>
       </div>
-      <div className="mt-16">
+
+      <div className="grid grid-cols-2 gap-6 max-[680px]:grid-cols-1">
         {COMPANIES.map((c, i) => (
-          <div
-            key={i}
-            className="grid grid-cols-[80px_1fr_1.6fr_1fr_60px] gap-12 items-center py-9 border-t border-line-2 last:border-b last:border-line-2 max-[880px]:grid-cols-1 max-[880px]:gap-[18px] max-[880px]:py-8"
-          >
+          <div key={i} className="border border-line-2 p-10 flex flex-col gap-8 max-[880px]:p-7">
             <div>
-              <div className="text-[30px] font-bold tracking-[-0.035em] text-cream leading-[1.05]">{c.name}</div>
-              <div className="text-[11.5px] text-muted tracking-[0.16em] uppercase mt-[10px]">{c.rating}</div>
+              {c.logo && (
+                <div className="relative h-14 w-[200px]">
+                  <Image src={c.logo} alt={c.name} fill className="object-contain object-left" />
+                </div>
+              )}
+              <div className="text-[12px] text-muted tracking-[0.18em] uppercase mt-3">{c.name}</div>
             </div>
-            <div className="text-[14.5px] text-cream-2 leading-[1.55]">{c.blurb}</div>
-            <div className="text-[13.5px] text-cream leading-[1.55] tracking-[-0.005em]">
-              <b className="block text-[10.5px] tracking-[0.22em] uppercase text-muted mb-2 font-medium not-italic">
+
+            <p className="text-[14.5px] text-cream-2 leading-[1.65] m-0">{c.blurb}</p>
+
+            <div className="mt-auto pt-6 border-t border-line-2">
+              <div className="text-[10.5px] tracking-[0.22em] uppercase text-muted font-medium mb-3">
                 Líneas que operamos
-              </b>
-              {c.lines.join(' · ')}
-            </div>
-            <div className="grid place-items-center text-cream-2">
-              <IconArrow />
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {c.lines.map(line => (
+                  <span
+                    key={line}
+                    className="text-[11.5px] tracking-[0.04em] text-cream-2 border border-line-2 px-3 py-[6px]"
+                  >
+                    {line}
+                  </span>
+                ))}
+              </div>
             </div>
           </div>
         ))}

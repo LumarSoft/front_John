@@ -11,10 +11,6 @@ export function Strip() {
           <span>
             <span className="strip-dot" /> Atención de siniestros 24 hs
           </span>
-          <span>·</span>
-          <span>
-            Vol. <b>LII</b>
-          </span>
         </div>
       </div>
     </div>

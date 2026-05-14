@@ -14,7 +14,7 @@ export const PRODUCTS: Product[] = [
   {
     id: 'auto',
     n: '01',
-    label: 'Automotor',
+    label: 'Auto',
     sub: 'Todo riesgo, terceros completo',
     Icon: IconAuto,
     desc: 'Cobertura para vehículos particulares y comerciales en todo el territorio nacional. Atención de siniestros sin franquicia variable y peritaje propio.',
@@ -25,7 +25,7 @@ export const PRODUCTS: Product[] = [
   {
     id: 'moto',
     n: '02',
-    label: 'Motovehículos',
+    label: 'Moto',
     sub: 'Cualquier cilindrada',
     Icon: IconMoto,
     desc: 'Pólizas para motos de uso particular y de reparto, con cobertura ampliada para accesorios y casco.',

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { PRODUCTS } from '@/src/features/landing/data/products'
 import { FIELDS, CONTACT_FIELDS } from '../data/fields'
 import { FormField } from './form-field'
@@ -9,6 +9,15 @@ export function CoberturasPage({ initialCoverageId = PRODUCTS[0].id }: { initial
   const [activeId, setActiveId] = useState(initialCoverageId)
   const active = PRODUCTS.find(p => p.id === activeId) ?? PRODUCTS[0]
   const fields = FIELDS[active.id] ?? []
+  const formRef = useRef<HTMLDivElement>(null)
+
+  const handleSelect = (id: string) => {
+    setActiveId(id)
+    if (window.innerWidth <= 900 && formRef.current) {
+      const top = formRef.current.getBoundingClientRect().top + window.scrollY - 88
+      window.scrollTo({ top, behavior: 'smooth' })
+    }
+  }
 
   const handleSubmit = (e: React.FormEvent) => e.preventDefault()
 
@@ -44,7 +53,7 @@ export function CoberturasPage({ initialCoverageId = PRODUCTS[0].id }: { initial
                       ? 'bg-surface-2 border-amber border-l-[3px] text-cream'
                       : 'bg-ink-2 border-line-2 text-cream-2 hover:bg-surface hover:text-cream'
                   }`}
-                  onClick={() => setActiveId(p.id)}
+                  onClick={() => handleSelect(p.id)}
                 >
                   <div
                     className={`shrink-0 transition-colors duration-[180ms] ${isActive ? 'text-amber' : 'text-muted'}`}
@@ -68,7 +77,7 @@ export function CoberturasPage({ initialCoverageId = PRODUCTS[0].id }: { initial
             })}
           </nav>
 
-          <div className="min-w-0">
+          <div className="min-w-0" ref={formRef}>
             <div className="mb-10 pb-8 border-b border-line-2">
               <div className="text-[10.5px] tracking-[0.32em] uppercase text-amber font-medium mb-[10px]">
                 Cotizador

@@ -7,7 +7,7 @@ import { PRODUCTS } from '@/src/features/landing/data/products'
 export const metadata: Metadata = {
   title: 'Coberturas · John Pellegrini & Asoc.',
   description:
-    'Ocho líneas de cobertura patrimonial: automotor, hogar, comercio, bicicletas, personas y más. Cotizá con John Pellegrini, productor matriculado SSN 64.231.',
+    'Ocho líneas de cobertura patrimonial: auto, hogar, comercio, bicicletas, personas y más. Cotizá con John Pellegrini, productor matriculado SSN 64.231.',
 }
 
 export default async function Coberturas({ searchParams }: { searchParams: Promise<{ coverage?: string }> }) {
