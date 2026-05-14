@@ -4,18 +4,16 @@ import type { Company } from '../types'
 const COMPANIES: Company[] = [
   {
     name: 'Triunfo Seguros',
-    founded: 'Fundada 1971',
     rating: 'Rating AA-',
     blurb:
-      'Compañía argentina de seguros patrimoniales con presencia nacional. La elegimos para coberturas de movilidad y hogar por sus tiempos de gestión.',
+      'La elegimos para coberturas de movilidad y hogar. Destacamos sus tiempos de liquidación de siniestros y la solidez de su red de atención en todo el país.',
     lines: ['Automotor', 'Motovehículos', 'Bicicletas', 'Hogar'],
   },
   {
     name: 'Sancor Seguros',
-    founded: 'Fundada 1945',
     rating: 'Rating AA',
     blurb:
-      'Una de las cooperativas de seguros más antiguas de Argentina. Operamos con ella las líneas de patrimonio empresarial, vida y responsabilidad profesional.',
+      'Nuestra opción para patrimonio empresarial, vida y praxis profesional. Cooperativa con respaldo nacional y cobertura a medida para cada actividad.',
     lines: ['Comercio e Industria', 'Personas', 'Praxis', 'Bolso'],
   },
 ]
@@ -26,12 +24,12 @@ export function Companias() {
       <div className="grid grid-cols-2 gap-16 items-end max-[880px]:grid-cols-1 max-[880px]:gap-6">
         <div>
           <h2 className="font-bold text-[clamp(40px,5.4vw,68px)] leading-[1.02] tracking-[-0.045em] text-cream m-0">
-            Compañías <em className="not-italic text-amber">representadas.</em>
+            Las compañías detrás de <em className="not-italic text-amber">tu cobertura.</em>
           </h2>
         </div>
         <p className="text-[15.5px] text-cream-2 leading-[1.6] max-w-[440px] m-0">
-          Operamos con dos compañías de las más sólidas del sistema asegurador argentino. La elección no es casual: cada
-          una nos da la mejor relación entre cobertura y servicio para las líneas que trabajamos.
+          No trabajamos con cualquier compañía — elegimos dos por su solvencia, sus tiempos de respuesta y porque
+          conocemos cómo operan cuando hay un siniestro.
         </p>
       </div>
       <div className="mt-16">
@@ -42,10 +40,7 @@ export function Companias() {
           >
             <div>
               <div className="text-[30px] font-bold tracking-[-0.035em] text-cream leading-[1.05]">{c.name}</div>
-              <div className="flex gap-2 flex-col text-[11.5px] text-muted tracking-[0.16em] uppercase mt-[10px]">
-                <span>{c.founded}</span>
-                <span>{c.rating}</span>
-              </div>
+              <div className="text-[11.5px] text-muted tracking-[0.16em] uppercase mt-[10px]">{c.rating}</div>
             </div>
             <div className="text-[14.5px] text-cream-2 leading-[1.55]">{c.blurb}</div>
             <div className="text-[13.5px] text-cream leading-[1.55] tracking-[-0.005em]">

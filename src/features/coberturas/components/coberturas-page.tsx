@@ -5,8 +5,8 @@ import { PRODUCTS } from '@/src/features/landing/data/products'
 import { FIELDS, CONTACT_FIELDS } from '../data/fields'
 import { FormField } from './form-field'
 
-export function CoberturasPage() {
-  const [activeId, setActiveId] = useState(PRODUCTS[0].id)
+export function CoberturasPage({ initialCoverageId = PRODUCTS[0].id }: { initialCoverageId?: string }) {
+  const [activeId, setActiveId] = useState(initialCoverageId)
   const active = PRODUCTS.find(p => p.id === activeId) ?? PRODUCTS[0]
   const fields = FIELDS[active.id] ?? []
 

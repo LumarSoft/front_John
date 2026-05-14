@@ -17,10 +17,10 @@ const ITEMS: CredItem[] = [
   {
     k: (
       <>
-        02 <em className="not-italic text-amber">compañías</em>
+        En el <em className="not-italic text-amber">día</em>
       </>
     ),
-    v: 'Trabajamos con Triunfo y Sancor, ambas con calificación A+.',
+    v: 'Recibís tu cotización detallada el mismo día que consultás, sin excepciones.',
   },
   {
     k: (

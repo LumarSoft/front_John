@@ -18,7 +18,6 @@ export interface Product {
 
 export interface Company {
   name: string
-  founded: string
   rating: string
   blurb: string
   lines: string[]
