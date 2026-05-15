@@ -35,11 +35,11 @@ export function Companias() {
 
       <div className="grid grid-cols-2 gap-6 max-[680px]:grid-cols-1">
         {COMPANIES.map((c, i) => (
-          <div key={i} className="border border-line-2 p-10 flex flex-col gap-8 max-[880px]:p-7">
+          <div key={i} className="border border-line-2 rounded-2xl p-10 flex flex-col gap-8 max-[880px]:p-7">
             <div>
               {c.logo && (
                 <div className="relative h-14 w-[200px]">
-                  <Image src={c.logo} alt={c.name} fill className="object-contain object-left" />
+                  <Image src={c.logo} alt={c.name} fill className="object-contain object-left" sizes="200px" />
                 </div>
               )}
               <div className="text-[12px] text-muted tracking-[0.18em] uppercase mt-3">{c.name}</div>
@@ -55,7 +55,7 @@ export function Companias() {
                 {c.lines.map(line => (
                   <span
                     key={line}
-                    className="text-[11.5px] tracking-[0.04em] text-cream-2 border border-line-2 px-3 py-[6px]"
+                    className="text-[11.5px] tracking-[0.04em] text-cream-2 border border-line-2 rounded-full px-3 py-[6px]"
                   >
                     {line}
                   </span>

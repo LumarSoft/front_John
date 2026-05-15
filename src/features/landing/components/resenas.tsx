@@ -62,7 +62,7 @@ export function Resenas() {
 
       <div className="grid grid-cols-3 gap-5 max-[960px]:grid-cols-2 max-[560px]:grid-cols-1">
         {REVIEWS.map((r, i) => (
-          <div key={i} className="border border-line-2 p-7 flex flex-col gap-5 bg-ink-2">
+          <div key={i} className="border border-line-2 rounded-2xl p-7 flex flex-col gap-5 bg-ink-2">
             <Stars />
             <p className="text-[15px] text-cream leading-[1.65] tracking-[-0.01em] m-0 flex-1">
               &ldquo;{r.text}&rdquo;

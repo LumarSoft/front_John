@@ -21,13 +21,13 @@ export function Cotizador() {
       </div>
 
       <div className="grid grid-cols-4 gap-4 max-[1080px]:grid-cols-3 max-[720px]:grid-cols-2 max-[480px]:grid-cols-1">
-        {PRODUCTS.map(item => {
+        {PRODUCTS.map((item, i) => {
           const ItemIcon = item.Icon
           return (
             <button
               key={item.id}
               onClick={() => router.push(`/coberturas?coverage=${item.id}`)}
-              className="group flex flex-col gap-6 p-7 border border-line-2 bg-ink-2 text-left cursor-pointer transition-[background-color,border-color] duration-200 hover:bg-surface hover:border-amber"
+              className="group flex flex-col gap-6 p-7 border border-line-2 rounded-2xl bg-ink-2 text-left cursor-pointer transition-[background-color,border-color] duration-200 hover:bg-surface hover:border-amber"
             >
               <div className="text-muted transition-colors duration-200 group-hover:text-amber">
                 <ItemIcon size={34} />

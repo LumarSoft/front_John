@@ -50,8 +50,8 @@ export function CoberturasPage({ initialCoverageId = PRODUCTS[0].id }: { initial
                   key={p.id}
                   className={`flex items-center gap-4 px-5 py-[18px] border cursor-pointer text-left transition-[background-color,border-color,color] duration-[180ms] [-webkit-tap-highlight-color:transparent] ${
                     isActive
-                      ? 'bg-surface-2 border-amber border-l-[3px] text-cream'
-                      : 'bg-ink-2 border-line-2 text-cream-2 hover:bg-surface hover:text-cream'
+                      ? 'bg-surface-2 border-amber border-l-[3px] text-cream rounded-xl'
+                      : 'bg-ink-2 border-line-2 text-cream-2 hover:bg-surface hover:text-cream rounded-xl'
                   }`}
                   onClick={() => handleSelect(p.id)}
                 >
@@ -112,7 +112,7 @@ export function CoberturasPage({ initialCoverageId = PRODUCTS[0].id }: { initial
               <div className="flex items-center gap-6 mt-7 flex-wrap">
                 <button
                   type="submit"
-                  className="bg-amber text-ink border-none py-[15px] px-8 font-bold text-[13px] tracking-[0.06em] uppercase cursor-pointer transition-colors hover:bg-[#e5b450]"
+                  className="bg-amber text-ink border-none py-[15px] px-8 rounded-xl font-bold text-[13px] tracking-[0.06em] uppercase cursor-pointer transition-colors hover:bg-[#e5b450]"
                 >
                   Solicitar cotización →
                 </button>

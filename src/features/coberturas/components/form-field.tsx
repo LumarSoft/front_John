@@ -2,7 +2,7 @@ import type { Field } from '../data/fields'
 
 export function FormField({ field }: { field: Field }) {
   const inputClass =
-    'bg-surface border border-line-2 text-cream font-sans text-[15px] px-4 py-[13px] outline-none transition-[border-color] duration-[180ms] appearance-none w-full rounded-none focus:border-amber placeholder:text-muted'
+    'bg-surface border border-line-2 text-cream font-sans text-[15px] px-4 py-[13px] outline-none transition-[border-color] duration-[180ms] appearance-none w-full rounded-xl focus:border-amber placeholder:text-muted'
 
   return (
     <div className={`flex flex-col gap-[7px] ${field.span === 'full' ? 'col-span-full' : ''}`}>

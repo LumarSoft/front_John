@@ -5,6 +5,7 @@ import { Carta } from '@/src/features/landing/components/carta'
 import { Companias } from '@/src/features/landing/components/companias'
 import { Resenas } from '@/src/features/landing/components/resenas'
 import { CtaSection } from '@/src/features/landing/components/cta-section'
+import { Estudio } from '@/src/features/landing/components/estudio'
 import { Footer } from '@/src/features/landing/components/footer'
 
 export default function Home() {
@@ -18,6 +19,7 @@ export default function Home() {
         <Companias />
         <Resenas />
         <CtaSection />
+        <Estudio />
       </main>
       <Footer />
     </>

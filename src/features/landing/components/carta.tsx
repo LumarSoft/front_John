@@ -29,7 +29,7 @@ const STEPS: Step[] = [
 
 export function Carta() {
   return (
-    <section className="paper">
+    <section id="carta" className="paper">
       <div className="container py-[120px]">
         <div className="grid grid-cols-2 gap-16 items-end mb-16 max-[880px]:grid-cols-1 max-[880px]:gap-6">
           <div>
@@ -43,9 +43,9 @@ export function Carta() {
           </p>
         </div>
 
-        <div className="grid grid-cols-4 border-t border-l border-line-paper max-[880px]:grid-cols-2 max-[480px]:grid-cols-1">
-          {STEPS.map(step => (
-            <div key={step.n} className="border-r border-b border-line-paper p-9 flex flex-col gap-5 max-[880px]:p-7">
+        <div className="grid grid-cols-4 gap-3 max-[880px]:grid-cols-2 max-[480px]:grid-cols-1">
+          {STEPS.map((step, i) => (
+            <div key={step.n} className="border border-line-paper rounded-2xl p-9 flex flex-col gap-5 max-[880px]:p-7">
               <div className="text-[11px] tracking-[0.3em] uppercase text-amber-2 font-semibold">{step.n}.</div>
               <div>
                 <div className="text-[20px] font-bold tracking-[-0.03em] text-paper-ink mb-3 leading-[1.15]">

@@ -73,7 +73,7 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="mt-10 p-5 border border-line rounded">
+        <div className="mt-10 p-5 border border-line rounded-2xl">
           <p className="text-[11px] text-muted leading-[1.7] m-0">
             La entidad aseguradora dispone de un Servicio de Atención al Asegurado. En caso de que existiera un reclamo
             ante la entidad aseguradora y que el mismo no haya sido resuelto o haya sido desestimado, total o
