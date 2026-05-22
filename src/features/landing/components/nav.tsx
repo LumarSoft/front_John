@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useLockBodyScroll } from '../hooks/use-lock-body-scroll'
-import { ThemeToggle } from '@/src/components/theme-toggle'
+import { ThemeToggle } from '@/src/components/ui/theme-toggle'
 
 const ANCHOR_LINKS = [
   { href: '#carta', label: 'El productor' },

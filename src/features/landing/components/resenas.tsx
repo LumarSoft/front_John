@@ -1,3 +1,8 @@
+'use client'
+
+import { motion } from 'framer-motion'
+import { fadeUp, stagger, viewport } from '@/src/lib/motion'
+
 const REVIEWS = [
   {
     author: 'Adrian Ferreyra',
@@ -46,23 +51,39 @@ function Stars() {
 export function Resenas() {
   return (
     <section className="container py-[120px] border-t border-line-2">
-      <div className="grid grid-cols-2 gap-16 items-end mb-16 max-[880px]:grid-cols-1 max-[880px]:gap-6 max-[880px]:mb-10">
-        <div>
+      <motion.div
+        className="grid grid-cols-2 gap-16 items-end mb-16 max-[880px]:grid-cols-1 max-[880px]:gap-6 max-[880px]:mb-10"
+        initial="hidden"
+        whileInView="visible"
+        viewport={viewport}
+        variants={stagger(0.12)}
+      >
+        <motion.div variants={fadeUp}>
           <h2 className="font-bold text-[clamp(40px,5.4vw,68px)] leading-[1.02] tracking-[-0.045em] text-cream m-0">
             Lo que dicen <em className="not-italic text-amber">nuestros clientes.</em>
           </h2>
-        </div>
-        <div className="flex flex-col gap-3">
+        </motion.div>
+        <motion.div variants={fadeUp} className="flex flex-col gap-3">
           <div className="flex items-center gap-4">
             <span className="font-bold text-[48px] tracking-[-0.04em] text-cream leading-none">4.7</span>
             <Stars />
           </div>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
-      <div className="grid grid-cols-3 gap-5 max-[960px]:grid-cols-2 max-[560px]:grid-cols-1">
+      <motion.div
+        className="grid grid-cols-3 gap-5 max-[960px]:grid-cols-2 max-[560px]:grid-cols-1"
+        initial="hidden"
+        whileInView="visible"
+        viewport={viewport}
+        variants={stagger(0.07)}
+      >
         {REVIEWS.map((r, i) => (
-          <div key={i} className="border border-line-2 rounded-2xl p-7 flex flex-col gap-5 bg-ink-2">
+          <motion.div
+            key={i}
+            variants={fadeUp}
+            className="border border-line-2 rounded-2xl p-7 flex flex-col gap-5 bg-ink-2"
+          >
             <Stars />
             <p className="text-[15px] text-cream leading-[1.65] tracking-[-0.01em] m-0 flex-1">
               &ldquo;{r.text}&rdquo;
@@ -90,9 +111,9 @@ export function Resenas() {
                 />
               </svg>
             </div>
-          </div>
+          </motion.div>
         ))}
-      </div>
+      </motion.div>
     </section>
   )
 }

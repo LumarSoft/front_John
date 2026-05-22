@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 
 type Theme = 'dark' | 'light'
 
@@ -15,14 +15,15 @@ export function useTheme() {
   return useContext(ThemeContext)
 }
 
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
+export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<Theme>('dark')
 
   useEffect(() => {
     const stored = localStorage.getItem('theme') as Theme | null
-    if (stored === 'light' || stored === 'dark') {
-      setTheme(stored)
-    }
+    // localStorage is unavailable during SSR; this effect safely initializes
+    // the theme after hydration without causing a server/client HTML mismatch.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (stored === 'light' || stored === 'dark') setTheme(stored)
   }, [])
 
   useEffect(() => {

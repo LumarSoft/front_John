@@ -1,4 +1,8 @@
+'use client'
+
+import { motion } from 'framer-motion'
 import type { ReactNode } from 'react'
+import { fadeUp, stagger, viewport } from '@/src/lib/motion'
 
 interface CredItem {
   k: ReactNode
@@ -43,10 +47,17 @@ const ITEMS: CredItem[] = [
 export function Credenciales() {
   return (
     <section className="container border-b border-line">
-      <div className="grid grid-cols-4 max-[880px]:grid-cols-2">
+      <motion.div
+        className="grid grid-cols-4 max-[880px]:grid-cols-2"
+        initial="hidden"
+        whileInView="visible"
+        viewport={viewport}
+        variants={stagger(0.1)}
+      >
         {ITEMS.map((item, i) => (
-          <div
+          <motion.div
             key={i}
+            variants={fadeUp}
             className={`
               py-11 flex flex-col gap-4
               border-r border-line last:border-r-0
@@ -59,9 +70,9 @@ export function Credenciales() {
             <div className="w-7 h-[2px] bg-amber" />
             <div className="font-bold text-[40px] tracking-[-0.045em] text-cream leading-none">{item.k}</div>
             <p className="text-[12.5px] text-cream-2 tracking-[0.01em] leading-[1.6] m-0 max-w-[220px]">{item.v}</p>
-          </div>
+          </motion.div>
         ))}
-      </div>
+      </motion.div>
     </section>
   )
 }

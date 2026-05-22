@@ -1,5 +1,9 @@
+'use client'
+
+import { motion } from 'framer-motion'
 import Image from 'next/image'
 import type { Company } from '../types'
+import { fadeUp, stagger, viewport } from '@/src/lib/motion'
 
 const COMPANIES: Company[] = [
   {
@@ -21,21 +25,37 @@ const COMPANIES: Company[] = [
 export function Companias() {
   return (
     <section id="companias" className="container py-[120px] border-t border-line-2">
-      <div className="grid grid-cols-2 gap-16 items-end mb-16 max-[880px]:grid-cols-1 max-[880px]:gap-6 max-[880px]:mb-10">
-        <div>
+      <motion.div
+        className="grid grid-cols-2 gap-16 items-end mb-16 max-[880px]:grid-cols-1 max-[880px]:gap-6 max-[880px]:mb-10"
+        initial="hidden"
+        whileInView="visible"
+        viewport={viewport}
+        variants={stagger(0.12)}
+      >
+        <motion.div variants={fadeUp}>
           <h2 className="font-bold text-[clamp(40px,5.4vw,68px)] leading-[1.02] tracking-[-0.045em] text-cream m-0">
             Las compañías detrás de <em className="not-italic text-amber">tu cobertura.</em>
           </h2>
-        </div>
-        <p className="text-[15.5px] text-cream-2 leading-[1.6] max-w-[440px] m-0">
+        </motion.div>
+        <motion.p variants={fadeUp} className="text-[15.5px] text-cream-2 leading-[1.6] max-w-[440px] m-0">
           No trabajamos con cualquier compañía — elegimos dos por su solvencia, sus tiempos de respuesta y porque
           conocemos cómo operan cuando hay un siniestro.
-        </p>
-      </div>
+        </motion.p>
+      </motion.div>
 
-      <div className="grid grid-cols-2 gap-6 max-[680px]:grid-cols-1">
+      <motion.div
+        className="grid grid-cols-2 gap-6 max-[680px]:grid-cols-1"
+        initial="hidden"
+        whileInView="visible"
+        viewport={viewport}
+        variants={stagger(0.14)}
+      >
         {COMPANIES.map((c, i) => (
-          <div key={i} className="border border-line-2 rounded-2xl p-10 flex flex-col gap-8 max-[880px]:p-7">
+          <motion.div
+            key={i}
+            variants={fadeUp}
+            className="border border-line-2 rounded-2xl p-10 flex flex-col gap-8 max-[880px]:p-7"
+          >
             <div>
               {c.logo && (
                 <div className="relative h-14 w-[200px]">
@@ -62,9 +82,9 @@ export function Companias() {
                 ))}
               </div>
             </div>
-          </div>
+          </motion.div>
         ))}
-      </div>
+      </motion.div>
     </section>
   )
 }

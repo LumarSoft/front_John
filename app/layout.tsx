@@ -1,7 +1,8 @@
 import type { Metadata } from 'next'
 import { Manrope } from 'next/font/google'
-import { ThemeProvider } from '@/src/components/theme-provider'
-import { WhatsAppFab } from '@/src/components/whatsapp-fab'
+import { ThemeProvider } from '@/src/components/ui/theme-provider'
+import { WhatsAppFab } from '@/src/components/ui/whatsapp-fab'
+import { Providers } from './providers'
 import './globals.css'
 
 const manrope = Manrope({
@@ -31,10 +32,12 @@ export default function RootLayout({
         />
       </head>
       <body>
-        <ThemeProvider>
-          {children}
-          <WhatsAppFab />
-        </ThemeProvider>
+        <Providers>
+          <ThemeProvider>
+            {children}
+            <WhatsAppFab />
+          </ThemeProvider>
+        </Providers>
       </body>
     </html>
   )

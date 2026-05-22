@@ -1,31 +1,46 @@
 'use client'
 
+import { motion } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import { PRODUCTS } from '../data/products'
+import { fadeUp, stagger, viewport } from '@/src/lib/motion'
 
 export function Cotizador() {
   const router = useRouter()
 
   return (
     <section id="coberturas" className="container py-[120px] border-b border-line-2">
-      <div className="grid grid-cols-2 gap-16 items-end mb-16 max-[880px]:grid-cols-1 max-[880px]:gap-6 max-[880px]:mb-8">
-        <div>
+      <motion.div
+        className="grid grid-cols-2 gap-16 items-end mb-16 max-[880px]:grid-cols-1 max-[880px]:gap-6 max-[880px]:mb-8"
+        initial="hidden"
+        whileInView="visible"
+        viewport={viewport}
+        variants={stagger(0.12)}
+      >
+        <motion.div variants={fadeUp}>
           <h2 className="font-bold text-[clamp(40px,5.4vw,68px)] leading-[1.02] tracking-[-0.045em] text-cream m-0">
             Sumario de <em className="not-italic text-amber">coberturas.</em>
           </h2>
-        </div>
-        <p className="text-[15.5px] text-cream-2 leading-[1.6] max-w-[440px] m-0">
+        </motion.div>
+        <motion.p variants={fadeUp} className="text-[15.5px] text-cream-2 leading-[1.6] max-w-[440px] m-0">
           Ocho líneas de producto, dos compañías de primera línea y un solo interlocutor. Elija el bien o la persona a
           proteger; le respondemos con cotización detallada en el día.
-        </p>
-      </div>
+        </motion.p>
+      </motion.div>
 
-      <div className="grid grid-cols-4 gap-4 max-[1080px]:grid-cols-3 max-[720px]:grid-cols-2 max-[480px]:grid-cols-1">
-        {PRODUCTS.map((item, i) => {
+      <motion.div
+        className="grid grid-cols-4 gap-4 max-[1080px]:grid-cols-3 max-[720px]:grid-cols-2 max-[480px]:grid-cols-1"
+        initial="hidden"
+        whileInView="visible"
+        viewport={viewport}
+        variants={stagger(0.06)}
+      >
+        {PRODUCTS.map(item => {
           const ItemIcon = item.Icon
           return (
-            <button
+            <motion.button
               key={item.id}
+              variants={fadeUp}
               onClick={() => router.push(`/coberturas?coverage=${item.id}`)}
               className="group flex flex-col gap-6 p-7 border border-line-2 rounded-2xl bg-ink-2 text-left cursor-pointer transition-[background-color,border-color] duration-200 hover:bg-surface hover:border-amber"
             >
@@ -42,10 +57,10 @@ export function Cotizador() {
                   <path d="M3 8h10M9 4l4 4-4 4" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </div>
-            </button>
+            </motion.button>
           )
         })}
-      </div>
+      </motion.div>
     </section>
   )
 }
