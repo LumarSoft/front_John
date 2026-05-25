@@ -80,6 +80,12 @@
   }
 }
 
+@keyframes marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
 @layer components {
   .container {
     max-width: 1280px;

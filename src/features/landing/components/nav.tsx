@@ -96,13 +96,6 @@ export function Nav() {
 
             <div className="flex items-center gap-4 max-[760px]:hidden">
               <ThemeToggle />
-              <a
-                href="tel:+541148150099"
-                className="text-[14px] text-cream tracking-[-0.01em] font-medium shrink-0 text-right"
-              >
-                <span className="text-[9.5px] tracking-[0.24em] text-muted uppercase block mb-1">Línea directa</span>
-                +54 11 4815-0099
-              </a>
             </div>
 
             <button
