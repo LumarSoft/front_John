@@ -8,7 +8,7 @@ export function ThemeToggle() {
   return (
     <button
       onClick={toggle}
-      className="w-9 h-9 flex items-center justify-center text-muted hover:text-cream transition-colors shrink-0 rounded-xl"
+      className="w-9 h-9 flex items-center justify-center text-muted hover:text-ink transition-colors shrink-0 rounded-full"
       aria-label={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
     >
       {theme === 'dark' ? (

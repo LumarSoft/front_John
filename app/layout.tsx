@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Manrope } from 'next/font/google'
+import { Manrope, Inter } from 'next/font/google'
 import { ThemeProvider } from '@/src/components/ui/theme-provider'
 import { WhatsAppFab } from '@/src/components/ui/whatsapp-fab'
 import { Providers } from './providers'
@@ -9,6 +9,12 @@ const manrope = Manrope({
   variable: '--font-manrope',
   subsets: ['latin'],
   weight: ['200', '300', '400', '500', '600', '700', '800'],
+})
+
+const inter = Inter({
+  variable: '--font-inter',
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700', '800', '900'],
 })
 
 export const metadata: Metadata = {
@@ -23,14 +29,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="es" className={manrope.variable} suppressHydrationWarning>
-      <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `try{var t=localStorage.getItem('theme');if(t==='light')document.documentElement.setAttribute('data-theme','light')}catch(e){}`,
-          }}
-        />
-      </head>
+    <html lang="es" className={`${manrope.variable} ${inter.variable}`} suppressHydrationWarning>
       <body>
         <Providers>
           <ThemeProvider>
