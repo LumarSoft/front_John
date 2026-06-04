@@ -6,9 +6,9 @@ import { useCotizadorAutoForm } from '../hooks/use-cotizador-auto-form'
 const YEARS = Array.from({ length: 31 }, (_, i) => new Date().getFullYear() - i)
 
 const inputClass =
-  'bg-surface border border-line-2 text-cream font-sans text-[15px] px-4 py-[13px] pr-10 outline-none transition-[border-color] duration-[180ms] appearance-none w-full rounded-xl focus:border-amber placeholder:text-muted'
+  'bg-paper border border-line-2 text-ink font-sans text-[14.5px] px-4 py-[12px] pr-10 outline-none transition-[border-color,box-shadow] duration-[180ms] appearance-none w-full rounded-2xl focus:border-ember focus:shadow-[0_0_0_3px_rgba(232,168,32,0.12)] placeholder:text-muted'
 
-const labelClass = 'text-[10.5px] tracking-[0.2em] uppercase text-muted font-medium'
+const labelClass = 'text-[10.5px] tracking-[0.2em] uppercase text-muted font-semibold'
 
 const Chevron = () => (
   <svg
@@ -53,25 +53,25 @@ export function CotizadorAutoForm() {
     const presupuestoNro = result.SDTSrvCotizacionOut?.Presupuesto?.Numero
     return (
       <div className="flex flex-col items-center gap-8 py-16 text-center">
-        <div className="w-16 h-16 rounded-full bg-surface flex items-center justify-center border border-amber/30">
-          <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="var(--color-amber)" strokeWidth="2.2">
+        <div className="w-16 h-16 rounded-full bg-ember/10 flex items-center justify-center border border-ember/30">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="var(--color-ember)" strokeWidth="2.2">
             <path d="M5 14l6 6L23 7" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </div>
         <div>
-          <h3 className="text-[26px] font-bold tracking-[-0.04em] text-cream m-0 mb-3">¡Cotización generada!</h3>
+          <h3 className="font-display text-[26px] text-ink m-0 mb-3">¡Cotización generada!</h3>
           {presupuestoNro && (
-            <p className="text-[13px] text-muted tracking-[0.04em] mb-2">
-              Nro. de presupuesto: <span className="text-cream font-semibold">{presupuestoNro}</span>
+            <p className="text-[13px] text-muted tracking-[0.02em] mb-2">
+              Nro. de presupuesto: <span className="text-ink font-semibold">{presupuestoNro}</span>
             </p>
           )}
-          <p className="text-[14px] text-cream-2 leading-[1.65] max-w-[380px] mx-auto mt-3">
+          <p className="text-[14px] text-ink-3 leading-[1.65] max-w-[380px] mx-auto mt-3">
             Nos pondremos en contacto a la brevedad con los detalles de tu cobertura.
           </p>
         </div>
         <button
           onClick={reset}
-          className="text-[11.5px] tracking-[0.08em] uppercase font-semibold text-muted hover:text-amber transition-colors duration-[180ms] bg-transparent border-none cursor-pointer"
+          className="text-[12px] tracking-[-0.005em] font-semibold text-ember-2 hover:text-ember transition-colors duration-[180ms] bg-transparent border-none cursor-pointer"
         >
           Nueva cotización →
         </button>
@@ -81,7 +81,7 @@ export function CotizadorAutoForm() {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col">
-      <div className="text-[10.5px] tracking-[0.28em] uppercase text-muted font-medium mb-[18px]">
+      <div className="text-[10.5px] tracking-[0.24em] uppercase text-muted font-semibold mb-[18px]">
         Datos del vehículo
       </div>
 
@@ -151,9 +151,9 @@ export function CotizadorAutoForm() {
         </div>
       </div>
 
-      <hr className="border-0 border-t border-line-2 my-7" />
+      <hr className="border-0 border-t border-line my-7" />
 
-      <div className="text-[10.5px] tracking-[0.28em] uppercase text-muted font-medium mb-[18px]">
+      <div className="text-[10.5px] tracking-[0.24em] uppercase text-muted font-semibold mb-[18px]">
         Tus datos de contacto
       </div>
 
@@ -191,20 +191,23 @@ export function CotizadorAutoForm() {
       </div>
 
       {cotizarError && (
-        <p className="mt-5 text-[13px] text-red-400 leading-[1.5]">
+        <p className="mt-5 text-[13px] text-red-600 leading-[1.5]">
           Ocurrió un error al procesar la cotización. Por favor intentá de nuevo.
         </p>
       )}
 
-      <div className="flex items-center gap-6 mt-7 flex-wrap">
+      <div className="flex items-center gap-5 mt-8 flex-wrap">
         <button
           type="submit"
           disabled={!isValid || isPending}
-          className="bg-amber text-ink border-none py-[15px] px-8 rounded-xl font-bold text-[13px] tracking-[0.06em] uppercase cursor-pointer transition-[background-color,opacity] duration-[180ms] hover:bg-amber-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="btn-shimmer inline-flex items-center gap-2 bg-ember text-paper border-none py-[14px] px-6 rounded-full font-semibold text-[13.5px] tracking-[-0.005em] cursor-pointer transition-[background-color,box-shadow,opacity] duration-[180ms] hover:bg-ember-2 hover:shadow-[0_12px_32px_-8px_rgba(232,168,32,0.55)] disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isPending ? 'Cotizando…' : 'Solicitar cotización →'}
+          {isPending ? 'Cotizando…' : 'Solicitar cotización'}
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8">
+            <path d="M3 7h8M7.5 3.5L11 7l-3.5 3.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
         </button>
-        <span className="text-[12px] text-muted tracking-[0.04em]">Te respondemos en menos de 24 hs hábiles</span>
+        <span className="text-[12.5px] text-muted tracking-[-0.005em]">Te respondemos en menos de 24 hs hábiles</span>
       </div>
     </form>
   )

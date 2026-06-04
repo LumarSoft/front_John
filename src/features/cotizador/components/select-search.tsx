@@ -19,7 +19,7 @@ interface SelectSearchProps {
 }
 
 const inputClass =
-  'bg-surface border border-line-2 text-cream font-sans text-[15px] py-[13px] pr-10 outline-none transition-[border-color] duration-[180ms] w-full rounded-xl focus:border-amber placeholder:text-muted'
+  'bg-paper border border-line-2 text-ink font-sans text-[14.5px] py-[12px] pr-10 outline-none transition-[border-color,box-shadow] duration-[180ms] w-full rounded-2xl focus:border-ember focus:shadow-[0_0_0_3px_rgba(232,168,32,0.12)] placeholder:text-muted'
 
 export function SelectSearch({
   options,
@@ -103,7 +103,7 @@ export function SelectSearch({
           <button
             type="button"
             onMouseDown={handleClear}
-            className="absolute right-3 text-muted hover:text-cream transition-colors duration-[180ms] bg-transparent border-none cursor-pointer p-1"
+            className="absolute right-3 text-muted hover:text-ink transition-colors duration-[180ms] bg-transparent border-none cursor-pointer p-1"
           >
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M1 1l10 10M11 1L1 11" strokeLinecap="round" />
@@ -125,13 +125,13 @@ export function SelectSearch({
       </div>
 
       {open && filtered.length > 0 && (
-        <ul className="absolute top-[calc(100%+4px)] left-0 right-0 bg-surface-2 border border-line-2 rounded-xl overflow-hidden z-50 max-h-[260px] overflow-y-auto shadow-[0_8px_32px_rgba(0,0,0,0.45)]">
+        <ul className="absolute top-[calc(100%+4px)] left-0 right-0 bg-paper border border-line-2 rounded-2xl overflow-hidden z-50 max-h-[260px] overflow-y-auto shadow-[0_24px_60px_-20px_rgba(15,13,10,0.30),0_0_0_1px_rgba(15,13,10,0.04)]">
           {filtered.map(opt => (
             <li
               key={opt.value}
               onMouseDown={() => handleSelect(opt)}
               className={`flex items-center gap-3 px-4 py-[10px] text-[14px] cursor-pointer transition-colors duration-[120ms] ${
-                opt.value === value ? 'text-cream bg-surface' : 'text-cream-2 hover:bg-surface hover:text-cream'
+                opt.value === value ? 'text-ink bg-canvas-2' : 'text-ink-3 hover:bg-canvas-2 hover:text-ink'
               }`}
             >
               {hasLogo && (
@@ -140,7 +140,7 @@ export function SelectSearch({
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={opt.logo} alt={opt.label} width={20} height={20} className="object-contain rounded-sm" />
                   ) : (
-                    <div className="w-5 h-5 rounded-sm bg-surface" />
+                    <div className="w-5 h-5 rounded-sm bg-canvas-2" />
                   )}
                 </div>
               )}
@@ -151,7 +151,7 @@ export function SelectSearch({
       )}
 
       {open && query && filtered.length === 0 && (
-        <div className="absolute top-[calc(100%+4px)] left-0 right-0 bg-surface-2 border border-line-2 rounded-xl z-50 px-4 py-[10px] text-[13px] text-muted">
+        <div className="absolute top-[calc(100%+4px)] left-0 right-0 bg-paper border border-line-2 rounded-2xl z-50 px-4 py-[10px] text-[13px] text-muted shadow-[0_24px_60px_-20px_rgba(15,13,10,0.30)]">
           Sin resultados para &ldquo;{query}&rdquo;
         </div>
       )}
