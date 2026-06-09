@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { Toaster } from '@/src/components/ui/sonner'
 import { AuthProvider } from '@/src/features/admin/context/auth-context'
 
 export const metadata: Metadata = {
@@ -7,5 +8,10 @@ export const metadata: Metadata = {
 }
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  return <AuthProvider>{children}</AuthProvider>
+  return (
+    <AuthProvider>
+      {children}
+      <Toaster position="top-right" richColors closeButton />
+    </AuthProvider>
+  )
 }

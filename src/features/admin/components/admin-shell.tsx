@@ -6,7 +6,6 @@ import { Loader2 } from 'lucide-react'
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/src/components/ui/sidebar'
 import { Separator } from '@/src/components/ui/separator'
 import { TooltipProvider } from '@/src/components/ui/tooltip'
-import { Toaster } from '@/src/components/ui/sonner'
 import { useAuth } from '../context/auth-context'
 import { AppSidebar } from './app-sidebar'
 
@@ -48,7 +47,6 @@ export function AdminShell({ children }: { children: ReactNode }) {
           <div className="flex flex-1 flex-col">{children}</div>
         </SidebarInset>
       </SidebarProvider>
-      <Toaster position="top-right" richColors closeButton />
     </TooltipProvider>
   )
 }
