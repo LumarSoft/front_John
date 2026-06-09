@@ -37,7 +37,7 @@ export default function CotizadorAutoPage() {
               <h2 className="font-bold text-[clamp(32px,4vw,48px)] tracking-[-0.04em] leading-[1.02] text-cream m-0 mb-2">
                 Seguro de auto
               </h2>
-              <p className="text-[14px] text-muted leading-[1.55] m-0">
+              <p className="text-[14px] text-faint leading-[1.55] m-0">
                 Todo riesgo · Terceros completo · Atención de siniestros sin franquicia variable
               </p>
             </div>

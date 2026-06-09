@@ -93,7 +93,7 @@ export function Nav() {
                 <div className="font-display text-[15px] md:text-[18px] font-semibold tracking-[-0.025em] text-ink">
                   John Pellegrini
                 </div>
-                <div className="mt-[3px] text-[8.5px] md:text-[9px] font-medium uppercase tracking-[0.2em] md:tracking-[0.22em] text-muted">
+                <div className="mt-[3px] text-[8.5px] md:text-[9px] font-medium uppercase tracking-[0.2em] md:tracking-[0.22em] text-faint">
                   <span className="hidden min-[380px]:inline">Seguros · </span>desde 1974
                 </div>
               </div>
@@ -147,7 +147,7 @@ export function Nav() {
                               <div className="text-[13.5px] font-semibold text-ink tracking-[-0.01em]">
                                 {child.label}
                               </div>
-                              {child.sub && <div className="text-[11.5px] text-muted mt-[2px]">{child.sub}</div>}
+                              {child.sub && <div className="text-[11.5px] text-faint mt-[2px]">{child.sub}</div>}
                             </Link>
                           ))}
                         </div>
@@ -221,7 +221,7 @@ export function Nav() {
             </div>
             <div className="leading-none">
               <div className="font-display text-[18px] font-semibold tracking-[-0.025em] text-ink">Pellegrini</div>
-              <div className="mt-[3px] text-[9px] font-medium uppercase tracking-[0.22em] text-muted">
+              <div className="mt-[3px] text-[9px] font-medium uppercase tracking-[0.22em] text-faint">
                 Seguros · desde 1974
               </div>
             </div>
