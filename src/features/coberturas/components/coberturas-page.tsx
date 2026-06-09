@@ -125,7 +125,7 @@ export function CoberturasPage({ initialCoverageId = PRODUCTS[0].id }: { initial
             animate="visible"
             variants={stagger(0.04, 0.25)}
           >
-            <div className="text-[10px] tracking-[0.22em] uppercase text-muted font-semibold px-4 pt-3 pb-2">
+            <div className="text-[10px] tracking-[0.22em] uppercase text-faint font-semibold px-4 pt-3 pb-2">
               Elegí una cobertura
             </div>
             {PRODUCTS.map(p => {
@@ -177,7 +177,7 @@ export function CoberturasPage({ initialCoverageId = PRODUCTS[0].id }: { initial
                     <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-ember text-paper">
                       <active.Icon size={20} />
                     </div>
-                    <div className="text-[10.5px] tracking-[0.24em] uppercase text-muted font-semibold">
+                    <div className="text-[10.5px] tracking-[0.24em] uppercase text-faint font-semibold">
                       Cotizador · {active.label}
                     </div>
                   </div>
@@ -191,7 +191,7 @@ export function CoberturasPage({ initialCoverageId = PRODUCTS[0].id }: { initial
                   <CotizadorAutoForm />
                 ) : (
                   <form className="flex flex-col" onSubmit={handleSubmit}>
-                    <div className="text-[10.5px] tracking-[0.24em] uppercase text-muted font-semibold mb-[18px]">
+                    <div className="text-[10.5px] tracking-[0.24em] uppercase text-faint font-semibold mb-[18px]">
                       Datos de la cobertura
                     </div>
                     <div className="grid grid-cols-2 gap-[14px] mb-2 max-[560px]:grid-cols-1">
@@ -202,7 +202,7 @@ export function CoberturasPage({ initialCoverageId = PRODUCTS[0].id }: { initial
 
                     <hr className="border-none border-t border-line my-7" />
 
-                    <div className="text-[10.5px] tracking-[0.24em] uppercase text-muted font-semibold mb-[18px]">
+                    <div className="text-[10.5px] tracking-[0.24em] uppercase text-faint font-semibold mb-[18px]">
                       Tus datos de contacto
                     </div>
                     <div className="grid grid-cols-2 gap-[14px] mb-2 max-[560px]:grid-cols-1">
@@ -228,7 +228,7 @@ export function CoberturasPage({ initialCoverageId = PRODUCTS[0].id }: { initial
                           <path d="M3 7h8M7.5 3.5L11 7l-3.5 3.5" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
                       </button>
-                      <span className="text-[12.5px] text-muted tracking-[-0.005em]">
+                      <span className="text-[12.5px] text-faint tracking-[-0.005em]">
                         Te respondemos en menos de 24 hs hábiles
                       </span>
                     </div>

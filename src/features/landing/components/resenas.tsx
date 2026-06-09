@@ -107,7 +107,7 @@ export function Resenas() {
                 <span className="font-display text-[30px] md:text-[36px] text-ink leading-none">4.7</span>
                 <Stars size={14} />
               </div>
-              <span className="text-[10.5px] md:text-[11px] text-muted tracking-[0.02em]">Reseñas de Google</span>
+              <span className="text-[10.5px] md:text-[11px] text-faint tracking-[0.02em]">Reseñas de Google</span>
             </div>
           </div>
         </div>
@@ -140,7 +140,7 @@ export function Resenas() {
                 <Avatar name={r.author} idx={i} />
                 <div className="flex-1 min-w-0">
                   <div className="text-[13px] font-semibold text-ink tracking-[-0.01em] truncate">{r.author}</div>
-                  <div className="text-[11px] text-muted mt-[2px]">Cliente verificado</div>
+                  <div className="text-[11px] text-faint mt-[2px]">Cliente verificado</div>
                 </div>
                 <GoogleIcon size={15} />
               </div>
