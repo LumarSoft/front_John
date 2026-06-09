@@ -176,6 +176,16 @@ export function Nav() {
               >
                 Llamanos
               </a>
+              <Link
+                href="/portal/login"
+                className="inline-flex items-center gap-[7px] rounded-full border border-line-2 px-4 py-[10px] text-[13px] font-medium text-ink-2 transition-colors hover:border-ink-3 hover:text-ink"
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" strokeLinecap="round" strokeLinejoin="round" />
+                  <circle cx="12" cy="7" r="4" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                Área cliente
+              </Link>
               <a
                 href="#contacto"
                 className="btn-shimmer inline-flex items-center gap-2 rounded-full bg-ember px-5 py-[11px] text-[13px] font-semibold tracking-[-0.005em] text-paper transition-[background-color,box-shadow] hover:bg-ember-2 hover:shadow-[0_8px_24px_-6px_rgba(232,168,32,0.45)]"
@@ -293,6 +303,18 @@ export function Nav() {
             WhatsApp
           </a>
         </div>
+
+        <Link
+          href="/portal/login"
+          onClick={close}
+          className="flex items-center justify-center gap-2 h-[52px] border border-line-2 rounded-full text-ink-2 text-[13.5px] font-semibold tracking-[-0.01em] mt-3"
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" strokeLinecap="round" strokeLinejoin="round" />
+            <circle cx="12" cy="7" r="4" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          Área cliente
+        </Link>
 
         <a
           href="#contacto"
