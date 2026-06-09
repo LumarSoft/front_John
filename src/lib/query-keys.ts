@@ -1,7 +1,12 @@
+import type { AdminClientsQuery } from '@/src/types/api/clients'
+
 export const QUERY_KEYS = {
   admin: {
     profile: ['admin', 'profile'] as const,
     users: ['admin', 'users'] as const,
+    clients: (params?: AdminClientsQuery) => ['admin', 'clients', 'list', params ?? {}] as const,
+    clientsStats: ['admin', 'clients', 'stats'] as const,
+    client: (id: number) => ['admin', 'clients', id] as const,
   },
   infoauto: {
     brands: (query?: string) => ['infoauto', 'brands', query ?? ''] as const,

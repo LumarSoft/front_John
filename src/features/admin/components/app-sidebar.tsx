@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { ChevronsUpDown, LayoutDashboard, LogOut, UserCog, Users, type LucideIcon } from 'lucide-react'
+import { ChevronsUpDown, LayoutDashboard, LogOut, ShieldCheck, UserCog, Users, type LucideIcon } from 'lucide-react'
 import {
   Sidebar,
   SidebarContent,
@@ -34,6 +34,7 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { label: 'Inicio', href: '/admin', icon: LayoutDashboard },
+  { label: 'Asegurados', href: '/admin/asegurados', icon: ShieldCheck },
   { label: 'Usuarios', href: '/admin/usuarios', icon: Users },
   { label: 'Configuración', href: '/admin/configuracion', icon: UserCog },
 ]
