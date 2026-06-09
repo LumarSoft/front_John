@@ -3,30 +3,35 @@
 import { useState, type ReactNode } from 'react'
 import {
   AlertTriangle,
+  ArrowRight,
   Ban,
   Calendar,
   CheckCircle2,
   CreditCard,
+  FileText,
   Mail,
   MapPin,
   Phone,
   Shield,
   User,
   XCircle,
+  type LucideIcon,
 } from 'lucide-react'
 import { Avatar, AvatarFallback } from '@/src/components/ui/avatar'
 import { Badge } from '@/src/components/ui/badge'
 import { WhatsAppIcon } from '@/src/components/ui/brand-icons'
 import { Button } from '@/src/components/ui/button'
-import { Separator } from '@/src/components/ui/separator'
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/src/components/ui/sheet'
+import { Dialog, DialogContent, DialogTitle } from '@/src/components/ui/dialog'
 import { Skeleton } from '@/src/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/src/components/ui/tabs'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/src/components/ui/tooltip'
 import type { AdminCuota, AdminPolizaDetail } from '@/src/types/api/clients'
 import { useAdminClient } from '../hooks/use-admin-client'
 import { formatCurrency, formatDate, initials, polizaStatus, RISK_LABELS, RiskIcon } from '../lib/asegurados-ui'
+import { AseguradoDocumentosTab } from './asegurado-documentos'
 import { PolizaStatusBadge } from './poliza-status-badge'
+
+type SheetTab = 'polizas' | 'pagos' | 'documentos'
 
 interface AseguradoSheetProps {
   clientId: number | null
@@ -96,47 +101,49 @@ function PolizaCard({ poliza }: { poliza: AdminPolizaDetail }) {
       </div>
 
       {poliza.vehiculo && (
-        <div className="mx-4 mb-3 rounded-lg bg-secondary/50 px-3 py-2">
-          <div className="text-[13px] font-medium text-ink">
-            {[poliza.vehiculo.marca, poliza.vehiculo.modelo].filter(Boolean).join(' ') || 'Vehículo'}
-            {poliza.vehiculo.anio ? ` (${poliza.vehiculo.anio})` : ''}
+        <div className="mx-4 mb-3 flex items-start justify-between gap-3 rounded-lg bg-secondary/50 px-3.5 py-3">
+          <div className="min-w-0">
+            <div className="text-[13.5px] font-medium text-ink">
+              {[poliza.vehiculo.marca, poliza.vehiculo.modelo].filter(Boolean).join(' ') || 'Vehículo'}
+              {poliza.vehiculo.anio ? ` (${poliza.vehiculo.anio})` : ''}
+            </div>
+            <div className="mt-1 flex flex-wrap gap-x-4 gap-y-0.5 text-[11.5px] text-muted-foreground">
+              {poliza.vehiculo.cobertura && <span>Cobertura {poliza.vehiculo.cobertura}</span>}
+              {poliza.vehiculo.sumaAsegurada && (
+                <span>Suma asegurada {formatCurrency(poliza.vehiculo.sumaAsegurada)}</span>
+              )}
+            </div>
           </div>
-          <div className="mt-0.5 flex flex-wrap gap-x-3 gap-y-0.5">
-            {poliza.vehiculo.dominio && (
-              <span className="text-[11px] text-muted-foreground">Dominio: {poliza.vehiculo.dominio}</span>
-            )}
-            {poliza.vehiculo.cobertura && (
-              <span className="text-[11px] text-muted-foreground">Cobertura {poliza.vehiculo.cobertura}</span>
-            )}
-            {poliza.vehiculo.sumaAsegurada && (
-              <span className="text-[11px] text-muted-foreground">
-                Suma asegurada: {formatCurrency(poliza.vehiculo.sumaAsegurada)}
-              </span>
-            )}
-          </div>
+          {poliza.vehiculo.dominio && (
+            <span className="shrink-0 rounded-md border border-line-strong/40 bg-ink px-2.5 py-1 font-mono text-[12px] font-bold tracking-widest text-on-dark">
+              {poliza.vehiculo.dominio}
+            </span>
+          )}
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 px-4">
-        <div>
-          <div className="text-[10.5px] uppercase tracking-[0.1em] text-muted-foreground">Vigencia</div>
-          <div className="text-[12.5px] text-ink-3">
-            {formatDate(poliza.vigenciaDesde)} → {formatDate(poliza.vigenciaHasta)}
-          </div>
+      <dl className="grid grid-cols-2 gap-x-4 gap-y-3 px-4">
+        <div className="col-span-2 min-w-0">
+          <dt className="text-[10.5px] uppercase tracking-[0.1em] text-muted-foreground">Vigencia</dt>
+          <dd className="mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[12.5px] text-ink-3">
+            <span>{formatDate(poliza.vigenciaDesde)}</span>
+            <ArrowRight className="size-3 shrink-0 text-muted-foreground" />
+            <span>{formatDate(poliza.vigenciaHasta)}</span>
+          </dd>
         </div>
         {poliza.premio && (
-          <div>
-            <div className="text-[10.5px] uppercase tracking-[0.1em] text-muted-foreground">Premio</div>
-            <div className="text-[12.5px] font-medium text-ink">{formatCurrency(poliza.premio)}</div>
+          <div className="min-w-0">
+            <dt className="text-[10.5px] uppercase tracking-[0.1em] text-muted-foreground">Premio</dt>
+            <dd className="mt-0.5 text-[12.5px] font-medium text-ink">{formatCurrency(poliza.premio)}</dd>
           </div>
         )}
         {poliza.paymentMethod && (
-          <div className="col-span-2">
-            <div className="text-[10.5px] uppercase tracking-[0.1em] text-muted-foreground">Forma de pago</div>
-            <div className="text-[12.5px] text-ink-3">{poliza.paymentMethod}</div>
+          <div className="min-w-0">
+            <dt className="text-[10.5px] uppercase tracking-[0.1em] text-muted-foreground">Forma de pago</dt>
+            <dd className="mt-0.5 break-words text-[12.5px] text-ink-3">{poliza.paymentMethod}</dd>
           </div>
         )}
-      </div>
+      </dl>
 
       {poliza.cuotas.length > 0 && (
         <div className="mt-3 border-t border-line-2 bg-secondary/30 px-4 py-3">
@@ -357,13 +364,29 @@ function PagosTab({ polizas }: { polizas: AdminPolizaDetail[] }) {
   )
 }
 
+function InfoCell({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: string }) {
+  return (
+    <div className="flex items-center gap-3">
+      <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-card text-muted-foreground ring-1 ring-line-2">
+        <Icon className="size-4" />
+      </div>
+      <div className="min-w-0">
+        <div className="text-[10px] font-medium uppercase tracking-[0.14em] text-faint">{label}</div>
+        <div className="truncate text-[13.5px] text-ink-3" title={value}>
+          {value}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function AseguradoSheet({ clientId, onClose }: AseguradoSheetProps) {
   const { data: client, isLoading } = useAdminClient(clientId)
-  const [tab, setTab] = useState<'polizas' | 'pagos'>('polizas')
+  const [tab, setTab] = useState<SheetTab>('polizas')
   const vigentesCount = client?.polizas.filter(p => p.vigenciaHasta && new Date(p.vigenciaHasta) >= new Date()).length
 
   return (
-    <Sheet
+    <Dialog
       open={clientId !== null}
       onOpenChange={open => {
         if (!open) {
@@ -372,37 +395,56 @@ export function AseguradoSheet({ clientId, onClose }: AseguradoSheetProps) {
         }
       }}
     >
-      <SheetContent className="w-full overflow-y-auto sm:max-w-[540px]" side="right">
-        <SheetHeader className="px-6 pb-0 pt-6">
-          {isLoading ? (
-            <div className="flex items-center gap-3">
-              <Skeleton className="size-14 rounded-full" />
+      <DialogContent
+        aria-describedby={undefined}
+        className="flex max-h-[88vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-3xl"
+      >
+        {isLoading ? (
+          <div className="flex flex-col gap-5 p-6">
+            <div className="flex items-center gap-4">
+              <Skeleton className="size-16 rounded-full" />
               <div className="space-y-2">
-                <SheetTitle className="sr-only">Cargando asegurado</SheetTitle>
-                <Skeleton className="h-5 w-40" />
-                <Skeleton className="h-4 w-24" />
+                <DialogTitle className="sr-only">Cargando asegurado</DialogTitle>
+                <Skeleton className="h-5 w-48" />
+                <Skeleton className="h-4 w-28" />
               </div>
             </div>
-          ) : client ? (
-            <>
-              <div className="flex items-center gap-4">
-                <Avatar className="size-14">
-                  <AvatarFallback className="bg-ember-soft text-xl font-semibold text-ember-2">
-                    {initials(client.firstName, client.lastName)}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="min-w-0">
-                  <SheetTitle className="font-display text-[22px] tracking-tight text-ink">
-                    {client.firstName} {client.lastName}
-                  </SheetTitle>
-                  <p className="text-[13px] text-muted-foreground">DNI {client.dni}</p>
+            <Skeleton className="h-px w-full" />
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton key={i} className="h-28 w-full rounded-xl" />
+            ))}
+          </div>
+        ) : client ? (
+          <>
+            {/* ── Header (fixed) ──────────────────────────────────────────── */}
+            <div className="border-b border-line-2 px-6 pb-5 pt-6">
+              <div className="flex items-start justify-between gap-4 pr-8">
+                <div className="flex min-w-0 items-center gap-4">
+                  <Avatar className="size-16 shrink-0">
+                    <AvatarFallback className="bg-ember-soft text-2xl font-semibold text-ember-2">
+                      {initials(client.firstName, client.lastName)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="min-w-0">
+                    <DialogTitle className="font-display text-[22px] leading-tight tracking-tight text-ink">
+                      {client.firstName} {client.lastName}
+                    </DialogTitle>
+                    <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                      <span className="text-[13px] text-muted-foreground">DNI {client.dni}</span>
+                      {vigentesCount !== undefined && vigentesCount > 0 && (
+                        <Badge
+                          variant="secondary"
+                          className="h-5 bg-emerald-50 px-2 text-[11px] text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
+                        >
+                          {vigentesCount} {vigentesCount === 1 ? 'vigente' : 'vigentes'}
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
                 </div>
-              </div>
 
-              <div className="mt-4">
-                <div className="mb-2 text-[10px] font-medium uppercase tracking-[0.2em] text-faint">Contacto</div>
                 <TooltipProvider delayDuration={150}>
-                  <div className="flex items-center gap-2">
+                  <div className="flex shrink-0 items-center gap-2">
                     {client.phone && (
                       <ContactButton label="WhatsApp" href={whatsappLink(client.phone)} accent external>
                         <WhatsAppIcon className="size-[18px]" />
@@ -420,104 +462,74 @@ export function AseguradoSheet({ clientId, onClose }: AseguradoSheetProps) {
                 </TooltipProvider>
               </div>
 
-              <div className="mt-4 grid grid-cols-1 gap-1.5">
-                <div className="flex items-center gap-2 text-[13px] text-ink-3">
-                  <Mail className="size-3.5 shrink-0 text-muted-foreground" />
-                  {client.email}
-                </div>
-                {client.phone && (
-                  <div className="flex items-center gap-2 text-[13px] text-ink-3">
-                    <Phone className="size-3.5 shrink-0 text-muted-foreground" />
-                    {client.phone}
-                  </div>
-                )}
-                {client.city && (
-                  <div className="flex items-center gap-2 text-[13px] text-ink-3">
-                    <MapPin className="size-3.5 shrink-0 text-muted-foreground" />
-                    {client.city}
-                  </div>
-                )}
-                <div className="flex items-center gap-2 text-[13px] text-ink-3">
-                  <User className="size-3.5 shrink-0 text-muted-foreground" />
-                  Cliente desde {formatDate(client.createdAt)}
-                </div>
+              <div className="mt-5 grid grid-cols-1 gap-x-8 gap-y-3.5 rounded-xl border border-line-2 bg-secondary/30 px-5 py-4 sm:grid-cols-2">
+                <InfoCell icon={Mail} label="Email" value={client.email} />
+                <InfoCell icon={Phone} label="Teléfono" value={client.phone ?? '—'} />
+                <InfoCell icon={MapPin} label="Ciudad" value={client.city ?? '—'} />
+                <InfoCell icon={User} label="Cliente desde" value={formatDate(client.createdAt)} />
               </div>
-            </>
-          ) : (
-            <SheetTitle className="sr-only">Detalle de asegurado</SheetTitle>
-          )}
-        </SheetHeader>
+            </div>
 
-        {isLoading && (
-          <div className="space-y-3 px-6 pt-5">
-            <Skeleton className="h-px w-full" />
-            {Array.from({ length: 3 }).map((_, i) => (
-              <Skeleton key={i} className="h-32 w-full rounded-xl" />
-            ))}
-          </div>
-        )}
-
-        {client && (
-          <>
-            <Separator className="mt-5" />
-
-            <Tabs value={tab} onValueChange={v => setTab(v as 'polizas' | 'pagos')} className="mt-0">
-              <TabsList className="mx-6 mt-4 h-9 w-auto justify-start rounded-lg border border-line-2 bg-secondary/50 p-0.5">
+            {/* ── Tabs + scrollable body ──────────────────────────────────── */}
+            <Tabs value={tab} onValueChange={v => setTab(v as SheetTab)} className="flex min-h-0 flex-1 flex-col">
+              <TabsList className="mx-6 mt-4 grid h-9 shrink-0 grid-cols-3 rounded-lg border border-line-2 bg-secondary/50 p-0.5">
                 <TabsTrigger
                   value="polizas"
-                  className="h-8 rounded-md px-4 text-[12.5px] data-[state=active]:bg-background data-[state=active]:text-ink data-[state=active]:shadow-sm"
+                  className="h-8 gap-1.5 rounded-md text-[12.5px] data-[state=active]:bg-background data-[state=active]:text-ink data-[state=active]:shadow-sm"
                 >
-                  <Shield className="mr-1.5 size-3.5" />
+                  <Shield className="size-3.5 shrink-0" />
                   Pólizas
-                  {client.polizas.length > 0 && (
-                    <Badge variant="secondary" className="ml-1.5 h-4 min-w-4 px-1 text-[10px]">
-                      {client.polizas.length}
-                    </Badge>
-                  )}
                 </TabsTrigger>
                 <TabsTrigger
                   value="pagos"
-                  className="h-8 rounded-md px-4 text-[12.5px] data-[state=active]:bg-background data-[state=active]:text-ink data-[state=active]:shadow-sm"
+                  className="h-8 gap-1.5 rounded-md text-[12.5px] data-[state=active]:bg-background data-[state=active]:text-ink data-[state=active]:shadow-sm"
                 >
-                  <CreditCard className="mr-1.5 size-3.5" />
+                  <CreditCard className="size-3.5 shrink-0" />
                   Pagos
+                </TabsTrigger>
+                <TabsTrigger
+                  value="documentos"
+                  className="h-8 gap-1.5 rounded-md text-[12.5px] data-[state=active]:bg-background data-[state=active]:text-ink data-[state=active]:shadow-sm"
+                >
+                  <FileText className="size-3.5 shrink-0" />
+                  Documentos
                 </TabsTrigger>
               </TabsList>
 
-              <TabsContent value="polizas" className="mt-0 px-6 pt-4">
-                <div className="mb-3 flex items-center justify-end gap-1.5">
-                  {vigentesCount !== undefined && vigentesCount > 0 && (
-                    <Badge
-                      variant="secondary"
-                      className="bg-emerald-50 text-[11px] text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
-                    >
-                      {vigentesCount} {vigentesCount === 1 ? 'vigente' : 'vigentes'}
-                    </Badge>
-                  )}
-                </div>
-                {client.polizas.length === 0 ? (
-                  <div className="flex flex-col items-center gap-3 py-10 text-center">
-                    <div className="flex size-12 items-center justify-center rounded-full bg-secondary text-muted-foreground">
-                      <Shield className="size-5" />
+              <div className="min-h-0 flex-1 overflow-y-auto">
+                <TabsContent value="polizas" className="mt-0 px-6 pt-5">
+                  {client.polizas.length === 0 ? (
+                    <div className="flex flex-col items-center gap-3 py-10 text-center">
+                      <div className="flex size-12 items-center justify-center rounded-full bg-secondary text-muted-foreground">
+                        <Shield className="size-5" />
+                      </div>
+                      <p className="text-[14px] text-muted-foreground">Este asegurado no tiene pólizas registradas.</p>
                     </div>
-                    <p className="text-[14px] text-muted-foreground">Este asegurado no tiene pólizas registradas.</p>
-                  </div>
-                ) : (
-                  <div className="space-y-3 pb-6">
-                    {client.polizas.map(p => (
-                      <PolizaCard key={p.id} poliza={p} />
-                    ))}
-                  </div>
-                )}
-              </TabsContent>
+                  ) : (
+                    <div className="space-y-3 pb-6">
+                      {client.polizas.map(p => (
+                        <PolizaCard key={p.id} poliza={p} />
+                      ))}
+                    </div>
+                  )}
+                </TabsContent>
 
-              <TabsContent value="pagos" className="mt-0 px-6 pt-4">
-                <PagosTab polizas={client.polizas} />
-              </TabsContent>
+                <TabsContent value="pagos" className="mt-0 px-6 pt-5">
+                  <PagosTab polizas={client.polizas} />
+                </TabsContent>
+
+                <TabsContent value="documentos" className="mt-0 px-6 pt-5">
+                  <AseguradoDocumentosTab client={client} />
+                </TabsContent>
+              </div>
             </Tabs>
           </>
+        ) : (
+          <div className="flex h-40 items-center justify-center">
+            <DialogTitle className="sr-only">Detalle de asegurado</DialogTitle>
+          </div>
         )}
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   )
 }
