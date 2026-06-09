@@ -16,6 +16,7 @@ export interface CobranzaCliente {
   rejectedCount: number
   paidCount: number
   totalDeuda: string
+  oldestOverdueDate: string | null
 }
 
 export interface CobranzasPage {

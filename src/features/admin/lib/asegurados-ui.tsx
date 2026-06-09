@@ -125,6 +125,48 @@ export function initials(firstName: string, lastName: string): string {
   return `${firstName[0] ?? ''}${lastName[0] ?? ''}`.toUpperCase()
 }
 
+/** Whole days a due date is past today. Returns null if not yet due / no date. */
+export function daysOverdue(dueDate: string | null | undefined): number | null {
+  if (!dueDate) return null
+  const diff = Date.now() - new Date(dueDate).getTime()
+  if (diff <= 0) return null
+  return Math.floor(diff / 86_400_000)
+}
+
+/** Human label for how long a cuota has been overdue. */
+export function overdueLabel(dueDate: string | null | undefined): string | null {
+  const days = daysOverdue(dueDate)
+  if (days === null) return null
+  if (days === 0) return 'vence hoy'
+  return `hace ${days} ${days === 1 ? 'día' : 'días'}`
+}
+
+interface CobranzaReminderInput {
+  firstName: string
+  totalDeuda: string
+  overdueCount: number
+  rejectedCount: number
+  pendingCount: number
+}
+
+/** Pre-filled WhatsApp link with a friendly payment reminder for a debtor. */
+export function buildCobranzaWhatsappUrl(phone: string, input: CobranzaReminderInput): string {
+  const digits = phone.replace(/\D/g, '')
+  const parts: string[] = []
+  if (input.overdueCount > 0)
+    parts.push(`${input.overdueCount} ${input.overdueCount === 1 ? 'cuota vencida' : 'cuotas vencidas'}`)
+  if (input.rejectedCount > 0)
+    parts.push(`${input.rejectedCount} ${input.rejectedCount === 1 ? 'cuota rechazada' : 'cuotas rechazadas'}`)
+  if (input.pendingCount > 0)
+    parts.push(`${input.pendingCount} ${input.pendingCount === 1 ? 'cuota pendiente' : 'cuotas pendientes'}`)
+  const detalle = parts.length ? ` (${parts.join(', ')})` : ''
+  const message =
+    `Hola ${input.firstName}, te escribimos de John Pellegrini Seguros. ` +
+    `Queríamos recordarte que figura un saldo pendiente de ${formatCurrency(input.totalDeuda)}${detalle}. ` +
+    `¿Coordinamos el pago? ¡Gracias!`
+  return `https://wa.me/${digits}?text=${encodeURIComponent(message)}`
+}
+
 export type PagoEstadoKey = 'al_dia' | 'pendiente' | 'vencida' | 'rechazado' | 'sin_cuotas'
 
 export interface PagoEstadoStyle {

@@ -1,7 +1,20 @@
 'use client'
 
 import { useState } from 'react'
-import { AlertTriangle, Ban, CheckCircle2, ChevronLeft, ChevronRight, Phone, Search, Users, Wallet } from 'lucide-react'
+import {
+  AlertTriangle,
+  Ban,
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
+  Mail,
+  Phone,
+  Search,
+  Users,
+  Wallet,
+  X,
+} from 'lucide-react'
 import { Avatar, AvatarFallback } from '@/src/components/ui/avatar'
 import { WhatsAppIcon } from '@/src/components/ui/brand-icons'
 import { Button } from '@/src/components/ui/button'
@@ -14,14 +27,17 @@ import { useDebouncedValue } from '@/src/hooks/use-debounced-value'
 import type { CobranzaCliente, CobranzaEstadoFilter, CobranzasStats } from '@/src/types/api/cobranzas'
 import { useCobranzas } from '../hooks/use-cobranzas'
 import { useCobranzasStats } from '../hooks/use-cobranzas-stats'
-import { formatCurrency, initials, RISK_LABELS, RiskIcon } from '../lib/asegurados-ui'
+import {
+  buildCobranzaWhatsappUrl,
+  formatCurrency,
+  initials,
+  overdueLabel,
+  RISK_LABELS,
+  RiskIcon,
+} from '../lib/asegurados-ui'
 import { AseguradoSheet } from './asegurado-sheet'
 
 const PAGE_SIZE = 25
-
-function whatsappLink(phone: string): string {
-  return `https://wa.me/${phone.replace(/\D/g, '')}`
-}
 
 // ─── Debt pills ───────────────────────────────────────────────────────────────
 
@@ -57,9 +73,56 @@ function DebtPills({ client }: { client: CobranzaCliente }) {
 
 // ─── Row ────────────────────────────────────────────────────────────────────────
 
-function CobranzaRow({ client, onSelect }: { client: CobranzaCliente; onSelect: () => void }) {
+function MontoCell({ client }: { client: CobranzaCliente }) {
+  const isUrgent = client.overdueCount > 0 || client.rejectedCount > 0
+  const overdueText = overdueLabel(client.oldestOverdueDate)
+  const owes = parseFloat(client.totalDeuda) > 0
+  const unpaidCount = client.overdueCount + client.rejectedCount + client.pendingCount
+
+  const amountCls = isUrgent
+    ? 'text-destructive'
+    : client.pendingCount > 0
+      ? 'text-amber-700 dark:text-amber'
+      : 'text-ink'
+
+  let sublabel: string
+  if (overdueText) sublabel = `Vencida ${overdueText}`
+  else if (client.rejectedCount > 0) sublabel = 'Rechazada'
+  else if (client.pendingCount > 0) sublabel = 'Por vencer'
+  else sublabel = 'Adeudado'
+
   return (
-    <TableRow className="group cursor-pointer hover:bg-ember-soft/40" onClick={onSelect}>
+    <>
+      <div className={`font-display text-[16px] font-semibold leading-none ${amountCls}`}>
+        {owes ? formatCurrency(client.totalDeuda) : `${unpaidCount} sin pagar`}
+      </div>
+      <div
+        className={`mt-1 text-[10.5px] tracking-[0.1em] ${
+          overdueText ? 'font-medium uppercase text-destructive' : 'uppercase text-muted-foreground'
+        }`}
+      >
+        {sublabel}
+      </div>
+    </>
+  )
+}
+
+function CobranzaRow({ client, onSelect }: { client: CobranzaCliente; onSelect: () => void }) {
+  const fullName = `${client.lastName}, ${client.firstName}`
+  return (
+    <TableRow
+      role="button"
+      tabIndex={0}
+      aria-label={`Ver detalle de ${fullName}`}
+      className="group cursor-pointer hover:bg-ember-soft/40 focus-visible:bg-ember-soft/40 focus-visible:outline-none"
+      onClick={onSelect}
+      onKeyDown={e => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          onSelect()
+        }
+      }}
+    >
       <TableCell className="py-3 pl-5">
         <div className="flex items-center gap-3">
           <Avatar className="size-9 shrink-0">
@@ -68,9 +131,7 @@ function CobranzaRow({ client, onSelect }: { client: CobranzaCliente; onSelect: 
             </AvatarFallback>
           </Avatar>
           <div className="min-w-0">
-            <div className="truncate text-[14px] font-medium text-ink">
-              {client.lastName}, {client.firstName}
-            </div>
+            <div className="truncate text-[14px] font-medium text-ink">{fullName}</div>
             <div className="text-[12px] text-muted-foreground">DNI {client.dni}</div>
           </div>
         </div>
@@ -100,10 +161,7 @@ function CobranzaRow({ client, onSelect }: { client: CobranzaCliente; onSelect: 
       </TableCell>
 
       <TableCell className="text-right">
-        <div className="font-display text-[16px] font-semibold leading-none text-destructive">
-          {formatCurrency(client.totalDeuda)}
-        </div>
-        <div className="mt-1 text-[10.5px] uppercase tracking-[0.1em] text-muted-foreground">Adeudado</div>
+        <MontoCell client={client} />
       </TableCell>
 
       <TableCell className="pr-4 text-right">
@@ -118,13 +176,13 @@ function CobranzaRow({ client, onSelect }: { client: CobranzaCliente; onSelect: 
                     variant="ghost"
                     className="size-8 rounded-full text-ink-3 hover:bg-ember-soft hover:text-ember-2"
                   >
-                    <a href={whatsappLink(client.phone)} target="_blank" rel="noopener noreferrer">
+                    <a href={buildCobranzaWhatsappUrl(client.phone, client)} target="_blank" rel="noopener noreferrer">
                       <WhatsAppIcon className="size-4" />
-                      <span className="sr-only">WhatsApp</span>
+                      <span className="sr-only">Recordar pago por WhatsApp</span>
                     </a>
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>WhatsApp</TooltipContent>
+                <TooltipContent>Recordar pago por WhatsApp</TooltipContent>
               </Tooltip>
             )}
             {client.phone && (
@@ -145,6 +203,25 @@ function CobranzaRow({ client, onSelect }: { client: CobranzaCliente; onSelect: 
                 <TooltipContent>Llamar</TooltipContent>
               </Tooltip>
             )}
+            {client.email && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    asChild
+                    size="icon"
+                    variant="ghost"
+                    className="hidden size-8 rounded-full text-ink-3 hover:bg-ember-soft hover:text-ember-2 sm:inline-flex"
+                  >
+                    <a href={`mailto:${client.email}`}>
+                      <Mail className="size-4" />
+                      <span className="sr-only">Enviar email</span>
+                    </a>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Enviar email</TooltipContent>
+              </Tooltip>
+            )}
+            <ChevronRight className="size-4 text-faint opacity-0 transition-opacity group-hover:opacity-100" />
           </div>
         </TooltipProvider>
       </TableCell>
@@ -299,8 +376,20 @@ export function CobranzasView() {
             placeholder="Buscar nombre, DNI, email, patente…"
             value={searchInput}
             onChange={e => handleSearch(e.target.value)}
-            className="h-10 border-line-2 pl-9 text-[13px]"
+            className="h-10 border-line-2 px-9 text-[13px]"
           />
+          {isFetching && !isLoading && searchInput ? (
+            <Loader2 className="absolute right-3 top-1/2 size-4 -translate-y-1/2 animate-spin text-muted-foreground" />
+          ) : searchInput ? (
+            <button
+              type="button"
+              aria-label="Limpiar búsqueda"
+              onClick={() => handleSearch('')}
+              className="absolute right-2.5 top-1/2 flex size-5 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-ink"
+            >
+              <X className="size-3.5" />
+            </button>
+          ) : null}
         </div>
       </div>
 
@@ -314,6 +403,7 @@ export function CobranzasView() {
             <button
               key={option.value}
               type="button"
+              aria-pressed={active}
               onClick={() => handleFilter(option.value)}
               className={`flex h-9 items-center justify-center gap-1.5 rounded-md text-[12.5px] font-medium transition-colors ${
                 active ? 'bg-background text-ink shadow-sm' : 'text-muted-foreground hover:text-ink'
@@ -450,7 +540,7 @@ export function CobranzasView() {
         </div>
       )}
 
-      <AseguradoSheet clientId={selectedId} onClose={() => setSelectedId(null)} />
+      <AseguradoSheet clientId={selectedId} onClose={() => setSelectedId(null)} defaultTab="pagos" />
     </div>
   )
 }
