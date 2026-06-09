@@ -25,9 +25,18 @@ import { Dialog, DialogContent, DialogTitle } from '@/src/components/ui/dialog'
 import { Skeleton } from '@/src/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/src/components/ui/tabs'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/src/components/ui/tooltip'
-import type { AdminCuota, AdminPolizaDetail } from '@/src/types/api/clients'
+import type { AdminClientDetail, AdminCuota, AdminPolizaDetail } from '@/src/types/api/clients'
 import { useAdminClient } from '../hooks/use-admin-client'
-import { formatCurrency, formatDate, initials, polizaStatus, RISK_LABELS, RiskIcon } from '../lib/asegurados-ui'
+import {
+  buildCobranzaWhatsappUrl,
+  formatCurrency,
+  formatDate,
+  initials,
+  overdueLabel,
+  polizaStatus,
+  RISK_LABELS,
+  RiskIcon,
+} from '../lib/asegurados-ui'
 import { AseguradoDocumentosTab } from './asegurado-documentos'
 import { PolizaStatusBadge } from './poliza-status-badge'
 
@@ -36,11 +45,47 @@ type SheetTab = 'polizas' | 'pagos' | 'documentos'
 interface AseguradoSheetProps {
   clientId: number | null
   onClose: () => void
+  defaultTab?: SheetTab
+}
+
+interface DebtSummary {
+  totalDeuda: number
+  overdueCount: number
+  rejectedCount: number
+  pendingCount: number
+}
+
+// Negative-amount cuotas are insurer credits/adjustments, not debt — excluded from the owed total.
+function debtAmount(amount: string): number {
+  return Math.max(0, parseFloat(amount))
+}
+
+function computeDebt(polizas: AdminPolizaDetail[]): DebtSummary {
+  const cuotas = polizas.flatMap(p => p.cuotas)
+  return {
+    totalDeuda: cuotas.filter(c => c.status !== 'paid').reduce((s, c) => s + debtAmount(c.amount), 0),
+    overdueCount: cuotas.filter(c => c.status === 'overdue').length,
+    rejectedCount: cuotas.filter(c => c.status === 'rejected').length,
+    pendingCount: cuotas.filter(c => c.status === 'pending').length,
+  }
 }
 
 function whatsappLink(phone: string): string {
   const digits = phone.replace(/\D/g, '')
   return `https://wa.me/${digits}`
+}
+
+function debtorWhatsappUrl(client: AdminClientDetail): string {
+  const debt = computeDebt(client.polizas)
+  if (!client.phone) return ''
+  if (debt.totalDeuda <= 0) return whatsappLink(client.phone)
+  return buildCobranzaWhatsappUrl(client.phone, {
+    firstName: client.firstName,
+    totalDeuda: debt.totalDeuda.toFixed(2),
+    overdueCount: debt.overdueCount,
+    rejectedCount: debt.rejectedCount,
+    pendingCount: debt.pendingCount,
+  })
 }
 
 interface ContactButtonProps {
@@ -215,7 +260,7 @@ function PolizaPagosCard({ poliza }: { poliza: AdminPolizaDetail }) {
   const overdueCount = allCuotas.filter(c => c.status === 'overdue').length
   const rejectedCount = allCuotas.filter(c => c.status === 'rejected').length
   const paidCount = allCuotas.filter(c => c.status === 'paid').length
-  const totalDeuda = allCuotas.filter(c => c.status !== 'paid').reduce((s, c) => s + parseFloat(c.amount), 0)
+  const totalDeuda = allCuotas.filter(c => c.status !== 'paid').reduce((s, c) => s + debtAmount(c.amount), 0)
 
   if (allCuotas.length === 0) return null
 
@@ -257,7 +302,12 @@ function PolizaPagosCard({ poliza }: { poliza: AdminPolizaDetail }) {
                 <span className="text-[11px] text-muted-foreground">{cuotaStatusLabel(cuota.status)}</span>
               </div>
               {cuota.dueDate && (
-                <div className="text-[11px] text-muted-foreground">Vto. {formatDate(cuota.dueDate)}</div>
+                <div className="text-[11px] text-muted-foreground">
+                  Vto. {formatDate(cuota.dueDate)}
+                  {cuota.status === 'overdue' && overdueLabel(cuota.dueDate) && (
+                    <span className="font-medium text-destructive"> · vencida {overdueLabel(cuota.dueDate)}</span>
+                  )}
+                </div>
               )}
             </div>
             <div className="text-[13px] font-semibold text-ink">{formatCurrency(cuota.amount)}</div>
@@ -285,14 +335,16 @@ function PolizaPagosCard({ poliza }: { poliza: AdminPolizaDetail }) {
   )
 }
 
-function PagosTab({ polizas }: { polizas: AdminPolizaDetail[] }) {
+function PagosTab({ client }: { client: AdminClientDetail }) {
+  const polizas = client.polizas
   const allCuotas = polizas.flatMap(p => p.cuotas)
-  const totalDeuda = allCuotas.filter(c => c.status !== 'paid').reduce((s, c) => s + parseFloat(c.amount), 0)
+  const totalDeuda = allCuotas.filter(c => c.status !== 'paid').reduce((s, c) => s + debtAmount(c.amount), 0)
   const overdueCount = allCuotas.filter(c => c.status === 'overdue').length
   const rejectedCount = allCuotas.filter(c => c.status === 'rejected').length
   const pendingCount = allCuotas.filter(c => c.status === 'pending').length
   const paidCount = allCuotas.filter(c => c.status === 'paid').length
   const polizasConCuotas = polizas.filter(p => p.cuotas.length > 0)
+  const hasUnpaid = overdueCount + rejectedCount + pendingCount > 0
 
   return (
     <div className="space-y-4 pb-6">
@@ -331,13 +383,33 @@ function PagosTab({ polizas }: { polizas: AdminPolizaDetail[] }) {
         ))}
       </div>
 
-      {totalDeuda > 0 ? (
-        <div className="flex items-center gap-3 rounded-xl border border-destructive/20 bg-destructive/5 px-4 py-3">
-          <CreditCard className="size-5 shrink-0 text-destructive" />
-          <div>
-            <div className="text-[10.5px] uppercase tracking-[0.1em] text-muted-foreground">Deuda total pendiente</div>
-            <div className="text-[18px] font-semibold text-destructive">{formatCurrency(totalDeuda.toFixed(2))}</div>
+      {hasUnpaid ? (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-destructive/20 bg-destructive/5 px-4 py-3">
+          <div className="flex items-center gap-3">
+            <CreditCard className="size-5 shrink-0 text-destructive" />
+            <div>
+              <div className="text-[10.5px] uppercase tracking-[0.1em] text-muted-foreground">
+                {totalDeuda > 0 ? 'Deuda total pendiente' : 'Cuotas impagas'}
+              </div>
+              <div className="text-[18px] font-semibold text-destructive">
+                {totalDeuda > 0
+                  ? formatCurrency(totalDeuda.toFixed(2))
+                  : `${overdueCount + rejectedCount + pendingCount} sin pagar`}
+              </div>
+            </div>
           </div>
+          {client.phone && (
+            <Button
+              asChild
+              size="sm"
+              className="h-8 gap-1.5 bg-[#25D366] px-3 text-[12.5px] text-white hover:bg-[#1faa52]"
+            >
+              <a href={debtorWhatsappUrl(client)} target="_blank" rel="noopener noreferrer">
+                <WhatsAppIcon className="size-4" />
+                Recordar por WhatsApp
+              </a>
+            </Button>
+          )}
         </div>
       ) : allCuotas.length > 0 ? (
         <div className="flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50/60 px-4 py-3 dark:border-emerald-900/40 dark:bg-emerald-950/20">
@@ -380,17 +452,18 @@ function InfoCell({ icon: Icon, label, value }: { icon: LucideIcon; label: strin
   )
 }
 
-export function AseguradoSheet({ clientId, onClose }: AseguradoSheetProps) {
+export function AseguradoSheet({ clientId, onClose, defaultTab = 'polizas' }: AseguradoSheetProps) {
   const { data: client, isLoading } = useAdminClient(clientId)
-  const [tab, setTab] = useState<SheetTab>('polizas')
+  const [tab, setTab] = useState<SheetTab>(defaultTab)
   const vigentesCount = client?.polizas.filter(p => p.vigenciaHasta && new Date(p.vigenciaHasta) >= new Date()).length
+  const debt = client ? computeDebt(client.polizas) : null
 
   return (
     <Dialog
       open={clientId !== null}
       onOpenChange={open => {
         if (!open) {
-          setTab('polizas')
+          setTab(defaultTab)
           onClose()
         }
       }}
@@ -439,6 +512,15 @@ export function AseguradoSheet({ clientId, onClose }: AseguradoSheetProps) {
                           {vigentesCount} {vigentesCount === 1 ? 'vigente' : 'vigentes'}
                         </Badge>
                       )}
+                      {debt && debt.totalDeuda > 0 && (
+                        <Badge
+                          variant="secondary"
+                          className="h-5 gap-1 bg-destructive/10 px-2 text-[11px] font-medium text-destructive"
+                        >
+                          <CreditCard className="size-3" />
+                          Debe {formatCurrency(debt.totalDeuda.toFixed(2))}
+                        </Badge>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -446,7 +528,12 @@ export function AseguradoSheet({ clientId, onClose }: AseguradoSheetProps) {
                 <TooltipProvider delayDuration={150}>
                   <div className="flex shrink-0 items-center gap-2">
                     {client.phone && (
-                      <ContactButton label="WhatsApp" href={whatsappLink(client.phone)} accent external>
+                      <ContactButton
+                        label={debt && debt.totalDeuda > 0 ? 'Recordar pago por WhatsApp' : 'WhatsApp'}
+                        href={debtorWhatsappUrl(client)}
+                        accent
+                        external
+                      >
                         <WhatsAppIcon className="size-[18px]" />
                       </ContactButton>
                     )}
@@ -515,7 +602,7 @@ export function AseguradoSheet({ clientId, onClose }: AseguradoSheetProps) {
                 </TabsContent>
 
                 <TabsContent value="pagos" className="mt-0 px-6 pt-5">
-                  <PagosTab polizas={client.polizas} />
+                  <PagosTab client={client} />
                 </TabsContent>
 
                 <TabsContent value="documentos" className="mt-0 px-6 pt-5">
