@@ -15,7 +15,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { label: 'Mis bienes', href: '/portal/dashboard', icon: LayoutGrid },
   { label: 'Pólizas', href: '/portal/polizas', icon: FileText, disabled: false },
-  { label: 'Siniestros', href: '/portal/siniestros', icon: AlertCircle, disabled: true },
+  { label: 'Siniestros', href: '/portal/siniestros', icon: AlertCircle, disabled: false },
   { label: 'Documentos', href: '/portal/documentos', icon: FolderOpen, disabled: true },
 ]
 
