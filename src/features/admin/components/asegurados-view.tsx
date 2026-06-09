@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { ChevronLeft, ChevronRight, Phone, Search, Users } from 'lucide-react'
+import { Badge } from '@/src/components/ui/badge'
 import { Avatar, AvatarFallback } from '@/src/components/ui/avatar'
 import { Button } from '@/src/components/ui/button'
 import { Card } from '@/src/components/ui/card'
@@ -13,6 +14,7 @@ import type { AdminClientSummary, ClientEstadoFilter, ClientSort, RiskType } fro
 import { useAdminClients } from '../hooks/use-admin-clients'
 import {
   clientStatus,
+  cuotaPaymentStatus,
   formatDate,
   initials,
   nearestExpiry,
@@ -85,6 +87,7 @@ function NextExpiryCell({ polizas }: { polizas: AdminClientSummary['polizas'] })
 
 function ClientRow({ client, onSelect }: { client: AdminClientSummary; onSelect: () => void }) {
   const status = clientStatus(client.polizas)
+  const pagoStatus = cuotaPaymentStatus(client.cuotaStats)
 
   return (
     <TableRow className="group cursor-pointer hover:bg-ember-soft/40" onClick={onSelect}>
@@ -124,6 +127,12 @@ function ClientRow({ client, onSelect }: { client: AdminClientSummary; onSelect:
 
       <TableCell>
         <PoliciesCell polizas={client.polizas} />
+      </TableCell>
+
+      <TableCell className="hidden sm:table-cell">
+        {pagoStatus.key !== 'sin_cuotas' && (
+          <Badge className={`text-[11px] font-medium ${pagoStatus.badge}`}>{pagoStatus.label}</Badge>
+        )}
       </TableCell>
 
       <TableCell className="hidden md:table-cell">
@@ -220,6 +229,9 @@ export function AseguradosView() {
                 Contacto
               </TableHead>
               <TableHead className="text-[11px] uppercase tracking-[0.12em] text-faint">Pólizas</TableHead>
+              <TableHead className="hidden text-[11px] uppercase tracking-[0.12em] text-faint sm:table-cell">
+                Pagos
+              </TableHead>
               <TableHead className="hidden text-[11px] uppercase tracking-[0.12em] text-faint md:table-cell">
                 Próx. vencimiento
               </TableHead>
@@ -245,6 +257,9 @@ export function AseguradosView() {
                   <TableCell>
                     <Skeleton className="h-6 w-28 rounded-md" />
                   </TableCell>
+                  <TableCell className="hidden sm:table-cell">
+                    <Skeleton className="h-5 w-20 rounded-full" />
+                  </TableCell>
                   <TableCell className="hidden md:table-cell">
                     <Skeleton className="h-8 w-24" />
                   </TableCell>
@@ -254,7 +269,7 @@ export function AseguradosView() {
 
             {isError && (
               <TableRow>
-                <TableCell colSpan={5} className="py-14 text-center text-[14px] text-destructive">
+                <TableCell colSpan={6} className="py-14 text-center text-[14px] text-destructive">
                   No se pudieron cargar los asegurados.
                 </TableCell>
               </TableRow>
@@ -262,7 +277,7 @@ export function AseguradosView() {
 
             {!isLoading && !isError && clients.length === 0 && (
               <TableRow>
-                <TableCell colSpan={5} className="py-16 text-center">
+                <TableCell colSpan={6} className="py-16 text-center">
                   <div className="flex flex-col items-center gap-3">
                     <div className="flex size-12 items-center justify-center rounded-full bg-secondary text-muted-foreground">
                       <Users className="size-5" />
