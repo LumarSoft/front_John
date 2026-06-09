@@ -26,7 +26,19 @@ export interface Cuota {
   status: 'pending' | 'paid' | 'overdue'
 }
 
-export type RiskType = 'auto' | 'home' | 'life' | 'commercial' | 'other'
+export type RiskType = 'auto' | 'moto' | 'home' | 'life' | 'commercial' | 'other'
+
+// Non-vehicle policies expose coverage details extracted from rawData.SDTOtrosRiesgosDatos
+export interface BienCobertura {
+  riesgo: string
+  cobertura: string
+  sumaAsegurada: string
+}
+
+export interface BienData {
+  descripcion: string | null
+  coberturas: BienCobertura[]
+}
 
 export interface PolizaListItem {
   id: number
@@ -42,6 +54,7 @@ export interface PolizaListItem {
   createdAt: string
   vehiculo: Vehiculo | null
   cuotas: Cuota[]
+  bien: BienData | null
 }
 
 export interface PolizaDetail extends PolizaListItem {
