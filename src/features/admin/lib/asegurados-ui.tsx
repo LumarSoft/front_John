@@ -124,3 +124,51 @@ export function formatCurrency(amount: string | null | undefined): string {
 export function initials(firstName: string, lastName: string): string {
   return `${firstName[0] ?? ''}${lastName[0] ?? ''}`.toUpperCase()
 }
+
+export type PagoEstadoKey = 'al_dia' | 'pendiente' | 'vencida' | 'rechazado' | 'sin_cuotas'
+
+export interface PagoEstadoStyle {
+  key: PagoEstadoKey
+  label: string
+  badge: string
+  dot: string
+}
+
+export function cuotaPaymentStatus(stats: {
+  pending: number
+  overdue: number
+  rejected: number
+  paid: number
+}): PagoEstadoStyle {
+  const total = stats.pending + stats.overdue + stats.rejected + stats.paid
+  if (total === 0)
+    return { key: 'sin_cuotas', label: 'Sin cuotas', badge: 'bg-secondary text-muted-foreground', dot: 'bg-faint-2' }
+  if (stats.rejected > 0)
+    return {
+      key: 'rechazado',
+      label: 'Rechazado',
+      badge: 'bg-destructive/10 text-destructive border border-destructive/25',
+      dot: 'bg-destructive',
+    }
+  if (stats.overdue > 0)
+    return {
+      key: 'vencida',
+      label: 'Vencida',
+      badge: 'bg-destructive/10 text-destructive border border-destructive/25',
+      dot: 'bg-destructive',
+    }
+  if (stats.pending > 0)
+    return {
+      key: 'pendiente',
+      label: 'Pendiente',
+      badge: 'bg-amber/10 text-amber-700 border border-amber/30 dark:text-amber',
+      dot: 'bg-amber-2',
+    }
+  return {
+    key: 'al_dia',
+    label: 'Al día',
+    badge:
+      'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/40',
+    dot: 'bg-emerald-500',
+  }
+}
