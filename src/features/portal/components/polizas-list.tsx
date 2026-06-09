@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import {
   Car,
+  Bike,
   Home,
   Heart,
   Briefcase,
@@ -23,6 +24,7 @@ import { fetchPolizas, proximaCuota, type PolizaListItem, type RiskType } from '
 
 const RISK_LABELS: Record<RiskType, string> = {
   auto: 'Automotor',
+  moto: 'Moto',
   home: 'Hogar',
   life: 'Vida / Sepelio',
   commercial: 'Comercio',
@@ -31,6 +33,7 @@ const RISK_LABELS: Record<RiskType, string> = {
 
 const RISK_ICONS: Record<RiskType, React.ElementType> = {
   auto: Car,
+  moto: Bike,
   home: Home,
   life: Heart,
   commercial: Briefcase,
@@ -92,15 +95,30 @@ function CuotaChip({ cuota }: { cuota: ReturnType<typeof proximaCuota> }) {
 
 // ─── Policy row ──────────────────────────────────────────
 
+function isMotoTipo(tipo: string | null | undefined): boolean {
+  if (!tipo) return false
+  const t = tipo.toUpperCase()
+  return t.includes('MOTO') || t === 'MOTOCICLETA'
+}
+
 function PolizaRow({ poliza }: { poliza: PolizaListItem }) {
-  const Icon = RISK_ICONS[poliza.riskType]
+  // Derive icon from vehicle tipo when riskType may be stale in DB
+  const effectiveRiskType: RiskType = poliza.vehiculo && isMotoTipo(poliza.vehiculo.tipo) ? 'moto' : poliza.riskType
+  const Icon = RISK_ICONS[effectiveRiskType]
   const v = poliza.vehiculo
+  const b = poliza.bien
   const vigente = isVigente(poliza.status)
   const proxima = proximaCuota(poliza.cuotas)
 
-  const subject = v
-    ? [v.marca, v.modelo].filter(Boolean).join(' ') || `Póliza ${poliza.certificado}`
-    : `Póliza ${poliza.certificado}`
+  // Title: vehicle name, bien description (stripping DNI suffix), or fallback
+  let subject: string
+  if (v) {
+    subject = [v.marca, v.modelo].filter(Boolean).join(' ') || `Póliza ${poliza.certificado}`
+  } else if (b?.descripcion) {
+    subject = b.descripcion.split(' - DNI:')[0].trim()
+  } else {
+    subject = `Póliza ${poliza.certificado}`
+  }
 
   return (
     <Link
@@ -136,7 +154,7 @@ function PolizaRow({ poliza }: { poliza: PolizaListItem }) {
 
         {/* Type + certificado */}
         <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[12px] text-muted-foreground">
-          <span className="font-medium uppercase tracking-wide">{RISK_LABELS[poliza.riskType]}</span>
+          <span className="font-medium uppercase tracking-wide">{RISK_LABELS[effectiveRiskType]}</span>
           <span className="text-line-2">·</span>
           <span>
             Póliza {poliza.certificado}
