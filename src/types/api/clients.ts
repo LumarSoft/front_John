@@ -24,7 +24,7 @@ export interface AdminCuota {
   numeroCuota: number
   amount: string
   dueDate: string | null
-  status: 'pending' | 'paid' | 'overdue'
+  status: 'pending' | 'paid' | 'overdue' | 'rejected'
 }
 
 export interface AdminPolizaSummary {
@@ -53,6 +53,13 @@ export interface AdminPolizaDetail {
   cuotas: AdminCuota[]
 }
 
+export interface AdminCuotaStats {
+  pending: number
+  overdue: number
+  rejected: number
+  paid: number
+}
+
 export interface AdminClientSummary {
   id: number
   firstName: string
@@ -63,6 +70,7 @@ export interface AdminClientSummary {
   dni: string
   createdAt: string
   polizas: AdminPolizaSummary[]
+  cuotaStats: AdminCuotaStats
 }
 
 export interface AdminClientDetail {
