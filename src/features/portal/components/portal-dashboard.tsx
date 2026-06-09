@@ -43,6 +43,27 @@ function isVigente(status: string) {
   return status.toUpperCase().includes('VIGENTE')
 }
 
+// Coverage / description keywords that mark a policy as covering a *person*
+// (sepelio, vida, accidentes personales, salud) rather than a physical good.
+const PERSON_POLICY_RE = /SEPELIO|VIDA|ACCIDENTE|SALUD/i
+
+// A "bien" is a physical insured object (vehicle, property, etc.). Policies that
+// insure a person — life/sepelio — belong in "Mis pólizas" only, never in bienes.
+// These can arrive classified as `life` OR mislabeled as `other`, so we also detect
+// them by their shape: an insured person identified by DNI, or a person-type coverage.
+function isBien(poliza: PolizaListItem): boolean {
+  if (poliza.riskType === 'life') return false
+  // Vehicles and properties are always physical goods.
+  if (poliza.vehiculo) return true
+  const descripcion = poliza.bien?.descripcion ?? ''
+  // Person policies describe the insured as "APELLIDO NOMBRE - DNI: XXXXXXXX".
+  if (/\bDNI:/i.test(descripcion)) return false
+  if (PERSON_POLICY_RE.test(descripcion)) return false
+  const coberturas = poliza.bien?.coberturas ?? []
+  if (coberturas.some(c => PERSON_POLICY_RE.test(c.riesgo))) return false
+  return true
+}
+
 // ─── Coverage chips for non-vehicle policies ─────────────
 
 function BienCoberturas({ coberturas }: { coberturas: BienCobertura[] }) {
@@ -214,6 +235,8 @@ export function PortalDashboard() {
       .finally(() => setLoading(false))
   }, [])
 
+  const bienes = polizas.filter(isBien)
+
   if (loading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
@@ -236,20 +259,20 @@ export function PortalDashboard() {
       <div className="mb-8">
         <h1 className="font-display text-[22px] font-semibold tracking-[-0.025em] text-ink">Mis bienes asegurados</h1>
         <p className="mt-1 text-[13.5px] text-muted-foreground">
-          {polizas.length === 0
+          {bienes.length === 0
             ? 'No tenés bienes asegurados'
-            : `${polizas.length} ${polizas.length === 1 ? 'bien asegurado' : 'bienes asegurados'}`}
+            : `${bienes.length} ${bienes.length === 1 ? 'bien asegurado' : 'bienes asegurados'}`}
         </p>
       </div>
 
-      {polizas.length === 0 ? (
+      {bienes.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-line-2 p-12 text-center">
           <Shield className="mx-auto mb-3 h-10 w-10 text-muted-foreground/30" />
           <p className="text-[14px] text-muted-foreground">Todavía no tenés bienes asegurados registrados.</p>
         </div>
       ) : (
         <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-          {polizas.map(p => (
+          {bienes.map(p => (
             <AssetCard key={p.id} poliza={p} />
           ))}
         </div>
