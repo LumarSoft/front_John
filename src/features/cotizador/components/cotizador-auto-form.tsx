@@ -6,13 +6,13 @@ import { useCotizadorAutoForm } from '../hooks/use-cotizador-auto-form'
 const YEARS = Array.from({ length: 31 }, (_, i) => new Date().getFullYear() - i)
 
 const inputClass =
-  'bg-paper border border-line-2 text-ink font-sans text-[14.5px] px-4 py-[12px] pr-10 outline-none transition-[border-color,box-shadow] duration-[180ms] appearance-none w-full rounded-2xl focus:border-ember focus:shadow-[0_0_0_3px_rgba(232,168,32,0.12)] placeholder:text-muted'
+  'bg-paper border border-line-2 text-ink font-sans text-[14.5px] px-4 py-[12px] pr-10 outline-none transition-[border-color,box-shadow] duration-[180ms] appearance-none w-full rounded-2xl focus:border-ember focus:shadow-[0_0_0_3px_rgba(232,168,32,0.12)] placeholder:text-faint'
 
-const labelClass = 'text-[10.5px] tracking-[0.2em] uppercase text-muted font-semibold'
+const labelClass = 'text-[10.5px] tracking-[0.2em] uppercase text-faint font-semibold'
 
 const Chevron = () => (
   <svg
-    className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted"
+    className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-faint"
     width="16"
     height="16"
     viewBox="0 0 16 16"
@@ -61,7 +61,7 @@ export function CotizadorAutoForm() {
         <div>
           <h3 className="font-display text-[26px] text-ink m-0 mb-3">¡Cotización generada!</h3>
           {presupuestoNro && (
-            <p className="text-[13px] text-muted tracking-[0.02em] mb-2">
+            <p className="text-[13px] text-faint tracking-[0.02em] mb-2">
               Nro. de presupuesto: <span className="text-ink font-semibold">{presupuestoNro}</span>
             </p>
           )}
@@ -81,7 +81,7 @@ export function CotizadorAutoForm() {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col">
-      <div className="text-[10.5px] tracking-[0.24em] uppercase text-muted font-semibold mb-[18px]">
+      <div className="text-[10.5px] tracking-[0.24em] uppercase text-faint font-semibold mb-[18px]">
         Datos del vehículo
       </div>
 
@@ -153,7 +153,7 @@ export function CotizadorAutoForm() {
 
       <hr className="border-0 border-t border-line my-7" />
 
-      <div className="text-[10.5px] tracking-[0.24em] uppercase text-muted font-semibold mb-[18px]">
+      <div className="text-[10.5px] tracking-[0.24em] uppercase text-faint font-semibold mb-[18px]">
         Tus datos de contacto
       </div>
 
@@ -207,7 +207,7 @@ export function CotizadorAutoForm() {
             <path d="M3 7h8M7.5 3.5L11 7l-3.5 3.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </button>
-        <span className="text-[12.5px] text-muted tracking-[-0.005em]">Te respondemos en menos de 24 hs hábiles</span>
+        <span className="text-[12.5px] text-faint tracking-[-0.005em]">Te respondemos en menos de 24 hs hábiles</span>
       </div>
     </form>
   )
