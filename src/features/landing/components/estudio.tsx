@@ -87,13 +87,13 @@ export function Estudio() {
             </div>
 
             <div>
-              <div className="text-[10px] tracking-[0.24em] uppercase text-muted font-semibold mb-2">Dirección</div>
+              <div className="text-[10px] tracking-[0.24em] uppercase text-faint font-semibold mb-2">Dirección</div>
               <div className="font-display text-[22px] text-ink leading-[1.2]">{active.address}</div>
               <div className="text-[14px] text-ink-3 mt-1">{active.city}, Argentina</div>
             </div>
 
             <div>
-              <div className="text-[10px] tracking-[0.24em] uppercase text-muted font-semibold mb-2">Horario</div>
+              <div className="text-[10px] tracking-[0.24em] uppercase text-faint font-semibold mb-2">Horario</div>
               <div className="font-display text-[16px] text-ink">Lunes a viernes · 9 a 18 hs</div>
               <div className="text-[13.5px] text-ink-3 mt-1">
                 Siniestros: <span className="text-ember-2 font-semibold">atención 24 hs</span>
@@ -101,7 +101,7 @@ export function Estudio() {
             </div>
 
             <div className="mt-auto pt-6 border-t border-line">
-              <div className="text-[10px] tracking-[0.24em] uppercase text-muted font-semibold mb-3">
+              <div className="text-[10px] tracking-[0.24em] uppercase text-faint font-semibold mb-3">
                 Contacto directo
               </div>
               <div className="flex flex-col gap-[6px]">

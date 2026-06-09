@@ -19,7 +19,7 @@ interface SelectSearchProps {
 }
 
 const inputClass =
-  'bg-paper border border-line-2 text-ink font-sans text-[14.5px] py-[12px] pr-10 outline-none transition-[border-color,box-shadow] duration-[180ms] w-full rounded-2xl focus:border-ember focus:shadow-[0_0_0_3px_rgba(232,168,32,0.12)] placeholder:text-muted'
+  'bg-paper border border-line-2 text-ink font-sans text-[14.5px] py-[12px] pr-10 outline-none transition-[border-color,box-shadow] duration-[180ms] w-full rounded-2xl focus:border-ember focus:shadow-[0_0_0_3px_rgba(232,168,32,0.12)] placeholder:text-faint'
 
 export function SelectSearch({
   options,
@@ -103,7 +103,7 @@ export function SelectSearch({
           <button
             type="button"
             onMouseDown={handleClear}
-            className="absolute right-3 text-muted hover:text-ink transition-colors duration-[180ms] bg-transparent border-none cursor-pointer p-1"
+            className="absolute right-3 text-faint hover:text-ink transition-colors duration-[180ms] bg-transparent border-none cursor-pointer p-1"
           >
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M1 1l10 10M11 1L1 11" strokeLinecap="round" />
@@ -111,7 +111,7 @@ export function SelectSearch({
           </button>
         ) : (
           <svg
-            className="pointer-events-none absolute right-3 text-muted"
+            className="pointer-events-none absolute right-3 text-faint"
             width="16"
             height="16"
             viewBox="0 0 16 16"
@@ -151,7 +151,7 @@ export function SelectSearch({
       )}
 
       {open && query && filtered.length === 0 && (
-        <div className="absolute top-[calc(100%+4px)] left-0 right-0 bg-paper border border-line-2 rounded-2xl z-50 px-4 py-[10px] text-[13px] text-muted shadow-[0_24px_60px_-20px_rgba(15,13,10,0.30)]">
+        <div className="absolute top-[calc(100%+4px)] left-0 right-0 bg-paper border border-line-2 rounded-2xl z-50 px-4 py-[10px] text-[13px] text-faint shadow-[0_24px_60px_-20px_rgba(15,13,10,0.30)]">
           Sin resultados para &ldquo;{query}&rdquo;
         </div>
       )}
