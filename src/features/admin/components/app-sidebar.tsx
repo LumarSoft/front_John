@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import { ChevronsUpDown, LayoutDashboard, LogOut, UserCog, Users, type LucideIcon } from 'lucide-react'
 import {
   Sidebar,
@@ -49,7 +49,6 @@ function isActive(pathname: string, href: string): boolean {
 
 export function AppSidebar() {
   const pathname = usePathname()
-  const router = useRouter()
   const { logout } = useAuth()
   const { data: profile } = useProfile()
 
@@ -57,7 +56,6 @@ export function AppSidebar() {
 
   const handleLogout = () => {
     logout()
-    router.replace('/admin/login')
   }
 
   return (
