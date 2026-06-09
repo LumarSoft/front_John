@@ -5,6 +5,7 @@ import Link from 'next/link'
 import {
   ArrowLeft,
   Car,
+  Bike,
   Home,
   Heart,
   Briefcase,
@@ -22,6 +23,7 @@ import { fetchPoliza, type PolizaDetail, type RiskType } from '@/src/services/po
 
 const RISK_LABELS: Record<RiskType, string> = {
   auto: 'Automotor',
+  moto: 'Moto',
   home: 'Hogar',
   life: 'Vida / Sepelio',
   commercial: 'Comercio',
@@ -30,6 +32,7 @@ const RISK_LABELS: Record<RiskType, string> = {
 
 const RISK_ICONS: Record<RiskType, React.ElementType> = {
   auto: Car,
+  moto: Bike,
   home: Home,
   life: Heart,
   commercial: Briefcase,
