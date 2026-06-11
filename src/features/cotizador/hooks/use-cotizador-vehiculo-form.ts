@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import type { SelectOption } from '../components/select-search'
+import type { VehicleType } from '@/src/types/api/cotizador'
 import { useBrands } from './use-brands'
 import { useGroups } from './use-groups'
 import { useModels } from './use-models'
-import { useCotizarAuto } from './use-cotizar-auto'
+import { useCotizarVehiculo } from './use-cotizar-vehiculo'
 
 interface FormState {
   brandId: number | null
@@ -11,9 +12,6 @@ interface FormState {
   codia: number | null
   year: number | null
   postalCode: string
-  name: string
-  phone: string
-  email: string
 }
 
 const INITIAL: FormState = {
@@ -22,13 +20,16 @@ const INITIAL: FormState = {
   codia: null,
   year: null,
   postalCode: '',
-  name: '',
-  phone: '',
-  email: '',
 }
 
-interface CotizadorAutoFormHook {
+interface UseCotizadorVehiculoFormOptions {
+  vehicleType: VehicleType
+  onCotizado?: () => void
+}
+
+export interface CotizadorVehiculoFormHook {
   form: FormState
+  vehicleLabel: string | null
   brandOptions: SelectOption[]
   groupOptions: SelectOption[]
   modelOptions: SelectOption[]
@@ -36,28 +37,34 @@ interface CotizadorAutoFormHook {
   loadingGroups: boolean
   loadingModels: boolean
   isPending: boolean
-  result: ReturnType<typeof useCotizarAuto>['data']
-  cotizarError: ReturnType<typeof useCotizarAuto>['error']
+  result: ReturnType<typeof useCotizarVehiculo>['data']
+  cotizarError: ReturnType<typeof useCotizarVehiculo>['error']
   isValid: boolean
   handleBrandChange: (val: string) => void
   handleGroupChange: (val: string) => void
   handleCodiaChange: (val: string) => void
   handleYearChange: (val: string) => void
   handlePostalCodeChange: (val: string) => void
-  handleNameChange: (val: string) => void
-  handlePhoneChange: (val: string) => void
-  handleEmailChange: (val: string) => void
-  handleSubmit: (e: React.FormEvent) => void
+  handleSubmit: (e: React.SubmitEvent<HTMLFormElement>) => void
   reset: () => void
 }
 
-export function useCotizadorAutoForm(): CotizadorAutoFormHook {
+export function useCotizadorVehiculoForm({
+  vehicleType,
+  onCotizado,
+}: UseCotizadorVehiculoFormOptions): CotizadorVehiculoFormHook {
   const [form, setForm] = useState<FormState>(INITIAL)
 
-  const { data: brandsData, isLoading: loadingBrands } = useBrands()
-  const { data: groupsData, isLoading: loadingGroups } = useGroups(form.brandId)
-  const { data: modelsData, isLoading: loadingModels } = useModels(form.brandId, form.groupId)
-  const { mutate: cotizar, isPending, data: result, error: cotizarError, reset: resetMutation } = useCotizarAuto()
+  const { data: brandsData, isLoading: loadingBrands } = useBrands(vehicleType)
+  const { data: groupsData, isLoading: loadingGroups } = useGroups(vehicleType, form.brandId)
+  const { data: modelsData, isLoading: loadingModels } = useModels(vehicleType, form.brandId, form.groupId)
+  const {
+    mutate: cotizar,
+    isPending,
+    data: result,
+    error: cotizarError,
+    reset: resetMutation,
+  } = useCotizarVehiculo(vehicleType)
 
   const brandOptions: SelectOption[] =
     brandsData?.data.map(b => ({ value: String(b.id), label: b.name, logo: b.logo_url })) ?? []
@@ -66,6 +73,10 @@ export function useCotizadorAutoForm(): CotizadorAutoFormHook {
     modelsData?.data.map(m => ({ value: String(m.codia), label: m.description })) ?? []
 
   const isValid = Boolean(form.brandId && form.codia && form.year && form.postalCode.trim())
+
+  const brandLabel = brandOptions.find(o => o.value === String(form.brandId))?.label
+  const modelLabel = modelOptions.find(o => o.value === String(form.codia))?.label
+  const vehicleLabel = brandLabel && modelLabel && form.year ? `${brandLabel} ${modelLabel} · ${form.year}` : null
 
   const handleBrandChange = (val: string) => {
     setForm(prev => ({ ...prev, brandId: val ? Number(val) : null, groupId: null, codia: null }))
@@ -87,28 +98,19 @@ export function useCotizadorAutoForm(): CotizadorAutoFormHook {
     setForm(prev => ({ ...prev, postalCode: val }))
   }
 
-  const handleNameChange = (val: string) => {
-    setForm(prev => ({ ...prev, name: val }))
-  }
-
-  const handlePhoneChange = (val: string) => {
-    setForm(prev => ({ ...prev, phone: val }))
-  }
-
-  const handleEmailChange = (val: string) => {
-    setForm(prev => ({ ...prev, email: val }))
-  }
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault()
     const trimmedPostal = form.postalCode.trim()
     if (!form.brandId || !form.codia || !form.year || !trimmedPostal) return
-    cotizar({
-      marca: String(form.brandId),
-      modelo: String(form.codia),
-      anioFabricacion: form.year,
-      codigoPostal: Number(trimmedPostal),
-    })
+    cotizar(
+      {
+        brand: String(form.brandId),
+        model: String(form.codia),
+        manufactureYear: form.year,
+        postalCode: Number(trimmedPostal),
+      },
+      { onSuccess: () => onCotizado?.() },
+    )
   }
 
   const reset = () => {
@@ -118,6 +120,7 @@ export function useCotizadorAutoForm(): CotizadorAutoFormHook {
 
   return {
     form,
+    vehicleLabel,
     brandOptions,
     groupOptions,
     modelOptions,
@@ -133,9 +136,6 @@ export function useCotizadorAutoForm(): CotizadorAutoFormHook {
     handleCodiaChange,
     handleYearChange,
     handlePostalCodeChange,
-    handleNameChange,
-    handlePhoneChange,
-    handleEmailChange,
     handleSubmit,
     reset,
   }

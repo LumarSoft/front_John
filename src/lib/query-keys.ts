@@ -1,5 +1,6 @@
 import type { AdminClientsQuery } from '@/src/types/api/clients'
 import type { CobranzasQuery } from '@/src/types/api/cobranzas'
+import type { VehicleType } from '@/src/types/api/cotizador'
 
 export const QUERY_KEYS = {
   admin: {
@@ -12,9 +13,10 @@ export const QUERY_KEYS = {
     cobranzasStats: ['admin', 'cobranzas', 'stats'] as const,
   },
   infoauto: {
-    brands: (query?: string) => ['infoauto', 'brands', query ?? ''] as const,
-    groups: (brandId: number, query?: string) => ['infoauto', 'groups', brandId, query ?? ''] as const,
-    models: (brandId: number, groupId: number, query?: string) =>
-      ['infoauto', 'models', brandId, groupId, query ?? ''] as const,
+    brands: (vehicleType: VehicleType, query?: string) => ['infoauto', vehicleType, 'brands', query ?? ''] as const,
+    groups: (vehicleType: VehicleType, brandId: number, query?: string) =>
+      ['infoauto', vehicleType, 'groups', brandId, query ?? ''] as const,
+    models: (vehicleType: VehicleType, brandId: number, groupId: number, query?: string) =>
+      ['infoauto', vehicleType, 'models', brandId, groupId, query ?? ''] as const,
   },
 } as const
