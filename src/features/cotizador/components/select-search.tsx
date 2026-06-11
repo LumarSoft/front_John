@@ -16,6 +16,7 @@ interface SelectSearchProps {
   disabledPlaceholder?: string
   disabled?: boolean
   loading?: boolean
+  inputId?: string
 }
 
 const inputClass =
@@ -29,6 +30,7 @@ export function SelectSearch({
   disabledPlaceholder,
   disabled = false,
   loading = false,
+  inputId,
 }: SelectSearchProps) {
   const [query, setQuery] = useState('')
   const [open, setOpen] = useState(false)
@@ -89,6 +91,7 @@ export function SelectSearch({
           </div>
         )}
         <input
+          id={inputId}
           type="text"
           className={`${inputClass} ${isDisabled ? 'cursor-not-allowed' : ''} ${selectedOption?.logo && !open ? 'pl-10' : 'pl-4'}`}
           placeholder={loading ? 'Cargando…' : isDisabled && disabledPlaceholder ? disabledPlaceholder : placeholder}
