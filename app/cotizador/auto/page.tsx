@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { Nav } from '@/src/features/landing/components/nav'
 import { Footer } from '@/src/features/landing/components/footer'
-import { CotizadorAutoForm } from '@/src/features/cotizador/components/cotizador-auto-form'
+import { CotizadorForm } from '@/src/features/cotizador/components/cotizador-form'
 
 export const metadata: Metadata = {
   title: 'Cotizador de autos · John Pellegrini & Asoc.',
@@ -42,7 +42,7 @@ export default function CotizadorAutoPage() {
               </p>
             </div>
 
-            <CotizadorAutoForm />
+            <CotizadorForm vehicleType="auto" />
           </div>
         </section>
       </main>

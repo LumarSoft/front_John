@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { PRODUCTS } from '@/src/features/landing/data/products'
 import { FIELDS, CONTACT_FIELDS } from '../data/fields'
 import { FormField } from './form-field'
-import { CotizadorAutoForm } from '@/src/features/cotizador/components/cotizador-auto-form'
+import { CotizadorForm } from '@/src/features/cotizador/components/cotizador-form'
 import { fadeUp, fadeUpBlur, stagger, EASE_OUT_EXPO } from '@/src/lib/motion'
 import { SectionMark } from '@/src/features/landing/components/section-mark'
 import type { Variants } from 'framer-motion'
@@ -187,8 +187,8 @@ export function CoberturasPage({ initialCoverageId = PRODUCTS[0].id }: { initial
                   <p className="text-[14.5px] text-ink-3 leading-[1.55] m-0">{active.sub}</p>
                 </div>
 
-                {activeId === 'auto' ? (
-                  <CotizadorAutoForm />
+                {activeId === 'auto' || activeId === 'moto' ? (
+                  <CotizadorForm vehicleType={activeId} />
                 ) : (
                   <form className="flex flex-col" onSubmit={handleSubmit}>
                     <div className="text-[10.5px] tracking-[0.24em] uppercase text-faint font-semibold mb-[18px]">

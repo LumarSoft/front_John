@@ -1,4 +1,5 @@
 import type { Brand, Group, InfoAutoListResponse, VehicleModel } from '@/src/types/api/infoauto'
+import type { VehicleType } from '@/src/types/api/cotizador'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'
 
@@ -18,13 +19,14 @@ async function request<T>(
 }
 
 export const infoAutoService = {
-  getBrands: (query?: string) => request<Brand>('/infoauto/brands', { query_string: query, page_size: 100 }),
+  getBrands: (vehicleType: VehicleType, query?: string) =>
+    request<Brand>(`/infoauto/${vehicleType}/brands`, { query_string: query, page_size: 100 }),
 
-  getGroups: (brandId: number, query?: string) =>
-    request<Group>(`/infoauto/brands/${brandId}/groups`, { query_string: query, page_size: 100 }),
+  getGroups: (vehicleType: VehicleType, brandId: number, query?: string) =>
+    request<Group>(`/infoauto/${vehicleType}/brands/${brandId}/groups`, { query_string: query, page_size: 100 }),
 
-  getModels: (brandId: number, groupId: number, query?: string) =>
-    request<VehicleModel>(`/infoauto/brands/${brandId}/groups/${groupId}/models`, {
+  getModels: (vehicleType: VehicleType, brandId: number, groupId: number, query?: string) =>
+    request<VehicleModel>(`/infoauto/${vehicleType}/brands/${brandId}/groups/${groupId}/models`, {
       query_string: query,
       page_size: 100,
     }),
