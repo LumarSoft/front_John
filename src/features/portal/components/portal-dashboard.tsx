@@ -1,279 +1,234 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useMemo } from 'react'
 import Link from 'next/link'
-import { Car, Bike, Home, Heart, Briefcase, Shield, AlertCircle, Loader2, MapPin, User } from 'lucide-react'
-import { fetchPolizas, type PolizaListItem, type RiskType, type BienCobertura } from '@/src/services/polizas.service'
+import { motion } from 'framer-motion'
+import {
+  AlertCircle,
+  AlertTriangle,
+  CalendarClock,
+  ChevronRight,
+  PiggyBank,
+  ShieldCheck,
+  Wallet,
+  Layers,
+  type LucideIcon,
+} from 'lucide-react'
+import { Card } from '@/src/components/ui/card'
+import { Skeleton } from '@/src/components/ui/skeleton'
+import { usePolizas } from '../hooks/use-portal-data'
+import { computePortalStats } from '../lib/portal-stats'
+import { formatCurrency, formatDateLong, isBien, polizaSubject } from '../lib/portal-ui'
+import { RamoDonut, VencimientosBar } from './dashboard-charts'
+import { BienCard } from './bien-card'
 
-// ─── Helpers ────────────────────────────────────────────
+// ─── Stat card ───────────────────────────────────────────
 
-const RISK_ICONS: Record<RiskType, React.ElementType> = {
-  auto: Car,
-  moto: Bike,
-  home: Home,
-  life: Heart,
-  commercial: Briefcase,
-  other: Shield,
+type Tone = 'neutral' | 'emerald' | 'amber' | 'destructive'
+
+const TONE: Record<Tone, string> = {
+  neutral: 'bg-ember-soft text-ember-2',
+  emerald: 'bg-emerald-50 text-emerald-600',
+  amber: 'bg-amber-50 text-amber-700',
+  destructive: 'bg-red-50 text-red-600',
 }
 
-const RISK_LABELS: Record<RiskType, string> = {
-  auto: 'Automotor',
-  moto: 'Moto',
-  home: 'Hogar',
-  life: 'Vida / Sepelio',
-  commercial: 'Comercio',
-  other: 'Otro',
-}
-
-function formatDate(iso: string | null): string {
-  if (!iso) return '—'
-  return new Date(iso).toLocaleDateString('es-AR', { day: '2-digit', month: 'short', year: 'numeric' })
-}
-
-function formatCurrency(raw: string | null): string {
-  if (!raw) return '—'
-  return new Intl.NumberFormat('es-AR', {
-    style: 'currency',
-    currency: 'ARS',
-    maximumFractionDigits: 0,
-  }).format(parseFloat(raw))
-}
-
-function isVigente(status: string) {
-  return status.toUpperCase().includes('VIGENTE')
-}
-
-// Coverage / description keywords that mark a policy as covering a *person*
-// (sepelio, vida, accidentes personales, salud) rather than a physical good.
-const PERSON_POLICY_RE = /SEPELIO|VIDA|ACCIDENTE|SALUD/i
-
-// A "bien" is a physical insured object (vehicle, property, etc.). Policies that
-// insure a person — life/sepelio — belong in "Mis pólizas" only, never in bienes.
-// These can arrive classified as `life` OR mislabeled as `other`, so we also detect
-// them by their shape: an insured person identified by DNI, or a person-type coverage.
-function isBien(poliza: PolizaListItem): boolean {
-  if (poliza.riskType === 'life') return false
-  // Vehicles and properties are always physical goods.
-  if (poliza.vehiculo) return true
-  const descripcion = poliza.bien?.descripcion ?? ''
-  // Person policies describe the insured as "APELLIDO NOMBRE - DNI: XXXXXXXX".
-  if (/\bDNI:/i.test(descripcion)) return false
-  if (PERSON_POLICY_RE.test(descripcion)) return false
-  const coberturas = poliza.bien?.coberturas ?? []
-  if (coberturas.some(c => PERSON_POLICY_RE.test(c.riesgo))) return false
-  return true
-}
-
-// ─── Coverage chips for non-vehicle policies ─────────────
-
-function BienCoberturas({ coberturas }: { coberturas: BienCobertura[] }) {
-  const unique = coberturas.filter((c, i, arr) => arr.findIndex(x => x.riesgo === c.riesgo) === i)
-  if (!unique.length) return null
+function StatCard({
+  icon: Icon,
+  label,
+  value,
+  hint,
+  tone,
+}: {
+  icon: LucideIcon
+  label: string
+  value: string | number
+  hint?: string
+  tone: Tone
+}) {
   return (
-    <div className="mx-5 mt-4 flex flex-wrap gap-2">
-      {unique.slice(0, 3).map((c, i) => (
-        <span key={i} className="rounded-lg bg-canvas-2 px-3 py-1.5 text-[11px] font-semibold text-ink">
-          {c.riesgo}
-        </span>
-      ))}
-    </div>
+    <Card className="flex flex-row items-center gap-3 border-line-2 p-3.5 shadow-sm">
+      <div className={`flex size-10 shrink-0 items-center justify-center rounded-xl ${TONE[tone]}`}>
+        <Icon className="size-5" />
+      </div>
+      <div className="min-w-0">
+        <div className="font-display text-[22px] leading-none tracking-tight text-ink">{value}</div>
+        <div className="mt-1 truncate text-[11.5px] text-faint">{label}</div>
+        {hint ? <div className="truncate text-[10.5px] text-faint-2">{hint}</div> : null}
+      </div>
+    </Card>
   )
 }
 
-// ─── Asset Card — focused on the physical object ────────
-
-function isMotoTipo(tipo: string | null | undefined): boolean {
-  if (!tipo) return false
-  const t = tipo.toUpperCase()
-  return t.includes('MOTO') || t === 'MOTOCICLETA'
+const fade = {
+  hidden: { opacity: 0, y: 14 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] as const } },
 }
-
-function AssetCard({ poliza }: { poliza: PolizaListItem }) {
-  // Derive effective type from vehicle data — riskType in DB may be stale
-  const effectiveRiskType: RiskType = poliza.vehiculo && isMotoTipo(poliza.vehiculo.tipo) ? 'moto' : poliza.riskType
-  const Icon = RISK_ICONS[effectiveRiskType]
-  const v = poliza.vehiculo
-  const b = poliza.bien
-  const vigente = isVigente(poliza.status)
-
-  // vehiculo presence is the source of truth — riskType in DB may be stale from before resolveRiskType fix
-  if (v) {
-    const vehicleName = [v.marca, v.modelo].filter(Boolean).join(' ') || `Póliza ${poliza.certificado}`
-    return (
-      <Link
-        href={`/portal/polizas/${poliza.id}`}
-        className="group flex flex-col rounded-2xl border border-line-2 bg-paper shadow-[0_2px_12px_-4px_rgba(15,13,10,0.07)] transition-shadow hover:shadow-[0_4px_20px_-4px_rgba(15,13,10,0.13)] overflow-hidden"
-      >
-        <div className="flex items-center justify-between px-5 pt-5 pb-4">
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-canvas-2">
-            <Icon className="h-5 w-5 text-ink-3" />
-          </div>
-          <span
-            className={[
-              'inline-flex items-center rounded-full px-2.5 py-1 text-[10.5px] font-bold uppercase tracking-wider',
-              vigente
-                ? 'bg-ember-soft text-ember-2 border border-ember-ring'
-                : 'bg-canvas-2 text-faint border border-line-2',
-            ].join(' ')}
-          >
-            {poliza.status}
-          </span>
-        </div>
-        <div className="px-5">
-          {v.subModelo ? (
-            <p className="text-[10.5px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-              {v.subModelo}
-            </p>
-          ) : null}
-          <h3 className="mt-0.5 font-display text-[18px] font-bold tracking-[-0.025em] text-ink leading-tight">
-            {vehicleName}
-          </h3>
-          {v.anio ? <p className="mt-0.5 text-[13px] text-faint">{v.anio}</p> : null}
-        </div>
-        {v.dominio ? (
-          <div className="mx-5 mt-4 flex items-center justify-center rounded-xl border-2 border-line-2 bg-canvas py-3">
-            <span className="font-display text-[22px] font-black tracking-[0.25em] text-ink">{v.dominio}</span>
-          </div>
-        ) : null}
-        <div className="mx-5 mt-4 grid grid-cols-2 gap-3">
-          {v.cobertura ? (
-            <div className="rounded-lg bg-canvas-2 px-3 py-2">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">Cobertura</p>
-              <p className="mt-0.5 font-display text-[15px] font-bold text-ink">{v.cobertura}</p>
-            </div>
-          ) : null}
-          {v.sumaAsegurada ? (
-            <div className="rounded-lg bg-canvas-2 px-3 py-2">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
-                Suma asegurada
-              </p>
-              <p className="mt-0.5 font-display text-[13px] font-bold text-ink">{formatCurrency(v.sumaAsegurada)}</p>
-            </div>
-          ) : null}
-        </div>
-        <div className="mt-6 border-t border-line px-5 py-3">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-[10.5px] font-medium uppercase tracking-[0.09em] text-muted-foreground">
-                Vigente hasta
-              </p>
-              <p className="mt-0.5 text-[13px] font-semibold text-ink">{formatDate(poliza.vigenciaHasta)}</p>
-            </div>
-            <span className="text-[12px] font-medium text-ember-2 group-hover:underline">Ver cobertura →</span>
-          </div>
-        </div>
-      </Link>
-    )
-  }
-
-  // ── Non-vehicle card (life, home, commercial, other) ────
-  const riskLabel = RISK_LABELS[effectiveRiskType]
-  const isAddress = poliza.riskType === 'home' || poliza.riskType === 'commercial'
-  const isPerson = poliza.riskType === 'life'
-  const DescIcon = isAddress ? MapPin : isPerson ? User : Shield
-  const descText = b?.descripcion ?? `Póliza ${poliza.certificado}`
-  // For life: descripcion = "APELLIDO NOMBRE - DNI: XXXXX" — extract just the name
-  const cleanDesc = isPerson ? descText.split(' - DNI:')[0].trim() : descText
-
-  return (
-    <Link
-      href={`/portal/polizas/${poliza.id}`}
-      className="group flex flex-col rounded-2xl border border-line-2 bg-paper shadow-[0_2px_12px_-4px_rgba(15,13,10,0.07)] transition-shadow hover:shadow-[0_4px_20px_-4px_rgba(15,13,10,0.13)] overflow-hidden"
-    >
-      <div className="flex items-center justify-between px-5 pt-5 pb-4">
-        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-canvas-2">
-          <Icon className="h-5 w-5 text-ink-3" />
-        </div>
-        <span
-          className={[
-            'inline-flex items-center rounded-full px-2.5 py-1 text-[10.5px] font-bold uppercase tracking-wider',
-            vigente
-              ? 'bg-ember-soft text-ember-2 border border-ember-ring'
-              : 'bg-canvas-2 text-faint border border-line-2',
-          ].join(' ')}
-        >
-          {poliza.status}
-        </span>
-      </div>
-      <div className="px-5">
-        <p className="text-[10.5px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">{riskLabel}</p>
-        <h3 className="mt-0.5 font-display text-[17px] font-bold tracking-[-0.02em] text-ink leading-tight">
-          {cleanDesc}
-        </h3>
-      </div>
-      {b?.descripcion ? (
-        <div className="mx-5 mt-3 flex items-start gap-2">
-          <DescIcon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-          <p className="text-[12px] text-muted-foreground leading-snug">{b.descripcion}</p>
-        </div>
-      ) : null}
-      {b?.coberturas?.length ? <BienCoberturas coberturas={b.coberturas} /> : null}
-      <div className="mt-auto mt-4 border-t border-line px-5 py-3">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-[10.5px] font-medium uppercase tracking-[0.09em] text-muted-foreground">Vigente hasta</p>
-            <p className="mt-0.5 text-[13px] font-semibold text-ink">{formatDate(poliza.vigenciaHasta)}</p>
-          </div>
-          <span className="text-[12px] font-medium text-ember-2 group-hover:underline">Ver cobertura →</span>
-        </div>
-      </div>
-    </Link>
-  )
-}
-
-// ─── Dashboard ──────────────────────────────────────────
 
 export function PortalDashboard() {
-  const [polizas, setPolizas] = useState<PolizaListItem[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const { data: polizas, isLoading, isError, error } = usePolizas()
+  const stats = useMemo(() => (polizas ? computePortalStats(polizas) : null), [polizas])
 
-  useEffect(() => {
-    fetchPolizas()
-      .then(setPolizas)
-      .catch(e => setError(e instanceof Error ? e.message : 'Error al cargar'))
-      .finally(() => setLoading(false))
-  }, [])
-
-  const bienes = polizas.filter(isBien)
-
-  if (loading) {
+  if (isLoading || !stats) {
     return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+      <div className="p-6 md:p-8">
+        <Skeleton className="mb-2 h-7 w-56" />
+        <Skeleton className="mb-8 h-4 w-72" />
+        <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Skeleton key={i} className="h-[72px] rounded-xl" />
+          ))}
+        </div>
+        <div className="grid gap-5 lg:grid-cols-2">
+          <Skeleton className="h-[260px] rounded-2xl" />
+          <Skeleton className="h-[260px] rounded-2xl" />
+        </div>
       </div>
     )
   }
 
-  if (error) {
+  if (isError) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3">
-        <AlertCircle className="h-8 w-8 text-muted-foreground/50" />
-        <p className="text-[14px] text-muted-foreground">{error}</p>
+        <AlertCircle className="h-8 w-8 text-faint-2" />
+        <p className="text-[14px] text-faint">{error instanceof Error ? error.message : 'Error al cargar'}</p>
       </div>
     )
   }
+
+  const bienes = (polizas ?? []).filter(isBien)
+  const hasDebt = stats.deudaTotal > 0
 
   return (
     <div className="p-6 md:p-8">
-      <div className="mb-8">
-        <h1 className="font-display text-[22px] font-semibold tracking-[-0.025em] text-ink">Mis bienes asegurados</h1>
-        <p className="mt-1 text-[13.5px] text-muted-foreground">
-          {bienes.length === 0
-            ? 'No tenés bienes asegurados'
-            : `${bienes.length} ${bienes.length === 1 ? 'bien asegurado' : 'bienes asegurados'}`}
-        </p>
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
+        <div className="text-[10.5px] font-medium uppercase tracking-[0.3em] text-ember-2">Resumen</div>
+        <h1 className="mt-1 font-display text-[clamp(24px,3vw,32px)] font-semibold tracking-[-0.03em] text-ink">
+          Mi tablero
+        </h1>
+        <p className="mt-1 text-[13.5px] text-faint">Tu cartera asegurada de un vistazo.</p>
+      </motion.div>
+
+      {/* Stat cards */}
+      <motion.div
+        variants={{ hidden: {}, show: { transition: { staggerChildren: 0.06 } } }}
+        initial="hidden"
+        animate="show"
+        className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5"
+      >
+        <motion.div variants={fade}>
+          <StatCard icon={Layers} label="Bienes asegurados" value={stats.bienesCount} tone="neutral" />
+        </motion.div>
+        <motion.div variants={fade}>
+          <StatCard icon={ShieldCheck} label="Pólizas vigentes" value={stats.vigentes} tone="emerald" />
+        </motion.div>
+        <motion.div variants={fade}>
+          <StatCard
+            icon={AlertTriangle}
+            label="Por vencer"
+            hint="Próximos 30 días"
+            value={stats.porVencer}
+            tone="amber"
+          />
+        </motion.div>
+        <motion.div variants={fade}>
+          <StatCard
+            icon={Wallet}
+            label="Cuotas adeudadas"
+            hint={stats.cuotasVencidas > 0 ? `${stats.cuotasVencidas} vencidas` : undefined}
+            value={stats.cuotasPendientes + stats.cuotasVencidas}
+            tone={stats.cuotasVencidas > 0 ? 'destructive' : 'amber'}
+          />
+        </motion.div>
+        <motion.div variants={fade}>
+          <StatCard
+            icon={PiggyBank}
+            label="Saldo a pagar"
+            value={hasDebt ? formatCurrency(stats.deudaTotal) : 'Al día'}
+            tone={hasDebt ? 'destructive' : 'emerald'}
+          />
+        </motion.div>
+      </motion.div>
+
+      {/* Charts */}
+      <div className="mt-5 grid gap-5 lg:grid-cols-2">
+        <Card className="border-line-2 p-5 shadow-sm">
+          <h2 className="font-display text-[15px] font-semibold tracking-[-0.01em] text-ink">Distribución por ramo</h2>
+          <p className="mb-4 text-[12.5px] text-faint">Cómo se reparten tus pólizas.</p>
+          <RamoDonut data={stats.ramos} />
+        </Card>
+
+        <Card className="border-line-2 p-5 shadow-sm">
+          <h2 className="font-display text-[15px] font-semibold tracking-[-0.01em] text-ink">Próximos pagos</h2>
+          <p className="mb-2 text-[12.5px] text-faint">Cuotas a vencer por mes (próximos 6 meses).</p>
+          <VencimientosBar data={stats.monthlyDue} />
+        </Card>
+      </div>
+
+      {/* Próximos vencimientos */}
+      <Card className="mt-5 border-line-2 p-5 shadow-sm">
+        <div className="mb-3 flex items-center gap-2">
+          <CalendarClock className="size-4 text-ember-2" />
+          <h2 className="font-display text-[15px] font-semibold tracking-[-0.01em] text-ink">Próximos vencimientos</h2>
+        </div>
+        {stats.proximosVencimientos.length === 0 ? (
+          <p className="py-2 text-[13px] text-faint">No tenés cuotas pendientes. ¡Estás al día! 🎉</p>
+        ) : (
+          <ul className="flex flex-col divide-y divide-line">
+            {stats.proximosVencimientos.map(({ poliza, cuota }) => (
+              <li key={`${poliza.id}-${cuota.id}`}>
+                <Link
+                  href={`/portal/polizas/${poliza.id}`}
+                  className="group flex items-center gap-3 py-2.5 transition-colors hover:bg-canvas-2/40"
+                >
+                  <span
+                    className={[
+                      'inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide',
+                      cuota.status === 'overdue' ? 'bg-red-50 text-red-600' : 'bg-amber-50 text-amber-700',
+                    ].join(' ')}
+                  >
+                    {cuota.status === 'overdue' ? 'Vencida' : 'Pendiente'}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[13.5px] font-medium text-ink">{polizaSubject(poliza)}</p>
+                    <p className="text-[11.5px] text-faint">
+                      Cuota {cuota.numeroCuota} · vence {formatDateLong(cuota.dueDate)}
+                    </p>
+                  </div>
+                  <span className="shrink-0 font-display text-[14px] font-semibold text-ink">
+                    {formatCurrency(cuota.amount)}
+                  </span>
+                  <ChevronRight className="size-4 shrink-0 text-faint-2 transition-transform group-hover:translate-x-0.5" />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Card>
+
+      {/* Mis bienes */}
+      <div className="mt-8 mb-4 flex items-end justify-between">
+        <div>
+          <h2 className="font-display text-[18px] font-semibold tracking-[-0.025em] text-ink">Mis bienes asegurados</h2>
+          <p className="mt-0.5 text-[13px] text-faint">
+            {bienes.length === 0
+              ? 'No tenés bienes asegurados'
+              : `${bienes.length} ${bienes.length === 1 ? 'bien' : 'bienes'}`}
+          </p>
+        </div>
+        <Link href="/portal/polizas" className="text-[13px] font-medium text-ember-2 hover:underline">
+          Ver todas →
+        </Link>
       </div>
 
       {bienes.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-line-2 p-12 text-center">
-          <Shield className="mx-auto mb-3 h-10 w-10 text-muted-foreground/30" />
-          <p className="text-[14px] text-muted-foreground">Todavía no tenés bienes asegurados registrados.</p>
-        </div>
+        <Card className="border-dashed border-line-2 p-12 text-center">
+          <p className="text-[14px] text-faint">Todavía no tenés bienes asegurados registrados.</p>
+        </Card>
       ) : (
         <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
           {bienes.map(p => (
-            <AssetCard key={p.id} poliza={p} />
+            <BienCard key={p.id} poliza={p} />
           ))}
         </div>
       )}

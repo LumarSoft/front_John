@@ -1,9 +1,10 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { AlertCircle, ArrowLeft, Calendar, Clock, FileText, ImageIcon, Loader2, Paperclip, Shield } from 'lucide-react'
-import { adjuntoUrl, fetchSiniestro, type Adjunto, type Siniestro } from '@/src/services/siniestros.service'
+import { AlertCircle, ArrowLeft, Calendar, Clock, FileText, ImageIcon, Paperclip, Shield } from 'lucide-react'
+import { Skeleton } from '@/src/components/ui/skeleton'
+import { adjuntoUrl, type Adjunto } from '@/src/services/siniestros.service'
+import { useSiniestro } from '../hooks/use-portal-data'
 import { TIPO_ICONS, TIPO_LABELS, ESTADO_META, ProgressBar, formatDate } from './siniestro-shared'
 
 function isImage(adjunto: Adjunto): boolean {
@@ -43,30 +44,24 @@ function AdjuntoItem({ adjunto }: { adjunto: Adjunto }) {
 }
 
 export function SiniestroDetailView({ id }: { id: number }) {
-  const [siniestro, setSiniestro] = useState<Siniestro | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const { data: siniestro, isLoading, isError, error } = useSiniestro(id)
 
-  useEffect(() => {
-    fetchSiniestro(id)
-      .then(setSiniestro)
-      .catch(e => setError(e instanceof Error ? e.message : 'Error al cargar'))
-      .finally(() => setLoading(false))
-  }, [id])
-
-  if (loading) {
+  if (isLoading) {
     return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+      <div className="mx-auto max-w-3xl p-6 md:p-8">
+        <Skeleton className="mb-4 h-4 w-32" />
+        <Skeleton className="mb-6 h-9 w-64" />
+        <Skeleton className="mb-5 h-[120px] rounded-2xl" />
+        <Skeleton className="h-[200px] rounded-2xl" />
       </div>
     )
   }
 
-  if (error || !siniestro) {
+  if (isError || !siniestro) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3">
-        <AlertCircle className="h-8 w-8 text-muted-foreground/50" />
-        <p className="text-[14px] text-muted-foreground">{error ?? 'Siniestro no encontrado'}</p>
+        <AlertCircle className="h-8 w-8 text-faint-2" />
+        <p className="text-[14px] text-faint">{error instanceof Error ? error.message : 'Siniestro no encontrado'}</p>
         <Link href="/portal/siniestros" className="text-[13px] font-medium text-ember-2 hover:underline">
           Volver a siniestros
         </Link>
