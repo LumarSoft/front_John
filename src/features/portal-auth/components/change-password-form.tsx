@@ -67,7 +67,7 @@ export function ChangePasswordForm() {
         </div>
         <div className="leading-none">
           <div className="font-display text-[17px] font-semibold tracking-[-0.025em] text-ink">John Pellegrini</div>
-          <div className="mt-[3px] text-[9px] font-medium uppercase tracking-[0.22em] text-muted">
+          <div className="mt-[3px] text-[9px] font-medium uppercase tracking-[0.22em] text-faint">
             Seguros · desde 1974
           </div>
         </div>
@@ -95,11 +95,11 @@ export function ChangePasswordForm() {
         </div>
 
         <h1 className="font-display text-[22px] font-semibold tracking-[-0.025em] text-ink mb-1">Nueva contraseña</h1>
-        <p className="text-[13.5px] text-muted mb-7">Mínimo 6 caracteres.</p>
+        <p className="text-[13.5px] text-faint mb-7">Mínimo 6 caracteres.</p>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="new-password" className="text-[12px] font-semibold uppercase tracking-[0.08em] text-muted">
+            <label htmlFor="new-password" className="text-[12px] font-semibold uppercase tracking-[0.08em] text-faint">
               Nueva contraseña
             </label>
             <input
@@ -110,12 +110,12 @@ export function ChangePasswordForm() {
               value={newPassword}
               onChange={e => setNewPassword(e.target.value)}
               placeholder="••••••••"
-              className="h-[46px] w-full rounded-xl border border-line-2 bg-canvas px-4 text-[14px] text-ink placeholder:text-muted-2 outline-none transition-[border-color,box-shadow] focus:border-ember focus:shadow-[0_0_0_3px_rgba(232,168,32,0.15)]"
+              className="h-[46px] w-full rounded-xl border border-line-2 bg-canvas px-4 text-[14px] text-ink placeholder:text-faint-2 outline-none transition-[border-color,box-shadow] focus:border-ember focus:shadow-[0_0_0_3px_rgba(232,168,32,0.15)]"
             />
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="confirm" className="text-[12px] font-semibold uppercase tracking-[0.08em] text-muted">
+            <label htmlFor="confirm" className="text-[12px] font-semibold uppercase tracking-[0.08em] text-faint">
               Confirmar contraseña
             </label>
             <input
@@ -126,7 +126,7 @@ export function ChangePasswordForm() {
               value={confirm}
               onChange={e => setConfirm(e.target.value)}
               placeholder="••••••••"
-              className="h-[46px] w-full rounded-xl border border-line-2 bg-canvas px-4 text-[14px] text-ink placeholder:text-muted-2 outline-none transition-[border-color,box-shadow] focus:border-ember focus:shadow-[0_0_0_3px_rgba(232,168,32,0.15)]"
+              className="h-[46px] w-full rounded-xl border border-line-2 bg-canvas px-4 text-[14px] text-ink placeholder:text-faint-2 outline-none transition-[border-color,box-shadow] focus:border-ember focus:shadow-[0_0_0_3px_rgba(232,168,32,0.15)]"
             />
           </div>
 
@@ -144,7 +144,7 @@ export function ChangePasswordForm() {
         </form>
       </div>
 
-      <button onClick={handleLogout} className="mt-8 text-[12.5px] text-muted hover:text-ink transition-colors">
+      <button onClick={handleLogout} className="mt-8 text-[12.5px] text-faint hover:text-ink transition-colors">
         Cerrar sesión
       </button>
     </div>
