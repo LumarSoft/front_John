@@ -1,11 +1,14 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { useQueryClient } from '@tanstack/react-query'
 import { AlertCircle, ArrowLeft, Loader2, Paperclip, UploadCloud, X } from 'lucide-react'
-import { fetchPolizas, type PolizaListItem } from '@/src/services/polizas.service'
+import { QUERY_KEYS } from '@/src/lib/query-keys'
+import { type PolizaListItem } from '@/src/services/polizas.service'
 import { createSiniestro, SINIESTRO_TIPOS, type SiniestroTipo } from '@/src/services/siniestros.service'
+import { usePolizas } from '../hooks/use-portal-data'
 
 const MAX_FILES = 5
 const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5 MB
@@ -35,10 +38,10 @@ const todayISO = (): string => new Date().toISOString().slice(0, 10)
 
 export function SiniestroForm() {
   const router = useRouter()
+  const queryClient = useQueryClient()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const [polizas, setPolizas] = useState<PolizaListItem[]>([])
-  const [loadingPolizas, setLoadingPolizas] = useState(true)
+  const { data: polizas = [], isLoading: loadingPolizas } = usePolizas()
 
   const [polizaId, setPolizaId] = useState<string>('')
   const [tipo, setTipo] = useState<SiniestroTipo>('auto')
@@ -48,16 +51,6 @@ export function SiniestroForm() {
 
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    fetchPolizas()
-      .then(data => {
-        setPolizas(data)
-        if (data.length === 1) setPolizaId(String(data[0].id))
-      })
-      .catch(e => setError(e instanceof Error ? e.message : 'Error al cargar las pólizas'))
-      .finally(() => setLoadingPolizas(false))
-  }, [])
 
   function addFiles(incoming: FileList | null) {
     if (!incoming) return
@@ -117,6 +110,7 @@ export function SiniestroForm() {
         fecha,
         adjuntos: files,
       })
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.portal.siniestros })
       router.push('/portal/siniestros')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo registrar el siniestro')

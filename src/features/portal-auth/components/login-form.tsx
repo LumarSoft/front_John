@@ -43,7 +43,7 @@ export function LoginForm() {
         </div>
         <div className="leading-none">
           <div className="font-display text-[17px] font-semibold tracking-[-0.025em] text-ink">John Pellegrini</div>
-          <div className="mt-[3px] text-[9px] font-medium uppercase tracking-[0.22em] text-muted">
+          <div className="mt-[3px] text-[9px] font-medium uppercase tracking-[0.22em] text-faint">
             Seguros · desde 1974
           </div>
         </div>
@@ -52,11 +52,11 @@ export function LoginForm() {
       {/* Card */}
       <div className="w-full max-w-[400px] rounded-2xl bg-paper shadow-[0_8px_40px_-12px_rgba(15,13,10,0.14),0_0_0_1px_rgba(15,13,10,0.06)] p-8">
         <h1 className="font-display text-[22px] font-semibold tracking-[-0.025em] text-ink mb-1">Área cliente</h1>
-        <p className="text-[13.5px] text-muted mb-7">Ingresá con tu email y contraseña.</p>
+        <p className="text-[13.5px] text-faint mb-7">Ingresá con tu email y contraseña.</p>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="email" className="text-[12px] font-semibold uppercase tracking-[0.08em] text-muted">
+            <label htmlFor="email" className="text-[12px] font-semibold uppercase tracking-[0.08em] text-faint">
               Email
             </label>
             <input
@@ -67,13 +67,13 @@ export function LoginForm() {
               value={email}
               onChange={e => setEmail(e.target.value)}
               placeholder="tu@email.com"
-              className="h-[46px] w-full rounded-xl border border-line-2 bg-canvas px-4 text-[14px] text-ink placeholder:text-muted-2 outline-none transition-[border-color,box-shadow] focus:border-ember focus:shadow-[0_0_0_3px_rgba(232,168,32,0.15)]"
+              className="h-[46px] w-full rounded-xl border border-line-2 bg-canvas px-4 text-[14px] text-ink placeholder:text-faint-2 outline-none transition-[border-color,box-shadow] focus:border-ember focus:shadow-[0_0_0_3px_rgba(232,168,32,0.15)]"
             />
           </div>
 
           <div className="flex flex-col gap-1.5">
             <div className="flex items-center justify-between">
-              <label htmlFor="password" className="text-[12px] font-semibold uppercase tracking-[0.08em] text-muted">
+              <label htmlFor="password" className="text-[12px] font-semibold uppercase tracking-[0.08em] text-faint">
                 Contraseña
               </label>
             </div>
@@ -85,7 +85,7 @@ export function LoginForm() {
               value={password}
               onChange={e => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="h-[46px] w-full rounded-xl border border-line-2 bg-canvas px-4 text-[14px] text-ink placeholder:text-muted-2 outline-none transition-[border-color,box-shadow] focus:border-ember focus:shadow-[0_0_0_3px_rgba(232,168,32,0.15)]"
+              className="h-[46px] w-full rounded-xl border border-line-2 bg-canvas px-4 text-[14px] text-ink placeholder:text-faint-2 outline-none transition-[border-color,box-shadow] focus:border-ember focus:shadow-[0_0_0_3px_rgba(232,168,32,0.15)]"
             />
           </div>
 
@@ -102,14 +102,14 @@ export function LoginForm() {
           </button>
         </form>
 
-        <p className="mt-6 text-center text-[12.5px] text-muted">
+        <p className="mt-6 text-center text-[12.5px] text-faint">
           ¿Primera vez? Tu contraseña inicial es tu número de DNI.
         </p>
       </div>
 
       <Link
         href="/"
-        className="mt-8 text-[12.5px] text-muted hover:text-ink transition-colors flex items-center gap-1.5"
+        className="mt-8 text-[12.5px] text-faint hover:text-ink transition-colors flex items-center gap-1.5"
       >
         <svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8">
           <path d="M11 7H3M6.5 3.5L3 7l3.5 3.5" strokeLinecap="round" strokeLinejoin="round" />

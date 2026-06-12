@@ -19,4 +19,11 @@ export const QUERY_KEYS = {
     models: (vehicleType: VehicleType, brandId: number, groupId: number, query?: string) =>
       ['infoauto', vehicleType, 'models', brandId, groupId, query ?? ''] as const,
   },
+  portal: {
+    polizas: ['portal', 'polizas'] as const,
+    poliza: (id: number) => ['portal', 'polizas', id] as const,
+    polizaDocumentos: (id: number) => ['portal', 'polizas', id, 'documentos'] as const,
+    siniestros: ['portal', 'siniestros'] as const,
+    siniestro: (id: number) => ['portal', 'siniestros', id] as const,
+  },
 } as const

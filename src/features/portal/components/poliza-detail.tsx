@@ -1,6 +1,5 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import {
   ArrowLeft,
@@ -11,13 +10,14 @@ import {
   Briefcase,
   Shield,
   AlertCircle,
-  Loader2,
   CalendarDays,
   CreditCard,
   Hash,
   MapPin,
 } from 'lucide-react'
-import { fetchPoliza, type PolizaDetail, type RiskType } from '@/src/services/polizas.service'
+import { Skeleton } from '@/src/components/ui/skeleton'
+import { type RiskType } from '@/src/services/polizas.service'
+import { usePoliza } from '../hooks/use-portal-data'
 
 // ─── Helpers ────────────────────────────────────────────
 
@@ -78,30 +78,24 @@ function InfoRow({ icon: Icon, label, value }: { icon: React.ElementType; label:
 // ─── Detail view ─────────────────────────────────────────
 
 export function PolizaDetailView({ id }: { id: number }) {
-  const [poliza, setPoliza] = useState<PolizaDetail | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const { data: poliza, isLoading, isError, error } = usePoliza(id)
 
-  useEffect(() => {
-    fetchPoliza(id)
-      .then(setPoliza)
-      .catch(e => setError(e instanceof Error ? e.message : 'Error'))
-      .finally(() => setLoading(false))
-  }, [id])
-
-  if (loading) {
+  if (isLoading) {
     return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+      <div className="mx-auto max-w-3xl p-6 md:p-8">
+        <Skeleton className="mb-4 h-4 w-28" />
+        <Skeleton className="mb-6 h-9 w-72" />
+        <Skeleton className="mb-5 h-[160px] rounded-2xl" />
+        <Skeleton className="h-[220px] rounded-2xl" />
       </div>
     )
   }
 
-  if (error || !poliza) {
+  if (isError || !poliza) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3">
-        <AlertCircle className="h-8 w-8 text-muted-foreground/50" />
-        <p className="text-[14px] text-muted-foreground">{error ?? 'Póliza no encontrada'}</p>
+        <AlertCircle className="h-8 w-8 text-faint-2" />
+        <p className="text-[14px] text-faint">{error instanceof Error ? error.message : 'Póliza no encontrada'}</p>
         <Link href="/portal/dashboard" className="text-[13px] text-ember hover:underline">
           Volver al inicio
         </Link>
