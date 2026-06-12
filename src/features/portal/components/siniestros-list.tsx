@@ -1,9 +1,10 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { AlertCircle, Loader2, Plus, ShieldAlert, Paperclip, Calendar } from 'lucide-react'
-import { fetchSiniestros, type Siniestro } from '@/src/services/siniestros.service'
+import { AlertCircle, Plus, ShieldAlert, Paperclip, Calendar } from 'lucide-react'
+import { Skeleton } from '@/src/components/ui/skeleton'
+import { type Siniestro } from '@/src/services/siniestros.service'
+import { useSiniestros } from '../hooks/use-portal-data'
 import { TIPO_ICONS, TIPO_LABELS, ESTADO_META, ProgressBar, formatDate } from './siniestro-shared'
 
 // ─── Siniestro card ──────────────────────────────────────
@@ -65,30 +66,26 @@ function SiniestroCard({ siniestro }: { siniestro: Siniestro }) {
 // ─── List ────────────────────────────────────────────────
 
 export function SiniestrosList() {
-  const [siniestros, setSiniestros] = useState<Siniestro[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const { data: siniestros = [], isLoading, isError, error } = useSiniestros()
 
-  useEffect(() => {
-    fetchSiniestros()
-      .then(setSiniestros)
-      .catch(e => setError(e instanceof Error ? e.message : 'Error al cargar'))
-      .finally(() => setLoading(false))
-  }, [])
-
-  if (loading) {
+  if (isLoading) {
     return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+      <div className="p-6 md:p-8">
+        <Skeleton className="mb-6 h-7 w-48" />
+        <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Skeleton key={i} className="h-[200px] rounded-2xl" />
+          ))}
+        </div>
       </div>
     )
   }
 
-  if (error) {
+  if (isError) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3">
-        <AlertCircle className="h-8 w-8 text-muted-foreground/50" />
-        <p className="text-[14px] text-muted-foreground">{error}</p>
+        <AlertCircle className="h-8 w-8 text-faint-2" />
+        <p className="text-[14px] text-faint">{error instanceof Error ? error.message : 'Error al cargar'}</p>
       </div>
     )
   }
@@ -98,7 +95,7 @@ export function SiniestrosList() {
       <div className="mb-6 flex items-start justify-between gap-4">
         <div>
           <h1 className="font-display text-[22px] font-semibold tracking-[-0.025em] text-ink">Mis siniestros</h1>
-          <p className="mt-1 text-[13.5px] text-muted-foreground">
+          <p className="mt-1 text-[13.5px] text-faint">
             {siniestros.length === 0
               ? 'No tenés denuncias registradas'
               : `${siniestros.length} ${siniestros.length === 1 ? 'denuncia' : 'denuncias'}`}
