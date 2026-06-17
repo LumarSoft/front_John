@@ -11,6 +11,7 @@ import { AppSidebar } from './app-sidebar'
 
 const TITLES: Record<string, string> = {
   '/admin': 'Inicio',
+  '/admin/inbox': 'Bandeja de entrada',
   '/admin/usuarios': 'Usuarios',
   '/admin/configuracion': 'Configuración',
 }

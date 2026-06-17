@@ -3,6 +3,10 @@ import type { CobranzasQuery } from '@/src/types/api/cobranzas'
 import type { VehicleType } from '@/src/types/api/cotizador'
 
 export const QUERY_KEYS = {
+  inbox: {
+    conversations: (status?: string) => ['admin', 'inbox', 'list', status ?? 'all'] as const,
+    messages: (id: number) => ['admin', 'inbox', id, 'messages'] as const,
+  },
   admin: {
     profile: ['admin', 'profile'] as const,
     users: ['admin', 'users'] as const,
