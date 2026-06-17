@@ -6,6 +6,7 @@ import {
   ChevronsUpDown,
   LayoutDashboard,
   LogOut,
+  MessageSquare,
   ShieldCheck,
   UserCog,
   Users,
@@ -43,6 +44,7 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { label: 'Inicio', href: '/admin', icon: LayoutDashboard },
+  { label: 'Bandeja', href: '/admin/inbox', icon: MessageSquare },
   { label: 'Asegurados', href: '/admin/asegurados', icon: ShieldCheck },
   { label: 'Cobranzas', href: '/admin/cobranzas', icon: Wallet },
   { label: 'Usuarios', href: '/admin/usuarios', icon: Users },
