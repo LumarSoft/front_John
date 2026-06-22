@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, type FormEvent } from 'react'
-import { KeyRound, Loader2, Mail } from 'lucide-react'
+import { Bot, KeyRound, Loader2, Mail } from 'lucide-react'
 import { toast } from 'sonner'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/src/components/ui/card'
 import { Button } from '@/src/components/ui/button'
@@ -12,6 +12,8 @@ import { ApiError } from '@/src/lib/api-client'
 import type { UpdateProfileRequest } from '@/src/types/api/auth'
 import { useProfile } from '../hooks/use-profile'
 import { useUpdateProfile } from '../hooks/use-update-profile'
+import { useProducerConfig } from '../hooks/use-producer-config'
+import { useUpdateProducerConfig } from '../hooks/use-update-producer-config'
 
 function SettingsForm({ initialEmail }: { initialEmail: string }) {
   const updateProfile = useUpdateProfile()
@@ -103,8 +105,77 @@ function SettingsForm({ initialEmail }: { initialEmail: string }) {
   )
 }
 
+function BotConfigForm({ initialName }: { initialName: string }) {
+  const updateConfig = useUpdateProducerConfig()
+  const [botName, setBotName] = useState(initialName)
+
+  const hasChanges = botName.trim() !== initialName.trim()
+
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault()
+    if (!hasChanges) return
+
+    updateConfig.mutate(
+      { botName: botName.trim() },
+      {
+        onSuccess: () => toast.success('Nombre del asistente actualizado'),
+        onError: () => toast.error('No se pudo guardar. Intentá de nuevo.'),
+      },
+    )
+  }
+
+  const preview = botName.trim()
+    ? `Soy ${botName.trim()}, el asistente de John Pellegrini Management Group`
+    : 'Soy el asistente de John Pellegrini Management Group (JPMG)'
+
+  return (
+    <Card className="mt-6 max-w-xl border-line-2 shadow-sm">
+      <form onSubmit={handleSubmit} className="contents">
+        <CardHeader>
+          <CardTitle className="font-display text-[18px]">Asistente de WhatsApp</CardTitle>
+          <CardDescription>
+            Elegí el nombre con el que el bot se presenta. Si lo dejás vacío, se presenta como “el asistente de JPMG”.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-5">
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="bot-name">Nombre del asistente</Label>
+            <div className="relative">
+              <Bot className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                id="bot-name"
+                type="text"
+                maxLength={60}
+                placeholder="Ej: NICO (dejá vacío para no usar nombre)"
+                className="h-10 pl-9"
+                value={botName}
+                onChange={e => setBotName(e.target.value)}
+              />
+            </div>
+            <p className="text-[12.5px] text-muted-foreground">
+              Vista previa: <span className="text-ink">{preview}</span>
+            </p>
+          </div>
+        </CardContent>
+        <CardFooter>
+          <Button type="submit" disabled={!hasChanges || updateConfig.isPending} className="h-10">
+            {updateConfig.isPending ? (
+              <>
+                <Loader2 className="size-4 animate-spin" /> Guardando…
+              </>
+            ) : (
+              'Guardar nombre'
+            )}
+          </Button>
+        </CardFooter>
+      </form>
+    </Card>
+  )
+}
+
 export function SettingsView() {
   const { data: profile, isLoading, isError } = useProfile()
+  const { data: config } = useProducerConfig()
 
   return (
     <div className="mx-auto w-full max-w-5xl px-5 py-8 md:px-8 md:py-10">
@@ -128,6 +199,7 @@ export function SettingsView() {
       )}
       {isError && <p className="text-[14px] text-destructive">No se pudo cargar tu perfil.</p>}
       {profile && <SettingsForm key={profile.id} initialEmail={profile.email} />}
+      {config && <BotConfigForm key={config.botName ?? 'no-name'} initialName={config.botName ?? ''} />}
     </div>
   )
 }
