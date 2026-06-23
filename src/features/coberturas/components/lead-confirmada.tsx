@@ -1,5 +1,7 @@
 'use client'
 
+import { useAttentionHours } from '@/src/hooks/use-attention-hours'
+
 interface LeadConfirmadaProps {
   name: string
   productLabel: string
@@ -8,6 +10,7 @@ interface LeadConfirmadaProps {
 }
 
 export function LeadConfirmada({ name, productLabel, planName, onReset }: Readonly<LeadConfirmadaProps>) {
+  const attentionHours = useAttentionHours()
   return (
     <div className="flex flex-col items-start gap-5 py-4">
       <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-ember/15 text-ember">
@@ -27,7 +30,7 @@ export function LeadConfirmada({ name, productLabel, planName, onReset }: Readon
               con el plan <span className="text-ink font-semibold">{planName}</span>
             </>
           ) : null}
-          . Un asesor te va a contactar con la propuesta el mismo día hábil (Lun a Vie de 8 a 16 hs).
+          . Un asesor te va a contactar con la propuesta el mismo día hábil ({attentionHours}).
         </p>
       </div>
       <button

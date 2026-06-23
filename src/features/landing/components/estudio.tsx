@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useAttentionHours } from '@/src/hooks/use-attention-hours'
 import { SectionMark } from './section-mark'
 
 type BranchId = 'rosario' | 'funes' | 'pueblo-esther'
@@ -51,6 +52,7 @@ const BRANCHES: Branch[] = [
 export function Estudio() {
   const [activeId, setActiveId] = useState<BranchId>('rosario')
   const active = BRANCHES.find(b => b.id === activeId)!
+  const attentionHours = useAttentionHours()
 
   return (
     <section id="estudio" className="bg-canvas grain border-t border-line">
@@ -94,7 +96,7 @@ export function Estudio() {
 
             <div>
               <div className="text-[10px] tracking-[0.24em] uppercase text-faint font-semibold mb-2">Horario</div>
-              <div className="font-display text-[16px] text-ink">Lunes a viernes · 9 a 18 hs</div>
+              <div className="font-display text-[16px] text-ink">{attentionHours}</div>
               <div className="text-[13.5px] text-ink-3 mt-1">
                 Siniestros: <span className="text-ember-2 font-semibold">atención 24 hs</span>
               </div>
