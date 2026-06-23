@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import {
   Bell,
   ChevronsUpDown,
+  ClipboardList,
   FileWarning,
   LayoutDashboard,
   LogOut,
@@ -48,6 +49,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { label: 'Inicio', href: '/admin', icon: LayoutDashboard },
   { label: 'Novedades', href: '/admin/novedades', icon: Bell },
+  { label: 'Solicitudes', href: '/admin/solicitudes', icon: ClipboardList },
   { label: 'Bandeja', href: '/admin/inbox', icon: MessageSquare },
   { label: 'Siniestros', href: '/admin/siniestros', icon: FileWarning },
   { label: 'Asegurados', href: '/admin/asegurados', icon: ShieldCheck },

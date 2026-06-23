@@ -2,6 +2,7 @@ import type { AdminClientsQuery } from '@/src/types/api/clients'
 import type { CobranzasQuery } from '@/src/types/api/cobranzas'
 import type { VehicleType } from '@/src/types/api/cotizador'
 import type { NovedadesQuery } from '@/src/types/api/novedades'
+import type { SolicitudesQuery } from '@/src/types/api/solicitudes'
 import type { AdminSiniestrosQuery } from '@/src/services/siniestros.service'
 
 export const QUERY_KEYS = {
@@ -24,6 +25,12 @@ export const QUERY_KEYS = {
     siniestros: (params?: AdminSiniestrosQuery) => ['admin', 'siniestros', 'list', params ?? {}] as const,
     siniestrosStats: ['admin', 'siniestros', 'stats'] as const,
     siniestro: (id: number) => ['admin', 'siniestros', id] as const,
+    solicitudes: (params?: SolicitudesQuery) => ['admin', 'solicitudes', 'list', params ?? {}] as const,
+    solicitud: (kind: string, id: number) => ['admin', 'solicitudes', kind, id] as const,
+    pricingPlans: ['admin', 'pricing'] as const,
+  },
+  pricing: {
+    plans: (productType: string) => ['pricing', productType] as const,
   },
   infoauto: {
     brands: (vehicleType: VehicleType, query?: string) => ['infoauto', vehicleType, 'brands', query ?? ''] as const,

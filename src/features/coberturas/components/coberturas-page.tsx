@@ -4,11 +4,12 @@ import { useRef, useState } from 'react'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import { PRODUCTS } from '@/src/features/landing/data/products'
-import { FIELDS, CONTACT_FIELDS } from '../data/fields'
-import { FormField } from './form-field'
 import { CotizadorForm } from '@/src/features/cotizador/components/cotizador-form'
+import type { VehicleType } from '@/src/types/api/cotizador'
+import { quoteFlowFor } from '../lib/quote-flow'
+import { LeadForm } from './lead-form'
+import { PlanesFijos } from './planes-fijos'
 import { fadeUp, fadeUpBlur, stagger, EASE_OUT_EXPO } from '@/src/lib/motion'
-import { SectionMark } from '@/src/features/landing/components/section-mark'
 import type { Variants } from 'framer-motion'
 
 const PANEL_VARIANTS: Variants = {
@@ -20,7 +21,7 @@ const PANEL_VARIANTS: Variants = {
 export function CoberturasPage({ initialCoverageId = PRODUCTS[0].id }: { initialCoverageId?: string }) {
   const [activeId, setActiveId] = useState(initialCoverageId)
   const active = PRODUCTS.find(p => p.id === activeId) ?? PRODUCTS[0]
-  const fields = FIELDS[active.id] ?? []
+  const flow = quoteFlowFor(active.id)
   const formRef = useRef<HTMLDivElement>(null)
 
   const handleSelect = (id: string) => {
@@ -30,8 +31,6 @@ export function CoberturasPage({ initialCoverageId = PRODUCTS[0].id }: { initial
       window.scrollTo({ top, behavior: 'smooth' })
     }
   }
-
-  const handleSubmit = (e: React.FormEvent) => e.preventDefault()
 
   return (
     <>
@@ -187,53 +186,9 @@ export function CoberturasPage({ initialCoverageId = PRODUCTS[0].id }: { initial
                   <p className="text-[14.5px] text-ink-3 leading-[1.55] m-0">{active.sub}</p>
                 </div>
 
-                {activeId === 'auto' || activeId === 'moto' ? (
-                  <CotizadorForm vehicleType={activeId} />
-                ) : (
-                  <form className="flex flex-col" onSubmit={handleSubmit}>
-                    <div className="text-[10.5px] tracking-[0.24em] uppercase text-faint font-semibold mb-[18px]">
-                      Datos de la cobertura
-                    </div>
-                    <div className="grid grid-cols-2 gap-[14px] mb-2 max-[560px]:grid-cols-1">
-                      {fields.map((f, i) => (
-                        <FormField key={i} field={f} />
-                      ))}
-                    </div>
-
-                    <hr className="border-none border-t border-line my-7" />
-
-                    <div className="text-[10.5px] tracking-[0.24em] uppercase text-faint font-semibold mb-[18px]">
-                      Tus datos de contacto
-                    </div>
-                    <div className="grid grid-cols-2 gap-[14px] mb-2 max-[560px]:grid-cols-1">
-                      {CONTACT_FIELDS.map((f, i) => (
-                        <FormField key={i} field={f} />
-                      ))}
-                    </div>
-
-                    <div className="flex items-center gap-5 mt-8 flex-wrap">
-                      <button
-                        type="submit"
-                        className="btn-shimmer inline-flex items-center gap-2 bg-ember text-paper border-none py-[14px] px-6 rounded-full font-semibold text-[13.5px] tracking-[-0.005em] cursor-pointer transition-[background-color,box-shadow] hover:bg-ember-2 hover:shadow-[0_12px_32px_-8px_rgba(232,168,32,0.55)]"
-                      >
-                        Solicitar cotización
-                        <svg
-                          width="14"
-                          height="14"
-                          viewBox="0 0 14 14"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="1.8"
-                        >
-                          <path d="M3 7h8M7.5 3.5L11 7l-3.5 3.5" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                      </button>
-                      <span className="text-[12.5px] text-faint tracking-[-0.005em]">
-                        Te respondemos en menos de 24 hs hábiles
-                      </span>
-                    </div>
-                  </form>
-                )}
+                {flow === 'instant' && <CotizadorForm vehicleType={active.id as VehicleType} />}
+                {flow === 'lead' && <LeadForm product={active} />}
+                {flow === 'fixed' && <PlanesFijos product={active} />}
               </motion.div>
             </AnimatePresence>
           </div>
