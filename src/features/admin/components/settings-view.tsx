@@ -14,6 +14,7 @@ import { useProfile } from '../hooks/use-profile'
 import { useUpdateProfile } from '../hooks/use-update-profile'
 import { useProducerConfig } from '../hooks/use-producer-config'
 import { useUpdateProducerConfig } from '../hooks/use-update-producer-config'
+import { PricingPlansSection } from './pricing-plans-section'
 
 function SettingsForm({ initialEmail }: { initialEmail: string }) {
   const updateProfile = useUpdateProfile()
@@ -200,6 +201,7 @@ export function SettingsView() {
       {isError && <p className="text-[14px] text-destructive">No se pudo cargar tu perfil.</p>}
       {profile && <SettingsForm key={profile.id} initialEmail={profile.email} />}
       {config && <BotConfigForm key={config.botName ?? 'no-name'} initialName={config.botName ?? ''} />}
+      <PricingPlansSection />
     </div>
   )
 }

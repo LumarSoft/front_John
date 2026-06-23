@@ -27,10 +27,10 @@ export const FIELDS: Record<string, Field[]> = {
       label: 'Tipo',
       placeholder: 'Seleccioná',
       type: 'select',
-      options: ['Urbana', 'MTB', 'Ruta', 'Eléctrica'],
+      options: ['Urbana', 'MTB', 'Ruta', 'Eléctrica', 'Monopatín'],
       span: 'half',
     },
-    { label: 'Valor de la bicicleta ($)', placeholder: '350.000', span: 'half' },
+    { label: 'Valor del rodado ($)', placeholder: '350.000', span: 'half' },
   ],
   bolso: [
     { label: 'Bienes a asegurar', placeholder: 'Notebook, celular, billetera…', span: 'full' },
