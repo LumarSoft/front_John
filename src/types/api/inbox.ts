@@ -9,7 +9,7 @@ export interface InboxConversation {
   lastMessageAt: string | null
   sessionStartedAt: string | null
   phoneNumberId: string | null
-  client: { id: number; firstName: string; lastName: string } | null
+  client: { id: number; firstName: string; lastName: string; dni: string } | null
 }
 
 export interface InboxMessage {

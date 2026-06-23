@@ -49,6 +49,7 @@ export function InboxList({ conversations, selectedId, onSelect }: Props) {
               <span className="truncate text-[13px] font-medium text-ink">{displayName(conv)}</span>
               <span className="shrink-0 text-[11px] text-muted-foreground">{timeAgo(conv.lastMessageAt)}</span>
             </div>
+            {conv.client && <span className="block text-[11px] text-muted-foreground">DNI {conv.client.dni}</span>}
             <div className="mt-1 flex items-center gap-1.5">
               {conv.status === 'pending' && (
                 <Badge variant="outline" className="h-4 border-amber text-[10px] text-amber-700">

@@ -3,7 +3,9 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
+  Bell,
   ChevronsUpDown,
+  FileWarning,
   LayoutDashboard,
   LogOut,
   MessageSquare,
@@ -35,6 +37,7 @@ import {
 import { Avatar, AvatarFallback } from '@/src/components/ui/avatar'
 import { useAuth } from '../context/auth-context'
 import { useProfile } from '../hooks/use-profile'
+import { useNovedadesStats } from '../hooks/use-novedades-stats'
 
 interface NavItem {
   label: string
@@ -44,7 +47,9 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { label: 'Inicio', href: '/admin', icon: LayoutDashboard },
+  { label: 'Novedades', href: '/admin/novedades', icon: Bell },
   { label: 'Bandeja', href: '/admin/inbox', icon: MessageSquare },
+  { label: 'Siniestros', href: '/admin/siniestros', icon: FileWarning },
   { label: 'Asegurados', href: '/admin/asegurados', icon: ShieldCheck },
   { label: 'Cobranzas', href: '/admin/cobranzas', icon: Wallet },
   { label: 'Usuarios', href: '/admin/usuarios', icon: Users },
@@ -64,6 +69,7 @@ export function AppSidebar() {
   const pathname = usePathname()
   const { logout } = useAuth()
   const { data: profile } = useProfile()
+  const { data: novedadesStats } = useNovedadesStats()
 
   const initials = profile?.email.slice(0, 2).toUpperCase() ?? 'JP'
 
@@ -89,21 +95,29 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupLabel className="text-[10.5px] tracking-[0.14em] uppercase">Navegación</SidebarGroupLabel>
           <SidebarMenu className="gap-1">
-            {NAV_ITEMS.map(item => (
-              <SidebarMenuItem key={item.href}>
-                <SidebarMenuButton
-                  asChild
-                  isActive={isActive(pathname, item.href)}
-                  tooltip={item.label}
-                  className={`h-9 gap-2.5 rounded-lg transition-colors ${activeClasses}`}
-                >
-                  <Link href={item.href}>
-                    <item.icon />
-                    <span>{item.label}</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            ))}
+            {NAV_ITEMS.map(item => {
+              const unread = item.href === '/admin/novedades' ? (novedadesStats?.unreadTotal ?? 0) : 0
+              return (
+                <SidebarMenuItem key={item.href}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={isActive(pathname, item.href)}
+                    tooltip={item.label}
+                    className={`h-9 gap-2.5 rounded-lg transition-colors ${activeClasses}`}
+                  >
+                    <Link href={item.href}>
+                      <item.icon />
+                      <span>{item.label}</span>
+                      {unread > 0 && (
+                        <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-ember-2 px-1.5 text-[10.5px] font-semibold text-on-dark group-data-[collapsible=icon]:hidden">
+                          {unread}
+                        </span>
+                      )}
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )
+            })}
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>
