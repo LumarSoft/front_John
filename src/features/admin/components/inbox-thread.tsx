@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { Loader2, SendHorizonal, UserCheck, UserX } from 'lucide-react'
+import { IdCard, Loader2, SendHorizonal, UserCheck, UserX } from 'lucide-react'
 import { Button } from '@/src/components/ui/button'
 import { useInboxMessages } from '../hooks/use-inbox-messages'
 import { useInboxActions } from '../hooks/use-inbox-actions'
@@ -11,6 +11,7 @@ const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000
 
 interface Props {
   conversation: InboxConversation
+  onOpenClient: (clientId: number) => void
 }
 
 function roleBubble(role: string) {
@@ -25,7 +26,7 @@ function roleLabel(role: string) {
   return 'Bot'
 }
 
-export function InboxThread({ conversation }: Props) {
+export function InboxThread({ conversation, onOpenClient }: Props) {
   const { data: messages = [], isLoading } = useInboxMessages(conversation.id)
   const { takeover, release, sendMessage } = useInboxActions(conversation.id)
   const [text, setText] = useState('')
@@ -57,9 +58,8 @@ export function InboxThread({ conversation }: Props) {
     }
   }
 
-  const clientName = conversation.client
-    ? `${conversation.client.firstName} ${conversation.client.lastName}`
-    : conversation.waId
+  const client = conversation.client
+  const clientName = client ? `${client.firstName} ${client.lastName}` : conversation.waId
 
   return (
     <div className="flex h-full flex-col">
@@ -67,9 +67,17 @@ export function InboxThread({ conversation }: Props) {
       <div className="flex items-center justify-between border-b border-line px-4 py-3">
         <div>
           <p className="text-[13.5px] font-medium text-ink">{clientName}</p>
-          <p className="text-[11px] text-muted-foreground">{conversation.waId}</p>
+          <p className="text-[11px] text-muted-foreground">
+            {client ? `DNI ${client.dni} · ${conversation.waId}` : conversation.waId}
+          </p>
         </div>
         <div className="flex gap-2">
+          {client && (
+            <Button size="sm" variant="outline" onClick={() => onOpenClient(client.id)}>
+              <IdCard className="size-3.5" />
+              Ver ficha
+            </Button>
+          )}
           {!conversation.botPaused ? (
             <Button size="sm" variant="outline" onClick={() => takeover.mutate()} disabled={takeover.isPending}>
               {takeover.isPending ? <Loader2 className="size-3.5 animate-spin" /> : <UserCheck className="size-3.5" />}

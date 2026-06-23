@@ -1,5 +1,8 @@
+import { apiRequest } from '@/src/lib/api-client'
 import { getToken } from './portal-auth.service'
 import type { RiskType } from './polizas.service'
+// Admin panel UI helpers (RISK_LABELS / RiskIcon) are keyed by this narrower RiskType.
+import type { RiskType as AdminRiskType } from '@/src/types/api/clients'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'
 
@@ -94,4 +97,89 @@ export async function createSiniestro(input: CreateSiniestroInput): Promise<Sini
   }
 
   return res.json() as Promise<Siniestro>
+}
+
+// ─── Admin (panel) ───────────────────────────────────────
+// Uses the admin JWT (passed explicitly), unlike the client-portal calls above
+// which rely on the portal token.
+
+export interface AdminSiniestroVehiculo {
+  dominio: string | null
+  marca: string | null
+  modelo: string | null
+}
+
+export interface AdminSiniestroDetail {
+  id: number
+  tipo: SiniestroTipo
+  descripcion: string
+  fecha: string
+  estado: SiniestroEstado
+  nroSiniestroCompania: string | null
+  adjuntos: Adjunto[] | null
+  createdAt: string
+  updatedAt: string
+  client: {
+    id: number
+    firstName: string
+    lastName: string
+    dni: string
+    email: string
+    phone: string | null
+  }
+  poliza: {
+    id: number
+    certificado: string
+    company: string
+    riskType: AdminRiskType
+    vehiculo: AdminSiniestroVehiculo | null
+  }
+}
+
+export interface UpdateSiniestroInput {
+  estado?: SiniestroEstado
+  nroSiniestroCompania?: string
+}
+
+export type SiniestroEstadoFilter = SiniestroEstado | 'todos'
+
+export interface AdminSiniestrosQuery {
+  estado?: SiniestroEstado
+  search?: string
+  page?: number
+  pageSize?: number
+}
+
+export interface AdminSiniestrosPage {
+  data: AdminSiniestroDetail[]
+  total: number
+  page: number
+  pageSize: number
+  totalPages: number
+}
+
+export interface AdminSiniestrosStats {
+  pendientes: number
+  enProceso: number
+  resueltos: number
+  sinNroCompania: number
+}
+
+function buildSiniestrosQuery(params: AdminSiniestrosQuery): string {
+  const sp = new URLSearchParams()
+  if (params.estado) sp.set('estado', params.estado)
+  if (params.search?.trim()) sp.set('search', params.search.trim())
+  if (params.page) sp.set('page', String(params.page))
+  if (params.pageSize) sp.set('pageSize', String(params.pageSize))
+  const qs = sp.toString()
+  return qs ? `?${qs}` : ''
+}
+
+export const adminSiniestrosService = {
+  list: (params: AdminSiniestrosQuery, token: string) =>
+    apiRequest<AdminSiniestrosPage>(`/admin/siniestros${buildSiniestrosQuery(params)}`, { token }),
+  stats: (token: string) => apiRequest<AdminSiniestrosStats>('/admin/siniestros/stats', { token }),
+  get: (id: number, token: string) => apiRequest<AdminSiniestroDetail>(`/admin/siniestros/${id}`, { token }),
+  update: (id: number, input: UpdateSiniestroInput, token: string) =>
+    apiRequest<AdminSiniestroDetail>(`/admin/siniestros/${id}`, { method: 'PATCH', token, body: input }),
 }
