@@ -2,36 +2,38 @@
 
 import { motion } from 'framer-motion'
 import { fadeUp, fadeUpBlur, stagger, viewport } from '@/src/lib/motion'
+import { useAttentionHours } from '@/src/hooks/use-attention-hours'
 import { SectionMark } from './section-mark'
 
-const CONTACT_ITEMS = [
-  {
-    label: 'Teléfono',
-    value: '+54 11 4815-0099',
-    href: 'tel:+541148150099',
-    sub: 'Lunes a viernes · 9 a 18 hs',
-  },
-  {
-    label: 'WhatsApp',
-    value: '+54 9 11 6234-1198',
-    href: 'https://wa.me/5491162341198',
-    sub: 'Respuesta en menos de 1 hora',
-  },
-  {
-    label: 'Correo',
-    value: 'hola@jpellegrini.ar',
-    href: 'mailto:hola@jpellegrini.ar',
-    sub: 'Respondemos el mismo día hábil',
-  },
-  {
-    label: 'Estudio central',
-    value: 'Blvd. 27 de Febrero 275',
-    href: 'https://maps.google.com/?q=Blvd.+27+de+Febrero+275+Rosario',
-    sub: 'Rosario, Santa Fe',
-  },
-]
-
 export function CtaSection() {
+  const attentionHours = useAttentionHours()
+  const contactItems = [
+    {
+      label: 'Teléfono',
+      value: '+54 11 4815-0099',
+      href: 'tel:+541148150099',
+      sub: attentionHours,
+    },
+    {
+      label: 'WhatsApp',
+      value: '+54 9 11 6234-1198',
+      href: 'https://wa.me/5491162341198',
+      sub: 'Respuesta en menos de 1 hora',
+    },
+    {
+      label: 'Correo',
+      value: 'hola@jpellegrini.ar',
+      href: 'mailto:hola@jpellegrini.ar',
+      sub: 'Respondemos el mismo día hábil',
+    },
+    {
+      label: 'Estudio central',
+      value: 'Blvd. 27 de Febrero 275',
+      href: 'https://maps.google.com/?q=Blvd.+27+de+Febrero+275+Rosario',
+      sub: 'Rosario, Santa Fe',
+    },
+  ]
+
   return (
     <section id="contacto" className="relative bg-ink text-paper overflow-hidden">
       {/* Ambient gradient blobs */}
@@ -110,7 +112,7 @@ export function CtaSection() {
           viewport={viewport}
           variants={stagger(0.08)}
         >
-          {CONTACT_ITEMS.map(item => (
+          {contactItems.map(item => (
             <motion.a
               key={item.label}
               variants={fadeUp}

@@ -28,6 +28,7 @@ export const QUERY_KEYS = {
     solicitudes: (params?: SolicitudesQuery) => ['admin', 'solicitudes', 'list', params ?? {}] as const,
     solicitud: (kind: string, id: number) => ['admin', 'solicitudes', kind, id] as const,
     pricingPlans: ['admin', 'pricing'] as const,
+    businessHours: ['admin', 'business-hours'] as const,
   },
   pricing: {
     plans: (productType: string) => ['pricing', productType] as const,
@@ -45,5 +46,9 @@ export const QUERY_KEYS = {
     polizaDocumentos: (id: number) => ['portal', 'polizas', id, 'documentos'] as const,
     siniestros: ['portal', 'siniestros'] as const,
     siniestro: (id: number) => ['portal', 'siniestros', id] as const,
+  },
+  public: {
+    producer: ['public', 'producer'] as const,
+    products: ['public', 'products'] as const,
   },
 } as const
