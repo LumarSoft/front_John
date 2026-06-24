@@ -270,7 +270,7 @@ export function PricingPlansSection() {
   const saving = create.isPending || update.isPending
 
   return (
-    <Card className="mt-6 max-w-xl border-line-2 shadow-sm">
+    <Card className="max-w-xl border-line-2 shadow-sm">
       <CardHeader>
         <CardTitle className="font-display text-[18px]">Planes y precios</CardTitle>
         <CardDescription>

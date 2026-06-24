@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { CalendarOff, Clock, Loader2, Plus, Trash2 } from 'lucide-react'
+import { CalendarOff, Loader2, Plus, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/src/components/ui/card'
 import { Button } from '@/src/components/ui/button'
@@ -274,7 +274,7 @@ export function BusinessHoursSection() {
 
   if (isLoading) {
     return (
-      <Card className="mt-6 max-w-2xl border-line-2">
+      <Card className="max-w-2xl border-line-2">
         <CardHeader>
           <Skeleton className="h-5 w-40" />
           <Skeleton className="h-4 w-72" />
@@ -288,14 +288,11 @@ export function BusinessHoursSection() {
   }
 
   if (isError || !data) {
-    return <p className="mt-6 text-[14px] text-destructive">No se pudieron cargar los horarios.</p>
+    return <p className="text-[14px] text-destructive">No se pudieron cargar los horarios.</p>
   }
 
   return (
-    <div className="mt-6 flex flex-col">
-      <div className="mb-3 flex items-center gap-2 text-[10.5px] font-semibold uppercase tracking-[0.3em] text-ember-2">
-        <Clock className="size-3.5" /> Horarios
-      </div>
+    <div className="flex flex-col">
       <ScheduleEditor key={JSON.stringify(data.weekly)} initial={data.weekly} />
       <ClosuresManager closures={data.closures} />
     </div>
