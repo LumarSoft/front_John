@@ -19,43 +19,14 @@ import { Input } from '@/src/components/ui/input'
 import { Skeleton } from '@/src/components/ui/skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/src/components/ui/table'
 import { useDebouncedValue } from '@/src/hooks/use-debounced-value'
-import type { AdminSiniestroDetail, SiniestroEstado, SiniestroEstadoFilter } from '@/src/services/siniestros.service'
+import type { AdminSiniestroDetail, SiniestroEstadoFilter } from '@/src/services/siniestros.service'
 import { formatDate, initials, RISK_LABELS, RiskIcon } from '../lib/asegurados-ui'
+import { EstadoBadge, tipoLabel } from '../lib/siniestros-ui'
 import { useAdminSiniestros } from '../hooks/use-admin-siniestros'
 import { useAdminSiniestrosStats } from '../hooks/use-admin-siniestros-stats'
 import { SiniestroSheet } from './siniestro-sheet'
 
 const PAGE_SIZE = 25
-
-const TIPO_LABELS: Record<string, string> = {
-  auto: 'Auto',
-  hogar: 'Hogar',
-  robo: 'Robo',
-  otro: 'Otro',
-}
-
-const ESTADO_META: Record<SiniestroEstado, { label: string; cls: string }> = {
-  pendiente: { label: 'Pendiente', cls: 'bg-amber/15 text-amber-700 border-amber/30 dark:text-amber' },
-  en_proceso: {
-    label: 'En proceso',
-    cls: 'bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950/40 dark:text-sky-300 dark:border-sky-900',
-  },
-  resuelto: {
-    label: 'Resuelto',
-    cls: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-900',
-  },
-}
-
-function EstadoBadge({ estado }: { estado: SiniestroEstado }) {
-  const meta = ESTADO_META[estado]
-  return (
-    <span
-      className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11.5px] font-medium ${meta.cls}`}
-    >
-      {meta.label}
-    </span>
-  )
-}
 
 // ─── Row ──────────────────────────────────────────────────────────────────────
 
@@ -111,7 +82,7 @@ function SiniestroRow({ siniestro, onSelect }: { siniestro: AdminSiniestroDetail
       </TableCell>
 
       <TableCell>
-        <div className="text-[13px] text-ink-3">{TIPO_LABELS[siniestro.tipo] ?? siniestro.tipo}</div>
+        <div className="text-[13px] text-ink-3">{tipoLabel(siniestro.tipo)}</div>
         <div className="text-[11.5px] text-muted-foreground">{formatDate(siniestro.fecha)}</div>
       </TableCell>
 

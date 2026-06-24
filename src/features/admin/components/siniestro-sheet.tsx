@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { toast } from 'sonner'
-import { Calendar, Car, FileText, Mail, Paperclip, Phone, Shield, User } from 'lucide-react'
+import { FileText, Loader2, Paperclip } from 'lucide-react'
 import { Button } from '@/src/components/ui/button'
 import { Dialog, DialogContent, DialogTitle } from '@/src/components/ui/dialog'
 import { Input } from '@/src/components/ui/input'
@@ -15,6 +15,7 @@ import {
   type SiniestroEstado,
 } from '@/src/services/siniestros.service'
 import { formatDate } from '../lib/asegurados-ui'
+import { ESTADO_META, ESTADO_ORDER, EstadoBadge, tipoLabel } from '../lib/siniestros-ui'
 import { useAdminSiniestro, useUpdateAdminSiniestro } from '../hooks/use-admin-siniestro'
 
 interface SiniestroSheetProps {
@@ -22,17 +23,22 @@ interface SiniestroSheetProps {
   onClose: () => void
 }
 
-const ESTADO_OPTIONS: { value: SiniestroEstado; label: string }[] = [
-  { value: 'pendiente', label: 'Pendiente' },
-  { value: 'en_proceso', label: 'En proceso' },
-  { value: 'resuelto', label: 'Resuelto' },
-]
+function SectionTitle({ children }: { children: ReactNode }) {
+  return (
+    <h3 className="mb-2.5 flex items-center gap-1.5 text-[10.5px] font-semibold uppercase tracking-[0.18em] text-faint">
+      {children}
+    </h3>
+  )
+}
 
-const TIPO_LABELS: Record<string, string> = {
-  auto: 'Auto',
-  hogar: 'Hogar',
-  robo: 'Robo',
-  otro: 'Otro',
+function Field({ label, value }: { label: string; value: ReactNode }) {
+  if (value === null || value === undefined || value === '') return null
+  return (
+    <div className="flex flex-col gap-1 rounded-xl border border-line-2 bg-paper px-3.5 py-2.5">
+      <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-faint">{label}</span>
+      <span className="text-[13.5px] text-ink">{value}</span>
+    </div>
+  )
 }
 
 function AdjuntoCard({ adjunto }: { adjunto: Adjunto }) {
@@ -44,7 +50,7 @@ function AdjuntoCard({ adjunto }: { adjunto: Adjunto }) {
       href={url}
       target="_blank"
       rel="noopener noreferrer"
-      className="group flex items-center gap-2.5 rounded-lg border border-line-2 bg-card px-3 py-2 transition-colors hover:border-ember-ring hover:bg-ember-soft"
+      className="group flex items-center gap-2.5 rounded-xl border border-line-2 bg-paper px-3 py-2 transition-colors hover:border-ember-ring hover:bg-ember-soft"
     >
       {isImage ? (
         // eslint-disable-next-line @next/next/no-img-element
@@ -58,22 +64,6 @@ function AdjuntoCard({ adjunto }: { adjunto: Adjunto }) {
         {adjunto.originalName}
       </span>
     </a>
-  )
-}
-
-function InfoRow({ icon: Icon, label, value }: { icon: typeof User; label: string; value: string }) {
-  return (
-    <div className="flex items-center gap-3">
-      <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-card text-muted-foreground ring-1 ring-line-2">
-        <Icon className="size-4" />
-      </div>
-      <div className="min-w-0">
-        <div className="text-[10px] font-medium uppercase tracking-[0.14em] text-faint">{label}</div>
-        <div className="truncate text-[13.5px] text-ink-3" title={value}>
-          {value}
-        </div>
-      </div>
-    </div>
   )
 }
 
@@ -105,90 +95,109 @@ function SiniestroContent({ siniestro }: { siniestro: AdminSiniestroDetail }) {
   return (
     <>
       {/* ── Header ─────────────────────────────────────────────── */}
-      <div className="border-b border-line-2 px-6 pb-5 pt-6">
-        <DialogTitle className="font-display text-[20px] leading-tight tracking-tight text-ink">
-          Siniestro #{siniestro.id} · {TIPO_LABELS[siniestro.tipo] ?? siniestro.tipo}
-        </DialogTitle>
-        <div className="mt-1 text-[13px] text-muted-foreground">Recibido el {formatDate(siniestro.createdAt)}</div>
-
-        <div className="mt-5 grid grid-cols-1 gap-x-8 gap-y-3.5 rounded-xl border border-line-2 bg-secondary/30 px-5 py-4 sm:grid-cols-2">
-          <InfoRow
-            icon={User}
-            label="Cliente"
-            value={`${siniestro.client.firstName} ${siniestro.client.lastName} · DNI ${siniestro.client.dni}`}
-          />
-          <InfoRow
-            icon={Shield}
-            label="Póliza"
-            value={`#${siniestro.poliza.certificado} · ${siniestro.poliza.company}`}
-          />
-          <InfoRow icon={Car} label="Vehículo" value={vehiculoLabel} />
-          <InfoRow icon={Calendar} label="Fecha del hecho" value={formatDate(siniestro.fecha)} />
-          {siniestro.client.phone && <InfoRow icon={Phone} label="Teléfono" value={siniestro.client.phone} />}
-          <InfoRow icon={Mail} label="Email" value={siniestro.client.email} />
+      <header className="flex items-start justify-between gap-3 border-b border-line-2 px-6 pb-5 pt-6 pr-12">
+        <div className="min-w-0">
+          <DialogTitle className="font-display text-[19px] leading-tight tracking-tight text-ink">
+            Siniestro #{siniestro.id} · {tipoLabel(siniestro.tipo)}
+          </DialogTitle>
+          <div className="mt-1 text-[12.5px] text-muted-foreground">Recibido el {formatDate(siniestro.createdAt)}</div>
         </div>
-      </div>
+        <EstadoBadge estado={estado} className="mt-0.5 shrink-0" />
+      </header>
 
       {/* ── Body (scrollable) ──────────────────────────────────── */}
-      <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-6 py-5">
-        <div>
-          <div className="text-[10.5px] uppercase tracking-[0.1em] text-muted-foreground">Descripción</div>
-          <p className="mt-1.5 whitespace-pre-wrap text-[13.5px] leading-relaxed text-ink-3">{siniestro.descripcion}</p>
-        </div>
-
-        {siniestro.adjuntos && siniestro.adjuntos.length > 0 && (
-          <div>
-            <div className="mb-2 flex items-center gap-1.5 text-[10.5px] uppercase tracking-[0.1em] text-muted-foreground">
-              <Paperclip className="size-3" />
-              Adjuntos ({siniestro.adjuntos.length})
+      <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
+        <div className="mx-auto flex max-w-2xl flex-col gap-6">
+          <section>
+            <SectionTitle>Asegurado y póliza</SectionTitle>
+            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+              <Field label="Cliente" value={`${siniestro.client.firstName} ${siniestro.client.lastName}`} />
+              <Field label="DNI" value={siniestro.client.dni} />
+              <Field label="Teléfono" value={siniestro.client.phone} />
+              <Field label="Email" value={siniestro.client.email} />
+              <Field label="Póliza" value={`#${siniestro.poliza.certificado} · ${siniestro.poliza.company}`} />
+              <Field label="Vehículo" value={vehiculoLabel} />
+              <Field label="Fecha del hecho" value={formatDate(siniestro.fecha)} />
             </div>
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-              {siniestro.adjuntos.map(a => (
-                <AdjuntoCard key={a.filename} adjunto={a} />
-              ))}
+          </section>
+
+          <section>
+            <SectionTitle>Descripción</SectionTitle>
+            <p className="whitespace-pre-wrap rounded-xl border border-line-2 bg-paper px-3.5 py-3 text-[13.5px] leading-relaxed text-ink-3">
+              {siniestro.descripcion}
+            </p>
+          </section>
+
+          {siniestro.adjuntos && siniestro.adjuntos.length > 0 && (
+            <section>
+              <SectionTitle>
+                <Paperclip className="size-3" />
+                Adjuntos ({siniestro.adjuntos.length})
+              </SectionTitle>
+              <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                {siniestro.adjuntos.map(a => (
+                  <AdjuntoCard key={a.filename} adjunto={a} />
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* ── Gestión ──────────────────────────────────────────── */}
+          <section className="rounded-xl border border-line-2 bg-secondary/20 p-4">
+            <SectionTitle>Gestión del reclamo</SectionTitle>
+
+            <div className="flex flex-col gap-1.5">
+              <Label className="text-[12px] text-muted-foreground">Estado</Label>
+              <div className="grid grid-cols-3 gap-1.5">
+                {ESTADO_ORDER.map(opt => {
+                  const active = estado === opt
+                  const meta = ESTADO_META[opt]
+                  return (
+                    <button
+                      key={opt}
+                      type="button"
+                      onClick={() => setEstado(opt)}
+                      className={`flex h-9 items-center justify-center gap-1.5 rounded-lg border text-[12.5px] font-medium transition-colors ${
+                        active ? meta.badge : 'border-line-2 text-ink-3 hover:bg-secondary/60'
+                      }`}
+                    >
+                      <span className={`size-1.5 rounded-full ${meta.dot}`} />
+                      {meta.label}
+                    </button>
+                  )
+                })}
+              </div>
             </div>
-          </div>
-        )}
 
-        {/* ── Gestión ──────────────────────────────────────────── */}
-        <div className="rounded-xl border border-line-2 bg-secondary/20 p-4">
-          <div className="text-[13px] font-semibold text-ink">Gestión</div>
-
-          <div className="mt-3 space-y-1.5">
-            <Label className="text-[12px] text-muted-foreground">Estado</Label>
-            <div className="grid grid-cols-3 gap-1.5">
-              {ESTADO_OPTIONS.map(opt => (
-                <Button
-                  key={opt.value}
-                  type="button"
-                  size="sm"
-                  variant={estado === opt.value ? 'default' : 'outline'}
-                  className={`h-8 text-[12.5px] ${estado === opt.value ? '' : 'border-line-2 text-ink-3'}`}
-                  onClick={() => setEstado(opt.value)}
-                >
-                  {opt.label}
-                </Button>
-              ))}
+            <div className="mt-4 flex flex-col gap-1.5">
+              <Label htmlFor="nro-compania" className="text-[12px] text-muted-foreground">
+                N° de siniestro de la compañía
+              </Label>
+              <Input
+                id="nro-compania"
+                value={nro}
+                onChange={e => setNro(e.target.value)}
+                placeholder="Cargar tras presentarlo en Triunfo"
+                maxLength={50}
+                className="h-9 bg-paper"
+              />
             </div>
-          </div>
 
-          <div className="mt-4 space-y-1.5">
-            <Label htmlFor="nro-compania" className="text-[12px] text-muted-foreground">
-              N° de siniestro de la compañía
-            </Label>
-            <Input
-              id="nro-compania"
-              value={nro}
-              onChange={e => setNro(e.target.value)}
-              placeholder="Cargar tras presentarlo en Triunfo"
-              maxLength={50}
-              className="h-9"
-            />
-          </div>
-
-          <Button type="button" className="mt-4 h-9 w-full" disabled={!dirty || update.isPending} onClick={handleSave}>
-            {update.isPending ? 'Guardando…' : 'Guardar cambios'}
-          </Button>
+            <Button
+              type="button"
+              className="mt-4 h-9 w-full"
+              disabled={!dirty || update.isPending}
+              onClick={handleSave}
+            >
+              {update.isPending ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" /> Guardando…
+                </>
+              ) : (
+                'Guardar cambios'
+              )}
+            </Button>
+          </section>
         </div>
       </div>
     </>
