@@ -1,13 +1,14 @@
 'use client'
 
 import { useState, type FormEvent } from 'react'
-import { Bot, KeyRound, Loader2, Mail } from 'lucide-react'
+import { Bot, Clock, KeyRound, Loader2, Mail, Tags, UserRound } from 'lucide-react'
 import { toast } from 'sonner'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/src/components/ui/card'
 import { Button } from '@/src/components/ui/button'
 import { Input } from '@/src/components/ui/input'
 import { Label } from '@/src/components/ui/label'
 import { Skeleton } from '@/src/components/ui/skeleton'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/src/components/ui/tabs'
 import { ApiError } from '@/src/lib/api-client'
 import type { UpdateProfileRequest } from '@/src/types/api/auth'
 import { useProfile } from '../hooks/use-profile'
@@ -131,7 +132,7 @@ function BotConfigForm({ initialName }: { initialName: string }) {
     : 'Soy el asistente de John Pellegrini Management Group (JPMG)'
 
   return (
-    <Card className="mt-6 max-w-xl border-line-2 shadow-sm">
+    <Card className="max-w-xl border-line-2 shadow-sm">
       <form onSubmit={handleSubmit} className="contents">
         <CardHeader>
           <CardTitle className="font-display text-[18px]">Asistente de WhatsApp</CardTitle>
@@ -175,35 +176,74 @@ function BotConfigForm({ initialName }: { initialName: string }) {
   )
 }
 
+const TABS = [
+  { value: 'cuenta', label: 'Cuenta', icon: UserRound },
+  { value: 'asistente', label: 'Asistente', icon: Bot },
+  { value: 'horarios', label: 'Horarios', icon: Clock },
+  { value: 'precios', label: 'Precios', icon: Tags },
+] as const
+
+function FormSkeleton() {
+  return (
+    <Card className="max-w-xl border-line-2">
+      <CardHeader>
+        <Skeleton className="h-5 w-40" />
+        <Skeleton className="h-4 w-64" />
+      </CardHeader>
+      <CardContent className="flex flex-col gap-5">
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-10 w-full" />
+      </CardContent>
+    </Card>
+  )
+}
+
 export function SettingsView() {
   const { data: profile, isLoading, isError } = useProfile()
   const { data: config } = useProducerConfig()
 
   return (
     <div className="mx-auto w-full max-w-5xl px-5 py-8 md:px-8 md:py-10">
-      <div className="mb-6">
+      <div className="mb-7">
         <div className="text-[10.5px] font-medium uppercase tracking-[0.3em] text-ember-2">Configuración</div>
-        <h1 className="mt-2 font-display text-[clamp(26px,3.5vw,36px)] tracking-[-0.035em] text-ink">Mi cuenta</h1>
-        <p className="mt-1.5 text-[14px] text-muted-foreground">Gestioná tus credenciales de acceso al panel.</p>
+        <h1 className="mt-2 font-display text-[clamp(26px,3.5vw,36px)] tracking-[-0.035em] text-ink">Configuración</h1>
+        <p className="mt-1.5 text-[14px] text-muted-foreground">
+          Gestioná tu cuenta, el asistente de WhatsApp, los horarios de atención y los precios.
+        </p>
       </div>
 
-      {isLoading && (
-        <Card className="max-w-xl border-line-2">
-          <CardHeader>
-            <Skeleton className="h-5 w-40" />
-            <Skeleton className="h-4 w-64" />
-          </CardHeader>
-          <CardContent className="flex flex-col gap-5">
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-full" />
-          </CardContent>
-        </Card>
-      )}
-      {isError && <p className="text-[14px] text-destructive">No se pudo cargar tu perfil.</p>}
-      {profile && <SettingsForm key={profile.id} initialEmail={profile.email} />}
-      {config && <BotConfigForm key={config.botName ?? 'no-name'} initialName={config.botName ?? ''} />}
-      <BusinessHoursSection />
-      <PricingPlansSection />
+      <Tabs defaultValue="cuenta">
+        <TabsList variant="line" className="h-auto max-w-full flex-wrap justify-start gap-1">
+          {TABS.map(tab => (
+            <TabsTrigger key={tab.value} value={tab.value} className="gap-1.5 px-3 py-1.5 text-[13.5px]">
+              <tab.icon className="size-4" />
+              {tab.label}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+
+        <TabsContent value="cuenta" className="mt-6">
+          {isLoading && <FormSkeleton />}
+          {isError && <p className="text-[14px] text-destructive">No se pudo cargar tu perfil.</p>}
+          {profile && <SettingsForm key={profile.id} initialEmail={profile.email} />}
+        </TabsContent>
+
+        <TabsContent value="asistente" className="mt-6">
+          {config ? (
+            <BotConfigForm key={config.botName ?? 'no-name'} initialName={config.botName ?? ''} />
+          ) : (
+            <FormSkeleton />
+          )}
+        </TabsContent>
+
+        <TabsContent value="horarios" className="mt-6">
+          <BusinessHoursSection />
+        </TabsContent>
+
+        <TabsContent value="precios" className="mt-6">
+          <PricingPlansSection />
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }
