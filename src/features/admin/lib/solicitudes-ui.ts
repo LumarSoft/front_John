@@ -30,6 +30,25 @@ export const STATUS_PILL_CLASS: Record<SolicitudStatus, string> = {
   CLOSED: 'bg-secondary text-muted-foreground border-line-2',
 }
 
+/**
+ * Pre-filled WhatsApp link to follow up on a solicitud. Returns null when there is
+ * no usable phone number. The greeting references the requested product.
+ */
+export function buildSolicitudWhatsappUrl(
+  phone: string | null,
+  contactName: string,
+  productType: string,
+): string | null {
+  const digits = phone?.replace(/\D/g, '') ?? ''
+  if (!digits) return null
+  const firstName = contactName.trim().split(/\s+/)[0] || ''
+  const greeting = firstName ? `Hola ${firstName}, ` : 'Hola, '
+  const message =
+    `${greeting}te escribimos de John Pellegrini Seguros por tu consulta sobre ${productLabel(productType)}. ` +
+    `¿Cómo podemos ayudarte?`
+  return `https://wa.me/${digits}?text=${encodeURIComponent(message)}`
+}
+
 export function timeAgo(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime()
   const min = Math.floor(diff / 60000)

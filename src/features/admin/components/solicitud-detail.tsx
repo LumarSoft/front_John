@@ -5,10 +5,11 @@ import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/src/components/ui/button'
 import { Skeleton } from '@/src/components/ui/skeleton'
+import { WhatsAppIcon } from '@/src/components/ui/brand-icons'
 import type { LeadDetail, SolicitudDetail, SolicitudKind, SolicitudStatus } from '@/src/types/api/solicitudes'
 import { useSolicitud } from '../hooks/use-solicitudes'
 import { useSolicitudActions } from '../hooks/use-solicitud-actions'
-import { productLabel, STATUS_LABELS, STATUS_ORDER, timeAgo } from '../lib/solicitudes-ui'
+import { buildSolicitudWhatsappUrl, productLabel, STATUS_LABELS, STATUS_ORDER, timeAgo } from '../lib/solicitudes-ui'
 import { StatusPill } from './solicitud-status-pill'
 
 interface SolicitudDetailViewProps {
@@ -88,16 +89,28 @@ function SolicitudEditor({
     )
   }
 
+  const contactName = data.kind === 'lead' ? data.contactName : fullName(data)
+  const contactPhone = data.kind === 'lead' ? data.phone : data.applicantPhone
+  const whatsappUrl = buildSolicitudWhatsappUrl(contactPhone, contactName, detailProductType(data))
+
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-6 p-5">
       <section>
         <h3 className="mb-2.5 text-[10.5px] font-semibold uppercase tracking-[0.18em] text-faint">Datos de contacto</h3>
         <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-          <Row label="Contacto" value={data.kind === 'lead' ? data.contactName : fullName(data)} />
-          <Row label="Teléfono" value={data.kind === 'lead' ? data.phone : data.applicantPhone} />
+          <Row label="Contacto" value={contactName} />
+          <Row label="Teléfono" value={contactPhone} />
           <Row label="Email" value={data.kind === 'lead' ? data.email : data.applicantEmail} />
           {data.kind === 'lead' && <Row label="Canal" value={data.channel === 'WHATSAPP' ? 'WhatsApp' : 'Web'} />}
         </div>
+        {whatsappUrl && (
+          <Button asChild className="mt-3 h-10 w-full gap-2 bg-[#25D366] text-white hover:bg-[#1ebe5b] sm:w-auto">
+            <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
+              <WhatsAppIcon className="size-4" />
+              Hablar por WhatsApp
+            </a>
+          </Button>
+        )}
       </section>
 
       <section>
