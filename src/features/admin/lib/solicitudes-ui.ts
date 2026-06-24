@@ -23,10 +23,11 @@ export const STATUS_LABELS: Record<SolicitudStatus, string> = {
 
 export const STATUS_ORDER: SolicitudStatus[] = ['NEW', 'CONTACTED', 'CLOSED']
 
-export function statusBadgeVariant(status: SolicitudStatus): 'default' | 'secondary' | 'outline' {
-  if (status === 'NEW') return 'default'
-  if (status === 'CONTACTED') return 'secondary'
-  return 'outline'
+/** Semantic colors for the status pill (soft background + matching text). */
+export const STATUS_PILL_CLASS: Record<SolicitudStatus, string> = {
+  NEW: 'bg-ember-soft text-ember-2 border-ember/25',
+  CONTACTED: 'bg-blue-500/10 text-blue-600 border-blue-500/20 dark:text-blue-400',
+  CLOSED: 'bg-secondary text-muted-foreground border-line-2',
 }
 
 export function timeAgo(iso: string): string {

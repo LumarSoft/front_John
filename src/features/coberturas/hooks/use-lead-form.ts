@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { CONTACT_FIELDS, FIELDS, type Field } from '../data/fields'
+import { CONTACT_FIELDS, type Field } from '../data/fields'
 import type { CreateLeadRequest, LeadProductType } from '@/src/types/api/leads'
 
 // Contact field labels, kept in sync with CONTACT_FIELDS in ../data/fields.
@@ -20,12 +20,12 @@ export interface LeadFormHook {
   reset: () => void
 }
 
-interface Options {
-  includeProductFields?: boolean
-}
-
-export function useLeadForm(productId: string, { includeProductFields = true }: Options = {}): LeadFormHook {
-  const productFields = includeProductFields ? (FIELDS[productId] ?? []) : []
+/**
+ * `productFields` come from the shared catalog (see useProductFields). Pass an
+ * empty list for the fixed-plan flow, where the plan is the spec and only contact
+ * details are captured.
+ */
+export function useLeadForm(productId: string, productFields: Field[] = []): LeadFormHook {
   const [values, setValues] = useState<Record<string, string>>({})
   const [attempted, setAttempted] = useState(false)
 

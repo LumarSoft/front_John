@@ -115,7 +115,7 @@ export function PlanesFijos({ product }: Readonly<{ product: Product }>) {
   const { data: plans, isLoading, isError } = usePlanes(product.id as FixedProductType)
   const [selected, setSelected] = useState<ProductPlan | null>(null)
   const [done, setDone] = useState(false)
-  const form = useLeadForm(product.id, { includeProductFields: false })
+  const form = useLeadForm(product.id)
   const submit = useSubmitLead()
 
   if (done && selected) {

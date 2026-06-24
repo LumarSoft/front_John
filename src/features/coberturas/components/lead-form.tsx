@@ -4,11 +4,13 @@ import { useState } from 'react'
 import type { Product } from '@/src/features/landing/types'
 import { FormField } from './form-field'
 import { useLeadForm } from '../hooks/use-lead-form'
+import { useProductFields } from '../hooks/use-product-fields'
 import { useSubmitLead } from '../hooks/use-submit-lead'
 import { LeadConfirmada } from './lead-confirmada'
 
 export function LeadForm({ product }: Readonly<{ product: Product }>) {
-  const form = useLeadForm(product.id)
+  const productFields = useProductFields(product.id)
+  const form = useLeadForm(product.id, productFields)
   const submit = useSubmitLead()
   const [done, setDone] = useState(false)
 

@@ -2,12 +2,12 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { AlertTriangle, Bell, CheckCheck, IdCard, MessageSquare, Search } from 'lucide-react'
+import { AlertTriangle, Bell, CheckCheck, ChevronRight, IdCard, MessageSquare, Search } from 'lucide-react'
 import { Badge } from '@/src/components/ui/badge'
 import { Button } from '@/src/components/ui/button'
 import { Input } from '@/src/components/ui/input'
 import { Skeleton } from '@/src/components/ui/skeleton'
-import { Tabs, TabsList, TabsTrigger } from '@/src/components/ui/tabs'
+import { cn } from '@/src/lib/utils'
 import { useDebouncedValue } from '@/src/hooks/use-debounced-value'
 import type { NovedadItem, NovedadType } from '@/src/types/api/novedades'
 import { formatDate } from '../lib/asegurados-ui'
@@ -18,6 +18,8 @@ import { SiniestroSheet } from './siniestro-sheet'
 import { AseguradoSheet } from './asegurado-sheet'
 
 type TabValue = 'todas' | NovedadType
+
+const TH = 'px-4 py-2.5 text-left text-[10.5px] font-semibold uppercase tracking-[0.14em] text-faint'
 
 function timeAgo(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime()
@@ -37,58 +39,102 @@ interface NovedadRowProps {
   onOpenClient: (clientId: number) => void
 }
 
-function NovedadRow({ novedad, onOpen, onOpenClient }: NovedadRowProps) {
+function NovedadTableRow({ novedad, onOpen, onOpenClient }: NovedadRowProps) {
   const unread = novedad.readAt === null
   const isSiniestro = novedad.type === 'siniestro'
   const Icon = isSiniestro ? AlertTriangle : MessageSquare
   const client = novedad.client
 
   return (
-    <div
-      className={`flex items-start gap-3 border-b border-line-2 px-4 py-3.5 transition-colors last:border-b-0 hover:bg-secondary/40 ${
-        unread ? 'bg-ember-soft/30' : 'bg-transparent'
-      }`}
+    <tr
+      role="button"
+      tabIndex={0}
+      onClick={() => onOpen(novedad)}
+      onKeyDown={e => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          onOpen(novedad)
+        }
+      }}
+      className={cn(
+        'group cursor-pointer border-b border-line/70 transition-colors last:border-b-0 hover:bg-secondary/40 focus-visible:bg-secondary/40 focus-visible:outline-none',
+        unread && 'bg-ember-soft/25',
+      )}
     >
-      <button type="button" onClick={() => onOpen(novedad)} className="flex min-w-0 flex-1 items-start gap-3 text-left">
-        <div
-          className={`flex size-9 shrink-0 items-center justify-center rounded-lg ${
-            isSiniestro ? 'bg-destructive/10 text-destructive' : 'bg-ember-soft text-ember-2'
-          }`}
-        >
-          <Icon className="size-4.5" />
-        </div>
-
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            {unread && <span className="size-2 shrink-0 rounded-full bg-ember-2" aria-label="No leída" />}
-            <span className={`truncate text-[13.5px] ${unread ? 'font-semibold text-ink' : 'font-medium text-ink-3'}`}>
-              {novedad.title}
-            </span>
+      {/* Novedad */}
+      <td className="px-4 py-3">
+        <div className="flex items-start gap-3">
+          <div
+            className={cn(
+              'flex size-9 shrink-0 items-center justify-center rounded-lg',
+              isSiniestro ? 'bg-destructive/10 text-destructive' : 'bg-ember-soft text-ember-2',
+            )}
+          >
+            <Icon className="size-4.5" />
           </div>
-          {novedad.body && <p className="mt-0.5 line-clamp-2 text-[12.5px] text-muted-foreground">{novedad.body}</p>}
-          <span className="mt-1 block text-[11px] text-faint">
-            {client ? `DNI ${client.dni} · ` : ''}
-            {timeAgo(novedad.createdAt)}
-          </span>
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5">
+              {unread && <span className="size-2 shrink-0 rounded-full bg-ember-2" aria-label="No leída" />}
+              <span
+                className={cn('truncate text-[13.5px]', unread ? 'font-semibold text-ink' : 'font-medium text-ink-3')}
+              >
+                {novedad.title}
+              </span>
+            </div>
+            {novedad.body && (
+              <p className="mt-0.5 line-clamp-1 max-w-[420px] text-[12.5px] text-muted-foreground">{novedad.body}</p>
+            )}
+          </div>
         </div>
-      </button>
+      </td>
 
-      <div className="flex shrink-0 flex-col items-end gap-1.5 self-center">
-        <span className="text-[11.5px] text-muted-foreground">{isSiniestro ? 'Gestionar' : 'Ver en Bandeja'}</span>
-        {client && (
-          <Button
+      {/* Tipo */}
+      <td className="px-4 py-3">
+        <Badge
+          variant="outline"
+          className={cn(
+            'h-5 gap-1 px-1.5 text-[10.5px]',
+            isSiniestro
+              ? 'border-destructive/20 bg-destructive/10 text-destructive'
+              : 'border-ember/25 bg-ember-soft text-ember-2',
+          )}
+        >
+          {isSiniestro ? 'Siniestro' : 'Asesor'}
+        </Badge>
+      </td>
+
+      {/* Cliente */}
+      <td className="hidden px-4 py-3 md:table-cell">
+        {client ? (
+          <button
             type="button"
-            size="sm"
-            variant="ghost"
-            className="h-6 gap-1 px-2 text-[11px] text-ink-3 hover:text-ember-2"
-            onClick={() => onOpenClient(client.id)}
+            onClick={e => {
+              e.stopPropagation()
+              onOpenClient(client.id)
+            }}
+            className="flex items-center gap-1.5 text-[12.5px] text-ink-3 transition-colors hover:text-ember-2"
           >
             <IdCard className="size-3.5" />
-            Ver ficha
-          </Button>
+            DNI {client.dni}
+          </button>
+        ) : (
+          <span className="text-[12.5px] text-faint">—</span>
         )}
-      </div>
-    </div>
+      </td>
+
+      {/* Recibido */}
+      <td className="hidden whitespace-nowrap px-4 py-3 text-[12.5px] text-muted-foreground sm:table-cell">
+        {timeAgo(novedad.createdAt)}
+      </td>
+
+      {/* Acción */}
+      <td className="px-4 py-3">
+        <span className="flex items-center justify-end gap-1.5 text-[11.5px] text-muted-foreground">
+          <span className="hidden lg:inline">{isSiniestro ? 'Gestionar' : 'Ver en Bandeja'}</span>
+          <ChevronRight className="size-4 text-faint transition-colors group-hover:text-muted-foreground" />
+        </span>
+      </td>
+    </tr>
   )
 }
 
@@ -116,9 +162,15 @@ export function NovedadesView() {
 
   const items = page?.data ?? []
 
+  const tabs: { value: TabValue; label: string; count: number }[] = [
+    { value: 'todas', label: 'Todas', count: stats?.unreadTotal ?? 0 },
+    { value: 'siniestro', label: 'Siniestros', count: stats?.unreadSiniestros ?? 0 },
+    { value: 'handoff', label: 'Asesor', count: stats?.unreadHandoff ?? 0 },
+  ]
+
   return (
-    <div className="mx-auto max-w-3xl px-4 py-6 sm:px-6">
-      <div className="mb-5 flex items-start justify-between gap-4">
+    <div className="mx-auto w-full max-w-[1600px] px-4 py-6 sm:px-6 lg:px-8">
+      <header className="mb-5 flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="flex items-center gap-2 font-display text-[22px] tracking-tight text-ink">
             <Bell className="size-5 text-ember-2" />
@@ -139,63 +191,98 @@ export function NovedadesView() {
           <CheckCheck className="size-4" />
           Marcar todo como leído
         </Button>
-      </div>
-
-      <div className="relative mb-4">
-        <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          value={searchInput}
-          onChange={e => setSearchInput(e.target.value)}
-          placeholder="Buscar por DNI o nombre del cliente"
-          className="h-9 pl-9"
-        />
-      </div>
-
-      <Tabs value={tab} onValueChange={v => setTab(v as TabValue)} className="mb-4">
-        <TabsList className="grid h-9 w-full grid-cols-3 rounded-lg border border-line-2 bg-secondary/50 p-0.5 sm:inline-grid sm:w-auto">
-          <TabsTrigger value="todas" className="h-8 gap-1.5 rounded-md px-4 text-[12.5px]">
-            Todas
-            {stats && stats.unreadTotal > 0 && <CountBadge n={stats.unreadTotal} />}
-          </TabsTrigger>
-          <TabsTrigger value="siniestro" className="h-8 gap-1.5 rounded-md px-4 text-[12.5px]">
-            Siniestros
-            {stats && stats.unreadSiniestros > 0 && <CountBadge n={stats.unreadSiniestros} />}
-          </TabsTrigger>
-          <TabsTrigger value="handoff" className="h-8 gap-1.5 rounded-md px-4 text-[12.5px]">
-            Asesor
-            {stats && stats.unreadHandoff > 0 && <CountBadge n={stats.unreadHandoff} />}
-          </TabsTrigger>
-        </TabsList>
-      </Tabs>
+      </header>
 
       <div className="overflow-hidden rounded-xl border border-line-2 bg-card">
-        {isLoading ? (
-          <div className="divide-y divide-line-2">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="flex items-center gap-3 px-4 py-3.5">
-                <Skeleton className="size-9 rounded-lg" />
-                <div className="flex-1 space-y-2">
-                  <Skeleton className="h-3.5 w-48" />
-                  <Skeleton className="h-3 w-64" />
-                </div>
-              </div>
+        {/* Toolbar */}
+        <div className="flex flex-col gap-3 border-b border-line-2 p-3 lg:flex-row lg:items-center lg:justify-between">
+          <div className="grid grid-cols-3 gap-1 rounded-lg bg-secondary/60 p-1 lg:w-auto">
+            {tabs.map(t => (
+              <button
+                key={t.value}
+                type="button"
+                onClick={() => setTab(t.value)}
+                className={cn(
+                  'inline-flex items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-[12.5px] font-medium transition-colors lg:px-4',
+                  tab === t.value ? 'bg-card text-ink shadow-sm' : 'text-muted-foreground hover:text-ink',
+                )}
+              >
+                {t.label}
+                {t.count > 0 && <CountBadge n={t.count} />}
+              </button>
             ))}
           </div>
-        ) : isError ? (
-          <div className="px-4 py-12 text-center text-[13px] text-destructive">
+
+          <div className="relative sm:w-72">
+            <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={searchInput}
+              onChange={e => setSearchInput(e.target.value)}
+              placeholder="Buscar por DNI o nombre del cliente"
+              className="h-9 pl-8.5 text-[13px]"
+            />
+          </div>
+        </div>
+
+        {/* Table */}
+        {isError ? (
+          <div className="px-4 py-16 text-center text-[13px] text-destructive">
             No se pudieron cargar las novedades.
           </div>
-        ) : items.length === 0 ? (
-          <div className="flex flex-col items-center gap-3 px-4 py-14 text-center">
+        ) : !isLoading && items.length === 0 ? (
+          <div className="flex flex-col items-center gap-3 px-4 py-20 text-center">
             <div className="flex size-12 items-center justify-center rounded-full bg-secondary text-muted-foreground">
               <CheckCheck className="size-5" />
             </div>
-            <p className="text-[14px] text-muted-foreground">
+            <p className="text-[13.5px] text-muted-foreground">
               {search ? 'No hay novedades para esa búsqueda.' : 'No hay novedades por ahora.'}
             </p>
           </div>
         ) : (
-          items.map(n => <NovedadRow key={n.id} novedad={n} onOpen={handleOpen} onOpenClient={setSelectedClientId} />)
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[640px]">
+              <thead>
+                <tr className="border-b border-line-2 bg-secondary/30">
+                  <th className={TH}>Novedad</th>
+                  <th className={TH}>Tipo</th>
+                  <th className={cn(TH, 'hidden md:table-cell')}>Cliente</th>
+                  <th className={cn(TH, 'hidden sm:table-cell')}>Recibido</th>
+                  <th className={cn(TH, 'text-right')}>Acción</th>
+                </tr>
+              </thead>
+              <tbody>
+                {isLoading
+                  ? Array.from({ length: 8 }).map((_, i) => (
+                      <tr key={i} className="border-b border-line/70">
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-3">
+                            <Skeleton className="size-9 rounded-lg" />
+                            <div className="space-y-1.5">
+                              <Skeleton className="h-3.5 w-48" />
+                              <Skeleton className="h-3 w-64" />
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <Skeleton className="h-5 w-16" />
+                        </td>
+                        <td className="hidden px-4 py-3 md:table-cell">
+                          <Skeleton className="h-3.5 w-20" />
+                        </td>
+                        <td className="hidden px-4 py-3 sm:table-cell">
+                          <Skeleton className="h-3.5 w-16" />
+                        </td>
+                        <td className="px-4 py-3">
+                          <Skeleton className="ml-auto h-4 w-16" />
+                        </td>
+                      </tr>
+                    ))
+                  : items.map(n => (
+                      <NovedadTableRow key={n.id} novedad={n} onOpen={handleOpen} onOpenClient={setSelectedClientId} />
+                    ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 
