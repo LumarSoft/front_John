@@ -33,6 +33,7 @@ export function FormField({ field, value, onChange, invalid = false }: Readonly<
           onChange={e => onChange(e.target.value)}
         />
       )}
+      {field.help && <p className="text-[11.5px] text-faint leading-snug">{field.help}</p>}
     </div>
   )
 }

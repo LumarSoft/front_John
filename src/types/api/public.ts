@@ -5,6 +5,19 @@ export interface ProducerInfo {
 
 export type ProductFlow = 'instant' | 'fixed' | 'lead'
 
+/** A lead-flow data point captured by the contact form and the WhatsApp bot. */
+export interface CatalogField {
+  label: string
+  placeholder: string
+  span?: 'half' | 'full'
+  type?: 'text' | 'select'
+  options?: string[]
+  help?: string
+  /** Natural-language question used by the WhatsApp bot only (the web shows `label`). */
+  question?: string
+  numeric?: boolean
+}
+
 /** Canonical product description served by GET /public/products (no prices). */
 export interface ProductCatalogItem {
   id: string
@@ -14,4 +27,5 @@ export interface ProductCatalogItem {
   includes: string[]
   excludes: string[]
   flow: ProductFlow
+  fields: CatalogField[]
 }
