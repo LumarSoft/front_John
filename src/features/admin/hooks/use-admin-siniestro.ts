@@ -22,6 +22,7 @@ export function useUpdateAdminSiniestro(id: number | null) {
     onSuccess: () => {
       // Refresh the open detail plus any list/stats so estado changes show everywhere.
       void queryClient.invalidateQueries({ queryKey: ['admin', 'siniestros'] })
+      void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.admin.dashboard })
     },
   })
 }

@@ -12,6 +12,7 @@ export const QUERY_KEYS = {
     messages: (id: number) => ['admin', 'inbox', id, 'messages'] as const,
   },
   admin: {
+    dashboard: ['admin', 'dashboard'] as const,
     profile: ['admin', 'profile'] as const,
     config: ['admin', 'config'] as const,
     users: ['admin', 'users'] as const,

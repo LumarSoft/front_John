@@ -1,101 +1,173 @@
 'use client'
 
+import dynamic from 'next/dynamic'
 import { motion } from 'framer-motion'
-import { Activity, FileText, Sparkles, TrendingUp, Users, type LucideIcon } from 'lucide-react'
-import { Card, CardContent, CardHeader } from '@/src/components/ui/card'
-import { Badge } from '@/src/components/ui/badge'
+import { AlertTriangle, FileText, ShieldAlert, Users, Wallet, type LucideIcon } from 'lucide-react'
+import { Card, CardContent } from '@/src/components/ui/card'
+import { Skeleton } from '@/src/components/ui/skeleton'
+import { formatCurrency } from '@/src/features/admin/lib/asegurados-ui'
+import { useDashboard } from '../hooks/use-dashboard'
+import type { DashboardData } from '@/src/types/api/dashboard'
 
-interface Metric {
+// Recharts is heavy and never needed on first paint — load it lazily.
+const DashboardCharts = dynamic(() => import('./dashboard-charts').then(m => m.DashboardCharts), {
+  ssr: false,
+  loading: () => <ChartsSkeleton />,
+})
+
+type KpiTone = 'ember' | 'emerald' | 'red' | 'amber'
+
+interface Kpi {
+  key: string
   label: string
-  icon: LucideIcon
+  value: string
   hint: string
+  icon: LucideIcon
+  tone: KpiTone
 }
 
-const METRICS: Metric[] = [
-  { label: 'Usuarios', icon: Users, hint: 'Administradores activos' },
-  { label: 'Cotizaciones', icon: FileText, hint: 'Generadas este mes' },
-  { label: 'Actividad', icon: Activity, hint: 'Eventos recientes' },
-]
-
-const container = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.07, delayChildren: 0.05 } },
+const TONES: Record<KpiTone, string> = {
+  ember: 'border-amber-border bg-ember-soft text-ember-2',
+  emerald: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400',
+  red: 'bg-red-50 text-red-600 dark:bg-red-950/40 dark:text-red-400',
+  amber: 'bg-amber/15 text-amber-700 dark:text-amber',
 }
 
-const item = {
-  hidden: { opacity: 0, y: 14 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.45, ease: [0.16, 1, 0.3, 1] as const } },
+function buildKpis(data: DashboardData): Kpi[] {
+  const { kpis } = data
+  return [
+    {
+      key: 'asegurados',
+      label: 'Asegurados',
+      value: String(kpis.asegurados),
+      hint: 'Clientes activos',
+      icon: Users,
+      tone: 'ember',
+    },
+    {
+      key: 'solicitudes',
+      label: 'Solicitudes nuevas',
+      value: String(kpis.solicitudesNuevas),
+      hint: 'Sin contactar todavía',
+      icon: FileText,
+      tone: 'emerald',
+    },
+    {
+      key: 'deuda',
+      label: 'Deuda por cobrar',
+      value: formatCurrency(kpis.montoDeudaTotal),
+      hint: `${kpis.cuotasVencidas} cuotas vencidas`,
+      icon: Wallet,
+      tone: 'red',
+    },
+    {
+      key: 'siniestros',
+      label: 'Siniestros abiertos',
+      value: String(kpis.siniestrosAbiertos),
+      hint: 'Pendientes o en proceso',
+      icon: ShieldAlert,
+      tone: 'amber',
+    },
+  ]
+}
+
+function KpiCard({ kpi }: { kpi: Kpi }) {
+  const Icon = kpi.icon
+  return (
+    <Card className="border-line-2 p-4 shadow-sm">
+      <span
+        className={`flex size-10 items-center justify-center rounded-xl border border-transparent ${TONES[kpi.tone]}`}
+      >
+        <Icon className="size-5" />
+      </span>
+      <CardContent className="mt-3 p-0">
+        <div className="font-display text-[28px] leading-none text-ink">{kpi.value}</div>
+        <div className="mt-1.5 text-[13px] font-medium text-ink">{kpi.label}</div>
+        <div className="text-[12px] text-muted-foreground">{kpi.hint}</div>
+      </CardContent>
+    </Card>
+  )
+}
+
+function KpiRow({ data }: { data: DashboardData }) {
+  return (
+    <div className="mt-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
+      {buildKpis(data).map(kpi => (
+        <KpiCard key={kpi.key} kpi={kpi} />
+      ))}
+    </div>
+  )
+}
+
+function ChartsSkeleton() {
+  return (
+    <div className="mt-5 grid gap-4">
+      <Skeleton className="h-[360px] rounded-xl" />
+      <div className="grid gap-4 lg:grid-cols-2">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Skeleton key={i} className="h-[320px] rounded-xl" />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function DashboardSkeleton() {
+  return (
+    <>
+      <div className="mt-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Skeleton key={i} className="h-[122px] rounded-xl" />
+        ))}
+      </div>
+      <ChartsSkeleton />
+    </>
+  )
 }
 
 export function DashboardHome() {
+  const { data, isLoading, isError, refetch } = useDashboard()
+
   return (
     <div className="mx-auto w-full max-w-6xl px-5 py-8 md:px-8 md:py-10">
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
         <div className="text-[10.5px] font-medium uppercase tracking-[0.3em] text-ember-2">Dashboard</div>
         <h1 className="mt-2 font-display text-[clamp(28px,4vw,40px)] tracking-[-0.035em] text-ink">Hola de nuevo 👋</h1>
         <p className="mt-2 text-[14.5px] text-muted-foreground">
-          Este es el panel de control. Pronto vas a encontrar acá las métricas de tu operación.
+          Un resumen en vivo de tu operación: asegurados, solicitudes, cobranzas y siniestros.
         </p>
       </motion.div>
 
-      <motion.div
-        variants={container}
-        initial="hidden"
-        animate="show"
-        className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
-      >
-        {METRICS.map(metric => (
-          <motion.div key={metric.label} variants={item}>
-            <Card className="group relative overflow-hidden border-line-2 shadow-sm transition-shadow duration-300 hover:shadow-[0_18px_50px_-24px_rgba(15,13,10,0.25)]">
-              <div className="pointer-events-none absolute -right-6 -top-8 size-24 rounded-full bg-amber-subtle blur-2xl transition-opacity duration-300 group-hover:opacity-80" />
-              <CardHeader className="flex flex-row items-center justify-between">
-                <div className="flex size-10 items-center justify-center rounded-xl border border-amber-border bg-ember-soft text-ember-2">
-                  <metric.icon className="size-5" />
-                </div>
-                <Badge variant="secondary" className="bg-secondary text-muted-foreground">
-                  Próximamente
-                </Badge>
-              </CardHeader>
-              <CardContent>
-                <div className="font-display text-[30px] leading-none text-ink/35">—</div>
-                <div className="mt-2 text-[13px] font-medium text-ink">{metric.label}</div>
-                <div className="text-[12px] text-muted-foreground">{metric.hint}</div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        ))}
-      </motion.div>
+      {isLoading ? <DashboardSkeleton /> : null}
 
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
-        className="mt-5"
-      >
-        <Card className="relative overflow-hidden border-line-2 shadow-sm">
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_120%_at_100%_0%,var(--color-amber-subtle),transparent_55%)]" />
-          <CardContent className="relative flex flex-col items-center gap-5 py-16 text-center">
-            <motion.div
-              animate={{ y: [0, -6, 0] }}
-              transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
-              className="flex size-16 items-center justify-center rounded-2xl border border-amber-border bg-ember-soft text-ember-2"
-            >
-              <Sparkles className="size-7" />
-            </motion.div>
+      {isError ? (
+        <Card className="mt-8 border-line-2 shadow-sm">
+          <CardContent className="flex flex-col items-center gap-4 py-14 text-center">
+            <span className="flex size-12 items-center justify-center rounded-full bg-red-50 text-red-600 dark:bg-red-950/40 dark:text-red-400">
+              <AlertTriangle className="size-6" />
+            </span>
             <div>
-              <h2 className="font-display text-[24px] text-ink">Más métricas en camino</h2>
-              <p className="mx-auto mt-2 max-w-[420px] text-[14px] leading-relaxed text-muted-foreground">
-                Estamos construyendo gráficos de cotizaciones, actividad de clientes y reportes. Por ahora podés
-                gestionar usuarios y tu configuración desde el menú.
+              <h2 className="font-display text-[20px] text-ink">No pudimos cargar las métricas</h2>
+              <p className="mx-auto mt-1.5 max-w-[380px] text-[13.5px] text-muted-foreground">
+                Revisá tu conexión e intentá de nuevo.
               </p>
             </div>
-            <div className="flex items-center gap-2 text-[12.5px] font-medium text-ember-2">
-              <TrendingUp className="size-4" />
-              En desarrollo
-            </div>
+            <button
+              onClick={() => refetch()}
+              className="rounded-lg border border-amber-border bg-ember-soft px-4 py-2 text-[13px] font-medium text-ember-2 transition-colors hover:bg-amber-subtle"
+            >
+              Reintentar
+            </button>
           </CardContent>
         </Card>
-      </motion.div>
+      ) : null}
+
+      {data ? (
+        <>
+          <KpiRow data={data} />
+          <DashboardCharts data={data} />
+        </>
+      ) : null}
     </div>
   )
 }
