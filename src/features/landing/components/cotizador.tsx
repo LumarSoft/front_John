@@ -68,7 +68,7 @@ export function Cotizador() {
                 </div>
                 <div className="mt-auto">
                   <div className="font-display text-[18px] md:text-[20px] text-ink leading-[1.1]">{item.label}</div>
-                  <div className="text-[12px] md:text-[12.5px] text-muted mt-1 leading-[1.5]">{item.sub}</div>
+                  <div className="text-[12px] md:text-[12.5px] text-faint mt-1 leading-[1.5]">{item.sub}</div>
                 </div>
                 <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-3 transition-colors group-hover:text-ember-2">
                   Cotizar

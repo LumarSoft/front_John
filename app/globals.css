@@ -1,8 +1,51 @@
 @import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
+
+@custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --font-sans: var(--font-manrope);
   --font-display: var(--font-inter);
+  --font-heading: var(--font-manrope);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
 }
 
 @theme {
@@ -13,8 +56,8 @@
   --color-ink: #0f0d0a;
   --color-ink-2: #1f1c16;
   --color-ink-3: #3d382e;
-  --color-muted: #6b6558;
-  --color-muted-2: #8f897b;
+  --color-faint: #6b6558;
+  --color-faint-2: #8f897b;
   --color-paper: #ffffff;
   --color-paper-2: #fafaf6;
 
@@ -59,8 +102,8 @@
   --color-ink: #fafaf6;
   --color-ink-2: #ece9df;
   --color-ink-3: #b8b3a3;
-  --color-muted: #7a7568;
-  --color-muted-2: #5a5648;
+  --color-faint: #7a7568;
+  --color-faint-2: #5a5648;
   --color-paper: #14110c;
   --color-paper-2: #1c1812;
   --color-line: rgba(250, 250, 246, 0.08);
@@ -85,6 +128,7 @@
   html {
     scroll-behavior: smooth;
     scroll-padding-top: 90px;
+    @apply font-sans;
   }
 
   @media (max-width: 720px) {
@@ -100,6 +144,7 @@
     -webkit-font-smoothing: antialiased;
     font-feature-settings: 'ss01', 'ss02';
     line-height: 1.5;
+    @apply bg-background text-foreground;
   }
 
   a {
@@ -115,6 +160,9 @@
   ::selection {
     background: var(--color-ember);
     color: var(--color-paper);
+  }
+  * {
+    @apply border-border outline-ring/50;
   }
 }
 
@@ -277,5 +325,103 @@
     opacity: 0.18;
     mix-blend-mode: overlay;
     background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='260' height='260'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 0.7 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  }
+}
+
+:root {
+  /* shadcn tokens mapped to the Pellegrini white + gold brand palette */
+  --radius: 0.85rem;
+  --background: #ffffff;
+  --foreground: #0f0d0a;
+  --card: #ffffff;
+  --card-foreground: #0f0d0a;
+  --popover: #ffffff;
+  --popover-foreground: #0f0d0a;
+  --primary: #e8a820;
+  --primary-foreground: #1a1206;
+  --secondary: #f3f1ea;
+  --secondary-foreground: #1f1c16;
+  --muted: #f3f1ea;
+  --muted-foreground: #6b6558;
+  --accent: #f6f1e4;
+  --accent-foreground: #1f1c16;
+  --destructive: #dc2626;
+  --border: rgba(15, 13, 10, 0.1);
+  --input: rgba(15, 13, 10, 0.12);
+  --ring: #e8a820;
+  --chart-1: #e8a820;
+  --chart-2: #c48a0a;
+  --chart-3: #f5c060;
+  --chart-4: #8f897b;
+  --chart-5: #3d382e;
+  --sidebar: #efece3;
+  --sidebar-foreground: #3d382e;
+  --sidebar-primary: #e8a820;
+  --sidebar-primary-foreground: #1a1206;
+  --sidebar-accent: #e4dfd1;
+  --sidebar-accent-foreground: #0f0d0a;
+  --sidebar-border: rgba(15, 13, 10, 0.08);
+  --sidebar-ring: #e8a820;
+}
+
+.dark {
+  --background: #0a0907;
+  --foreground: #fafaf6;
+  --card: #14110c;
+  --card-foreground: #fafaf6;
+  --popover: #14110c;
+  --popover-foreground: #fafaf6;
+  --primary: #e8a820;
+  --primary-foreground: #1a1206;
+  --secondary: #1c1812;
+  --secondary-foreground: #fafaf6;
+  --muted: #1c1812;
+  --muted-foreground: #9c9685;
+  --accent: #241f16;
+  --accent-foreground: #fafaf6;
+  --destructive: #ef4444;
+  --border: rgba(250, 250, 246, 0.1);
+  --input: rgba(250, 250, 246, 0.14);
+  --ring: #e8a820;
+  --chart-1: #e8a820;
+  --chart-2: #c48a0a;
+  --chart-3: #f5c060;
+  --chart-4: #9c9685;
+  --chart-5: #b8b3a3;
+  --sidebar: #14110c;
+  --sidebar-foreground: #b8b3a3;
+  --sidebar-primary: #e8a820;
+  --sidebar-primary-foreground: #1a1206;
+  --sidebar-accent: #1c1812;
+  --sidebar-accent-foreground: #fafaf6;
+  --sidebar-border: rgba(250, 250, 246, 0.08);
+  --sidebar-ring: #e8a820;
+}
+
+/* Print isolation — render only the active printable document (credencial/certificado). */
+@media print {
+  body * {
+    visibility: hidden !important;
+  }
+
+  .print-area,
+  .print-area * {
+    visibility: visible !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .print-area {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 8mm;
+    background: #ffffff;
+  }
+
+  @page {
+    margin: 10mm;
   }
 }
