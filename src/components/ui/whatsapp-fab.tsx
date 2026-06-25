@@ -1,8 +1,10 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { usePathname } from 'next/navigation'
 
 export function WhatsAppFab() {
+  const pathname = usePathname()
   const [visible, setVisible] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
 
@@ -19,7 +21,7 @@ export function WhatsAppFab() {
     return () => observer.disconnect()
   }, [])
 
-  const shown = visible && !menuOpen
+  const shown = visible && !menuOpen && !pathname.startsWith('/admin')
 
   return (
     <a

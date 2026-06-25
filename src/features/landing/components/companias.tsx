@@ -67,7 +67,7 @@ export function Companias() {
                     <Image src={c.logo} alt={c.name} fill className="object-contain object-left" sizes="180px" />
                   </div>
                 )}
-                <div className="flex h-9 w-9 items-center justify-center rounded-full border border-line-2 text-muted transition-colors group-hover:text-ember-2 group-hover:border-ember/40 shrink-0">
+                <div className="flex h-9 w-9 items-center justify-center rounded-full border border-line-2 text-faint transition-colors group-hover:text-ember-2 group-hover:border-ember/40 shrink-0">
                   <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8">
                     <path d="M3 7h8M7.5 3.5L11 7l-3.5 3.5" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
@@ -79,7 +79,7 @@ export function Companias() {
               </p>
 
               <div className="mt-auto pt-5 md:pt-6 border-t border-line">
-                <div className="text-[10px] tracking-[0.22em] uppercase text-muted font-semibold mb-3">
+                <div className="text-[10px] tracking-[0.22em] uppercase text-faint font-semibold mb-3">
                   Líneas que operamos
                 </div>
                 <div className="flex flex-wrap gap-2">

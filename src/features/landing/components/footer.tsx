@@ -1,4 +1,5 @@
 import Image from 'next/image'
+import { AttentionHoursText } from '@/src/components/ui/attention-hours-text'
 
 export function Footer() {
   return (
@@ -63,7 +64,9 @@ export function Footer() {
               hola@jpellegrini.ar
             </a>
             <a className="block py-1">Blvd. 27 de Febrero 275, Rosario</a>
-            <a className="block py-1">Lunes a viernes · 9 a 18 hs</a>
+            <a className="block py-1">
+              <AttentionHoursText />
+            </a>
           </div>
           <div>
             <h5 className="text-[10.5px] tracking-[0.24em] uppercase text-paper/50 mb-4 mt-0 font-semibold">
