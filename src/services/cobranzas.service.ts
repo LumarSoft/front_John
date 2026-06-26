@@ -5,6 +5,7 @@ function buildQuery(params: CobranzasQuery): string {
   const search = new URLSearchParams()
   if (params.search?.trim()) search.set('search', params.search.trim())
   if (params.estado) search.set('estado', params.estado)
+  if (params.producerCodeId) search.set('producerCodeId', String(params.producerCodeId))
   if (params.page) search.set('page', String(params.page))
   if (params.pageSize) search.set('pageSize', String(params.pageSize))
   const qs = search.toString()

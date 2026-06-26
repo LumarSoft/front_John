@@ -10,6 +10,7 @@ import {
   LayoutDashboard,
   LogOut,
   MessageSquare,
+  Phone,
   ShieldCheck,
   UserCog,
   Users,
@@ -44,6 +45,8 @@ interface NavItem {
   label: string
   href: string
   icon: LucideIcon
+  // Only visible to SUPERADMIN (org-wide management).
+  superAdminOnly?: boolean
 }
 
 const NAV_ITEMS: NavItem[] = [
@@ -54,7 +57,8 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Siniestros', href: '/admin/siniestros', icon: FileWarning },
   { label: 'Asegurados', href: '/admin/asegurados', icon: ShieldCheck },
   { label: 'Cobranzas', href: '/admin/cobranzas', icon: Wallet },
-  { label: 'Usuarios', href: '/admin/usuarios', icon: Users },
+  { label: 'Usuarios', href: '/admin/usuarios', icon: Users, superAdminOnly: true },
+  { label: 'Números', href: '/admin/numeros', icon: Phone, superAdminOnly: true },
   { label: 'Configuración', href: '/admin/configuracion', icon: UserCog },
 ]
 
@@ -74,6 +78,10 @@ export function AppSidebar() {
   const { data: novedadesStats } = useNovedadesStats()
 
   const initials = profile?.email.slice(0, 2).toUpperCase() ?? 'JP'
+  const isSuperAdmin = profile?.role === 'SUPERADMIN'
+  const roleLabel = isSuperAdmin ? 'SuperAdmin' : 'Administrador'
+  // Hide SuperAdmin-only items for plain admins.
+  const navItems = NAV_ITEMS.filter(item => !item.superAdminOnly || isSuperAdmin)
 
   const handleLogout = () => {
     logout()
@@ -97,7 +105,7 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupLabel className="text-[10.5px] tracking-[0.14em] uppercase">Navegación</SidebarGroupLabel>
           <SidebarMenu className="gap-1">
-            {NAV_ITEMS.map(item => {
+            {navItems.map(item => {
               const unread = item.href === '/admin/novedades' ? (novedadesStats?.unreadTotal ?? 0) : 0
               return (
                 <SidebarMenuItem key={item.href}>
@@ -142,7 +150,7 @@ export function AppSidebar() {
                     <span className="truncate text-[13px] font-medium text-sidebar-foreground">
                       {profile?.email ?? 'Cargando…'}
                     </span>
-                    <span className="truncate text-[11px] text-muted-foreground">Administrador</span>
+                    <span className="truncate text-[11px] text-muted-foreground">{roleLabel}</span>
                   </div>
                   <ChevronsUpDown className="ml-auto size-4 text-muted-foreground" />
                 </SidebarMenuButton>
@@ -156,7 +164,7 @@ export function AppSidebar() {
                 <DropdownMenuLabel className="font-normal">
                   <div className="grid leading-tight">
                     <span className="truncate text-[13px] font-medium">{profile?.email}</span>
-                    <span className="truncate text-[11px] text-muted-foreground">Administrador</span>
+                    <span className="truncate text-[11px] text-muted-foreground">{roleLabel}</span>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
