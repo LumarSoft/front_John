@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import dynamic from 'next/dynamic'
 import { motion } from 'framer-motion'
 import { AlertTriangle, FileText, ShieldAlert, Users, Wallet, type LucideIcon } from 'lucide-react'
@@ -7,6 +8,7 @@ import { Card, CardContent } from '@/src/components/ui/card'
 import { Skeleton } from '@/src/components/ui/skeleton'
 import { formatCurrency } from '@/src/features/admin/lib/asegurados-ui'
 import { useDashboard } from '../hooks/use-dashboard'
+import { ScopeFilter, type ScopeFilterValue } from './scope-filter'
 import type { DashboardData } from '@/src/types/api/dashboard'
 
 // Recharts is heavy and never needed on first paint — load it lazily.
@@ -126,16 +128,27 @@ function DashboardSkeleton() {
 }
 
 export function DashboardHome() {
-  const { data, isLoading, isError, refetch } = useDashboard()
+  const [scope, setScope] = useState<ScopeFilterValue>({})
+  const { data, isLoading, isError, refetch } = useDashboard(scope)
 
   return (
     <div className="mx-auto w-full max-w-6xl px-5 py-8 md:px-8 md:py-10">
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-        <div className="text-[10.5px] font-medium uppercase tracking-[0.3em] text-ember-2">Dashboard</div>
-        <h1 className="mt-2 font-display text-[clamp(28px,4vw,40px)] tracking-[-0.035em] text-ink">Hola de nuevo 👋</h1>
-        <p className="mt-2 text-[14.5px] text-muted-foreground">
-          Un resumen en vivo de tu operación: asegurados, solicitudes, cobranzas y siniestros.
-        </p>
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="flex flex-wrap items-start justify-between gap-4"
+      >
+        <div>
+          <div className="text-[10.5px] font-medium uppercase tracking-[0.3em] text-ember-2">Dashboard</div>
+          <h1 className="mt-2 font-display text-[clamp(28px,4vw,40px)] tracking-[-0.035em] text-ink">
+            Hola de nuevo 👋
+          </h1>
+          <p className="mt-2 text-[14.5px] text-muted-foreground">
+            Un resumen en vivo de tu operación: asegurados, solicitudes, cobranzas y siniestros.
+          </p>
+        </div>
+        <ScopeFilter value={scope} onChange={setScope} />
       </motion.div>
 
       {isLoading ? <DashboardSkeleton /> : null}

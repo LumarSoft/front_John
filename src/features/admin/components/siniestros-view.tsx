@@ -25,6 +25,7 @@ import { EstadoBadge, tipoLabel } from '../lib/siniestros-ui'
 import { useAdminSiniestros } from '../hooks/use-admin-siniestros'
 import { useAdminSiniestrosStats } from '../hooks/use-admin-siniestros-stats'
 import { SiniestroSheet } from './siniestro-sheet'
+import { ScopeFilter, type ScopeFilterValue } from './scope-filter'
 
 const PAGE_SIZE = 25
 
@@ -198,6 +199,7 @@ export function SiniestrosView() {
   const [searchInput, setSearchInput] = useState('')
   const search = useDebouncedValue(searchInput, 350)
   const [filter, setFilter] = useState<SiniestroEstadoFilter>('pendiente')
+  const [scope, setScope] = useState<ScopeFilterValue>({})
   const [page, setPage] = useState(1)
   const [selectedId, setSelectedId] = useState<number | null>(null)
 
@@ -209,10 +211,15 @@ export function SiniestrosView() {
     setFilter(value)
     setPage(1)
   }
+  const handleScope = (value: ScopeFilterValue) => {
+    setScope(value)
+    setPage(1)
+  }
 
   const { data, isLoading, isError, isFetching } = useAdminSiniestros({
     search,
     estado: filter === 'todos' ? undefined : filter,
+    ...scope,
     page,
     pageSize: PAGE_SIZE,
   })
@@ -234,26 +241,29 @@ export function SiniestrosView() {
             Seguí las denuncias de tu cartera, cargá el número de compañía y actualizá su estado.
           </p>
         </div>
-        <div className="relative w-full max-w-xs">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Buscar nombre, DNI, certificado o N°…"
-            value={searchInput}
-            onChange={e => handleSearch(e.target.value)}
-            className="h-10 border-line-2 px-9 text-[13px]"
-          />
-          {isFetching && !isLoading && searchInput ? (
-            <Loader2 className="absolute right-3 top-1/2 size-4 -translate-y-1/2 animate-spin text-muted-foreground" />
-          ) : searchInput ? (
-            <button
-              type="button"
-              aria-label="Limpiar búsqueda"
-              onClick={() => handleSearch('')}
-              className="absolute right-2.5 top-1/2 flex size-5 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-ink"
-            >
-              <X className="size-3.5" />
-            </button>
-          ) : null}
+        <div className="flex w-full max-w-md items-center gap-2">
+          <ScopeFilter value={scope} onChange={handleScope} className="shrink-0" />
+          <div className="relative flex-1">
+            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Buscar nombre, DNI, certificado o N°…"
+              value={searchInput}
+              onChange={e => handleSearch(e.target.value)}
+              className="h-10 border-line-2 px-9 text-[13px]"
+            />
+            {isFetching && !isLoading && searchInput ? (
+              <Loader2 className="absolute right-3 top-1/2 size-4 -translate-y-1/2 animate-spin text-muted-foreground" />
+            ) : searchInput ? (
+              <button
+                type="button"
+                aria-label="Limpiar búsqueda"
+                onClick={() => handleSearch('')}
+                className="absolute right-2.5 top-1/2 flex size-5 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-ink"
+              >
+                <X className="size-3.5" />
+              </button>
+            ) : null}
+          </div>
         </div>
       </div>
 

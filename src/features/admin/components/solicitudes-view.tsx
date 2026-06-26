@@ -9,6 +9,7 @@ import { cn } from '@/src/lib/utils'
 import { useDebouncedValue } from '@/src/hooks/use-debounced-value'
 import type { SolicitudListItem, SolicitudKind, SolicitudStatus } from '@/src/types/api/solicitudes'
 import { useSolicitudes } from '../hooks/use-solicitudes'
+import { ScopeFilter, type ScopeFilterValue } from './scope-filter'
 import { SolicitudDialog } from './solicitud-dialog'
 import { StatusPill } from './solicitud-status-pill'
 import { PRODUCT_LABELS, productLabel, timeAgo } from '../lib/solicitudes-ui'
@@ -105,6 +106,7 @@ export function SolicitudesView() {
   const [kind, setKind] = useState<SolicitudKind | ''>('')
   const [searchInput, setSearchInput] = useState('')
   const search = useDebouncedValue(searchInput, 350)
+  const [scope, setScope] = useState<ScopeFilterValue>({})
   const [target, setTarget] = useState<{ kind: SolicitudKind; id: number } | null>(null)
 
   const status = tab === 'todas' ? undefined : tab
@@ -117,6 +119,7 @@ export function SolicitudesView() {
     productType: productType || undefined,
     kind: kind || undefined,
     search,
+    ...scope,
     pageSize: 50,
   })
 
@@ -192,6 +195,7 @@ export function SolicitudesView() {
               <option value="cotizacion">Cotización online</option>
               <option value="lead">Lead / asesor</option>
             </select>
+            <ScopeFilter value={scope} onChange={setScope} className="!h-9" />
           </div>
         </div>
 

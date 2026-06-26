@@ -7,6 +7,8 @@ function buildQuery(params: NovedadesQuery): string {
   if (params.unread) search.set('unread', 'true')
   if (params.search?.trim()) search.set('search', params.search.trim())
   if (params.clientId) search.set('clientId', String(params.clientId))
+  if (params.producerCodeId) search.set('producerCodeId', String(params.producerCodeId))
+  if (params.phoneNumberId) search.set('phoneNumberId', String(params.phoneNumberId))
   if (params.page) search.set('page', String(params.page))
   if (params.pageSize) search.set('pageSize', String(params.pageSize))
   const qs = search.toString()

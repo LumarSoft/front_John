@@ -27,7 +27,7 @@ import { useDebouncedValue } from '@/src/hooks/use-debounced-value'
 import type { CobranzaCliente, CobranzaEstadoFilter, CobranzasStats } from '@/src/types/api/cobranzas'
 import { useCobranzas } from '../hooks/use-cobranzas'
 import { useCobranzasStats } from '../hooks/use-cobranzas-stats'
-import { ProducerCodeFilter } from './producer-code-filter'
+import { ScopeFilter, type ScopeFilterValue } from './scope-filter'
 import {
   buildCobranzaWhatsappUrl,
   formatCurrency,
@@ -340,7 +340,7 @@ export function CobranzasView() {
   const [searchInput, setSearchInput] = useState('')
   const search = useDebouncedValue(searchInput, 350)
   const [filter, setFilter] = useState<CobranzaEstadoFilter>('vencidas')
-  const [producerCodeId, setProducerCodeId] = useState<number | undefined>()
+  const [scope, setScope] = useState<ScopeFilterValue>({})
   const [page, setPage] = useState(1)
   const [selectedId, setSelectedId] = useState<number | null>(null)
 
@@ -352,15 +352,15 @@ export function CobranzasView() {
     setFilter(value)
     setPage(1)
   }
-  const handleProducerCode = (value?: number) => {
-    setProducerCodeId(value)
+  const handleScope = (value: ScopeFilterValue) => {
+    setScope(value)
     setPage(1)
   }
 
   const { data, isLoading, isError, isFetching } = useCobranzas({
     search,
     estado: filter,
-    producerCodeId,
+    ...scope,
     page,
     pageSize: PAGE_SIZE,
   })
@@ -383,7 +383,7 @@ export function CobranzasView() {
           </p>
         </div>
         <div className="flex w-full max-w-xs flex-col gap-2">
-          <ProducerCodeFilter value={producerCodeId} onChange={handleProducerCode} className="w-full" />
+          <ScopeFilter value={scope} onChange={handleScope} className="w-full" />
           <div className="relative w-full">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input

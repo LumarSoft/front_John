@@ -13,6 +13,8 @@ function buildQuery(params: SolicitudesQuery): string {
   if (params.productType) search.set('productType', params.productType)
   if (params.kind) search.set('kind', params.kind)
   if (params.search?.trim()) search.set('search', params.search.trim())
+  if (params.producerCodeId) search.set('producerCodeId', String(params.producerCodeId))
+  if (params.phoneNumberId) search.set('phoneNumberId', String(params.phoneNumberId))
   if (params.page) search.set('page', String(params.page))
   if (params.pageSize) search.set('pageSize', String(params.pageSize))
   const qs = search.toString()

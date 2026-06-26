@@ -12,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useDebouncedValue } from '@/src/hooks/use-debounced-value'
 import type { AdminClientSummary, ClientEstadoFilter, ClientSort, RiskType } from '@/src/types/api/clients'
 import { useAdminClients } from '../hooks/use-admin-clients'
-import { ProducerCodeFilter } from './producer-code-filter'
+import { ScopeFilter, type ScopeFilterValue } from './scope-filter'
 import {
   clientStatus,
   cuotaPaymentStatus,
@@ -153,12 +153,12 @@ export function AseguradosView() {
   const [riskType, setRiskType] = useState<RiskType | undefined>()
   const [estado, setEstado] = useState<ClientEstadoFilter | undefined>()
   const [sort, setSort] = useState<ClientSort>('nombre_asc')
-  const [producerCodeId, setProducerCodeId] = useState<number | undefined>()
+  const [scope, setScope] = useState<ScopeFilterValue>({})
   const [page, setPage] = useState(1)
   const [selectedId, setSelectedId] = useState<number | null>(null)
 
-  const handleProducerCode = (value?: number) => {
-    setProducerCodeId(value)
+  const handleScope = (value: ScopeFilterValue) => {
+    setScope(value)
     setPage(1)
   }
 
@@ -185,7 +185,7 @@ export function AseguradosView() {
     riskType,
     estado,
     sort,
-    producerCodeId,
+    ...scope,
     page,
     pageSize: PAGE_SIZE,
   })
@@ -207,7 +207,7 @@ export function AseguradosView() {
           </p>
         </div>
         <div className="flex w-full max-w-xl items-center gap-2">
-          <ProducerCodeFilter value={producerCodeId} onChange={handleProducerCode} className="shrink-0" />
+          <ScopeFilter value={scope} onChange={handleScope} className="shrink-0" />
           <div className="relative flex-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
