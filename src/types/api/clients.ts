@@ -94,6 +94,8 @@ export interface AdminClientsQuery {
   riskType?: RiskType
   estado?: ClientEstadoFilter
   sort?: ClientSort
+  // SuperAdmin "filter by código" selector.
+  producerCodeId?: number
   page?: number
   pageSize?: number
 }

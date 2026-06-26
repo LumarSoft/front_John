@@ -27,6 +27,7 @@ import { useDebouncedValue } from '@/src/hooks/use-debounced-value'
 import type { CobranzaCliente, CobranzaEstadoFilter, CobranzasStats } from '@/src/types/api/cobranzas'
 import { useCobranzas } from '../hooks/use-cobranzas'
 import { useCobranzasStats } from '../hooks/use-cobranzas-stats'
+import { ProducerCodeFilter } from './producer-code-filter'
 import {
   buildCobranzaWhatsappUrl,
   formatCurrency,
@@ -339,6 +340,7 @@ export function CobranzasView() {
   const [searchInput, setSearchInput] = useState('')
   const search = useDebouncedValue(searchInput, 350)
   const [filter, setFilter] = useState<CobranzaEstadoFilter>('vencidas')
+  const [producerCodeId, setProducerCodeId] = useState<number | undefined>()
   const [page, setPage] = useState(1)
   const [selectedId, setSelectedId] = useState<number | null>(null)
 
@@ -350,8 +352,18 @@ export function CobranzasView() {
     setFilter(value)
     setPage(1)
   }
+  const handleProducerCode = (value?: number) => {
+    setProducerCodeId(value)
+    setPage(1)
+  }
 
-  const { data, isLoading, isError, isFetching } = useCobranzas({ search, estado: filter, page, pageSize: PAGE_SIZE })
+  const { data, isLoading, isError, isFetching } = useCobranzas({
+    search,
+    estado: filter,
+    producerCodeId,
+    page,
+    pageSize: PAGE_SIZE,
+  })
   const { data: stats } = useCobranzasStats()
 
   const rows = data?.data ?? []
@@ -370,26 +382,29 @@ export function CobranzasView() {
             Seguimiento de la deuda de tu cartera. Identificá a quién contactar y resolvé los pagos pendientes.
           </p>
         </div>
-        <div className="relative w-full max-w-xs">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Buscar nombre, DNI, email, patente…"
-            value={searchInput}
-            onChange={e => handleSearch(e.target.value)}
-            className="h-10 border-line-2 px-9 text-[13px]"
-          />
-          {isFetching && !isLoading && searchInput ? (
-            <Loader2 className="absolute right-3 top-1/2 size-4 -translate-y-1/2 animate-spin text-muted-foreground" />
-          ) : searchInput ? (
-            <button
-              type="button"
-              aria-label="Limpiar búsqueda"
-              onClick={() => handleSearch('')}
-              className="absolute right-2.5 top-1/2 flex size-5 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-ink"
-            >
-              <X className="size-3.5" />
-            </button>
-          ) : null}
+        <div className="flex w-full max-w-xs flex-col gap-2">
+          <ProducerCodeFilter value={producerCodeId} onChange={handleProducerCode} className="w-full" />
+          <div className="relative w-full">
+            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Buscar nombre, DNI, email, patente…"
+              value={searchInput}
+              onChange={e => handleSearch(e.target.value)}
+              className="h-10 border-line-2 px-9 text-[13px]"
+            />
+            {isFetching && !isLoading && searchInput ? (
+              <Loader2 className="absolute right-3 top-1/2 size-4 -translate-y-1/2 animate-spin text-muted-foreground" />
+            ) : searchInput ? (
+              <button
+                type="button"
+                aria-label="Limpiar búsqueda"
+                onClick={() => handleSearch('')}
+                className="absolute right-2.5 top-1/2 flex size-5 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-ink"
+              >
+                <X className="size-3.5" />
+              </button>
+            ) : null}
+          </div>
         </div>
       </div>
 

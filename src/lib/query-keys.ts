@@ -16,6 +16,8 @@ export const QUERY_KEYS = {
     profile: ['admin', 'profile'] as const,
     config: ['admin', 'config'] as const,
     users: ['admin', 'users'] as const,
+    producerCodes: ['admin', 'producer-codes'] as const,
+    phoneNumbers: ['admin', 'phone-numbers'] as const,
     clients: (params?: AdminClientsQuery) => ['admin', 'clients', 'list', params ?? {}] as const,
     clientsStats: ['admin', 'clients', 'stats'] as const,
     client: (id: number) => ['admin', 'clients', id] as const,

@@ -7,6 +7,7 @@ function buildListQuery(params: AdminClientsQuery): string {
   if (params.riskType) search.set('riskType', params.riskType)
   if (params.estado) search.set('estado', params.estado)
   if (params.sort) search.set('sort', params.sort)
+  if (params.producerCodeId) search.set('producerCodeId', String(params.producerCodeId))
   if (params.page) search.set('page', String(params.page))
   if (params.pageSize) search.set('pageSize', String(params.pageSize))
   const qs = search.toString()

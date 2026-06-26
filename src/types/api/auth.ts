@@ -1,8 +1,16 @@
+export type AdminRole = 'SUPERADMIN' | 'ADMIN'
+
+export interface AdminUserProducerCode {
+  producerCode: { id: number; code: string; holderName: string | null }
+}
+
 export interface AdminUser {
   id: number
   email: string
-  role: string
+  role: AdminRole
   producerId: number
+  // Codes this admin can access (empty for SUPERADMIN = all). Present on /users/me and /users.
+  producerCodes?: AdminUserProducerCode[]
   createdAt: string
   updatedAt: string
 }

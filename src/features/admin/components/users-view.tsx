@@ -28,6 +28,7 @@ import {
 import type { AdminUser } from '@/src/types/api/auth'
 import { useUsers } from '../hooks/use-users'
 import { useProfile } from '../hooks/use-profile'
+import { useRole } from '../hooks/use-role'
 import { useDeleteUser } from '../hooks/use-delete-user'
 import { UserFormDialog } from './user-form-dialog'
 
@@ -38,6 +39,7 @@ function formatDate(value: string): string {
 export function UsersView() {
   const { data: users, isLoading, isError } = useUsers()
   const { data: profile } = useProfile()
+  const { isSuperAdmin, isLoading: roleLoading } = useRole()
   const deleteUser = useDeleteUser()
 
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -64,6 +66,23 @@ export function UsersView() {
       },
       onError: () => toast.error('No se pudo eliminar el usuario.'),
     })
+  }
+
+  // Org user management is SuperAdmin-only (API enforces it too via RolesGuard).
+  if (!roleLoading && !isSuperAdmin) {
+    return (
+      <div className="mx-auto w-full max-w-5xl px-5 py-16 text-center md:px-8">
+        <div className="mx-auto flex max-w-md flex-col items-center gap-3">
+          <div className="flex size-12 items-center justify-center rounded-full bg-secondary text-muted-foreground">
+            <ShieldCheck className="size-5" />
+          </div>
+          <h1 className="font-display text-[22px] text-ink">Acceso restringido</h1>
+          <p className="text-[14px] text-muted-foreground">
+            Solo un SuperAdmin puede gestionar usuarios y asignar códigos de productor.
+          </p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -167,10 +186,19 @@ export function UsersView() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="secondary" className="gap-1 font-normal text-ink-3">
-                      <ShieldCheck className="size-3.5 text-ember-2" />
-                      Administrador
-                    </Badge>
+                    <div className="flex flex-col gap-1">
+                      <Badge variant="secondary" className="w-fit gap-1 font-normal text-ink-3">
+                        <ShieldCheck className="size-3.5 text-ember-2" />
+                        {user.role === 'SUPERADMIN' ? 'SuperAdmin' : 'Administrador'}
+                      </Badge>
+                      {user.role === 'ADMIN' && (
+                        <span className="text-[11.5px] text-muted-foreground">
+                          {user.producerCodes && user.producerCodes.length > 0
+                            ? `${user.producerCodes.length} código${user.producerCodes.length > 1 ? 's' : ''}`
+                            : 'Sin códigos'}
+                        </span>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell className="hidden text-[13px] text-muted-foreground sm:table-cell">
                     {formatDate(user.createdAt)}

@@ -1,9 +1,12 @@
 import { apiRequest } from '@/src/lib/api-client'
 import type { AdminUser } from '@/src/types/api/auth'
-import type { CreateUserRequest, UpdateUserRequest } from '@/src/types/api/users'
+import type { CreateUserRequest, ProducerCodeOption, UpdateUserRequest } from '@/src/types/api/users'
 
 export const usersService = {
   list: (token: string): Promise<AdminUser[]> => apiRequest<AdminUser[]>('/users', { token }),
+
+  listProducerCodes: (token: string): Promise<ProducerCodeOption[]> =>
+    apiRequest<ProducerCodeOption[]>('/users/producer-codes', { token }),
 
   create: (token: string, data: CreateUserRequest): Promise<AdminUser> =>
     apiRequest<AdminUser>('/users', { method: 'POST', token, body: data }),
