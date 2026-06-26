@@ -7,8 +7,8 @@ import type { AdminSiniestrosQuery } from '@/src/services/siniestros.service'
 
 export const QUERY_KEYS = {
   inbox: {
-    conversations: (status?: string, search?: string) =>
-      ['admin', 'inbox', 'list', status ?? 'all', search ?? ''] as const,
+    conversations: (status?: string, search?: string, scope?: { producerCodeId?: number; phoneNumberId?: number }) =>
+      ['admin', 'inbox', 'list', status ?? 'all', search ?? '', scope ?? {}] as const,
     messages: (id: number) => ['admin', 'inbox', id, 'messages'] as const,
   },
   admin: {
@@ -32,6 +32,10 @@ export const QUERY_KEYS = {
     solicitud: (kind: string, id: number) => ['admin', 'solicitudes', kind, id] as const,
     pricingPlans: ['admin', 'pricing'] as const,
     businessHours: ['admin', 'business-hours'] as const,
+  },
+  owner: {
+    organizations: ['owner', 'organizations'] as const,
+    organization: (id: number) => ['owner', 'organizations', id] as const,
   },
   pricing: {
     plans: (productType: string) => ['pricing', productType] as const,

@@ -2,10 +2,17 @@ import { apiRequest } from '@/src/lib/api-client'
 import type { InboxConversation, InboxMessage } from '@/src/types/api/inbox'
 
 export const inboxService = {
-  listConversations(token: string, status?: string, search?: string): Promise<InboxConversation[]> {
+  listConversations(
+    token: string,
+    status?: string,
+    search?: string,
+    scope?: { producerCodeId?: number; phoneNumberId?: number },
+  ): Promise<InboxConversation[]> {
     const params = new URLSearchParams()
     if (status) params.set('status', status)
     if (search?.trim()) params.set('search', search.trim())
+    if (scope?.producerCodeId) params.set('producerCodeId', String(scope.producerCodeId))
+    if (scope?.phoneNumberId) params.set('phoneNumberId', String(scope.phoneNumberId))
     const qs = params.toString()
     return apiRequest<InboxConversation[]>(`/admin/inbox${qs ? `?${qs}` : ''}`, { token })
   },

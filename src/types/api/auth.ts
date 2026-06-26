@@ -1,4 +1,4 @@
-export type AdminRole = 'SUPERADMIN' | 'ADMIN'
+export type AdminRole = 'OWNER' | 'SUPERADMIN' | 'ADMIN'
 
 export interface AdminUserProducerCode {
   producerCode: { id: number; code: string; holderName: string | null }

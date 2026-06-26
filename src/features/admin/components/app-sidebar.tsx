@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   Bell,
+  Building2,
   ChevronsUpDown,
   ClipboardList,
   FileWarning,
@@ -45,8 +46,10 @@ interface NavItem {
   label: string
   href: string
   icon: LucideIcon
-  // Only visible to SUPERADMIN (org-wide management).
+  // Only visible to SUPERADMIN (org-wide management). OWNER sees these too.
   superAdminOnly?: boolean
+  // Only visible to the platform OWNER (Lumar): provision organizations.
+  ownerOnly?: boolean
 }
 
 const NAV_ITEMS: NavItem[] = [
@@ -59,6 +62,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Cobranzas', href: '/admin/cobranzas', icon: Wallet },
   { label: 'Usuarios', href: '/admin/usuarios', icon: Users, superAdminOnly: true },
   { label: 'Números', href: '/admin/numeros', icon: Phone, superAdminOnly: true },
+  { label: 'Organizaciones', href: '/admin/organizaciones', icon: Building2, ownerOnly: true },
   { label: 'Configuración', href: '/admin/configuracion', icon: UserCog },
 ]
 
@@ -78,10 +82,14 @@ export function AppSidebar() {
   const { data: novedadesStats } = useNovedadesStats()
 
   const initials = profile?.email.slice(0, 2).toUpperCase() ?? 'JP'
+  const isOwner = profile?.role === 'OWNER'
   const isSuperAdmin = profile?.role === 'SUPERADMIN'
-  const roleLabel = isSuperAdmin ? 'SuperAdmin' : 'Administrador'
-  // Hide SuperAdmin-only items for plain admins.
-  const navItems = NAV_ITEMS.filter(item => !item.superAdminOnly || isSuperAdmin)
+  const roleLabel = isOwner ? 'Owner · Lumar' : isSuperAdmin ? 'SuperAdmin' : 'Administrador'
+  // The OWNER's only interface is "Organizaciones": show owner-only items and
+  // nothing else. Everyone else sees their items (SuperAdmin-only hidden for admins).
+  const navItems = isOwner
+    ? NAV_ITEMS.filter(item => item.ownerOnly)
+    : NAV_ITEMS.filter(item => !item.ownerOnly && (!item.superAdminOnly || isSuperAdmin))
 
   const handleLogout = () => {
     logout()
