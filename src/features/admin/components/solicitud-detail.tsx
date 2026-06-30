@@ -6,7 +6,13 @@ import { toast } from 'sonner'
 import { Button } from '@/src/components/ui/button'
 import { Skeleton } from '@/src/components/ui/skeleton'
 import { WhatsAppIcon } from '@/src/components/ui/brand-icons'
-import type { LeadDetail, SolicitudDetail, SolicitudKind, SolicitudStatus } from '@/src/types/api/solicitudes'
+import type {
+  CotizacionCoverageView,
+  LeadDetail,
+  SolicitudDetail,
+  SolicitudKind,
+  SolicitudStatus,
+} from '@/src/types/api/solicitudes'
 import { useSolicitud } from '../hooks/use-solicitudes'
 import { useSolicitudActions } from '../hooks/use-solicitud-actions'
 import { buildSolicitudWhatsappUrl, productLabel, STATUS_LABELS, STATUS_ORDER, timeAgo } from '../lib/solicitudes-ui'
@@ -120,14 +126,17 @@ function SolicitudEditor({
         {data.kind === 'lead' ? (
           <LeadExtra data={data} />
         ) : (
-          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-            <Row label="Cobertura" value={data.selectedCoverage} />
-            <Row label="N° presupuesto" value={data.cotizacion.quoteNumber} />
-            <Row label="Vehículo" value={`${data.cotizacion.vehicleType} ${data.cotizacion.manufactureYear}`} />
-            <Row label="CP" value={data.cotizacion.postalCode} />
-            <Row label="Documento" value={`${data.applicantDocType} ${data.applicantDocNumber}`} />
-            <Row label="Dirección" value={data.applicantAddress} />
-            <Row label="Pago" value={data.paymentMethod} />
+          <div className="flex flex-col gap-4">
+            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+              <Row label="Cobertura elegida" value={data.selectedCoverage} />
+              <Row label="N° presupuesto" value={data.cotizacion.quoteNumber} />
+              <Row label="Vehículo" value={`${data.cotizacion.vehicleType} ${data.cotizacion.manufactureYear}`} />
+              <Row label="CP" value={data.cotizacion.postalCode} />
+              <Row label="Documento" value={`${data.applicantDocType} ${data.applicantDocNumber}`} />
+              <Row label="Dirección" value={data.applicantAddress} />
+              <Row label="Pago" value={data.paymentMethod} />
+            </div>
+            <CoveragesList coverages={data.coverages} selected={data.selectedCoverage} />
           </div>
         )}
       </section>
@@ -177,6 +186,56 @@ function SolicitudEditor({
             'Guardar cambios'
           )}
         </Button>
+      </div>
+    </div>
+  )
+}
+
+const ars = (n: number) => n.toLocaleString('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 })
+
+/** All quoted coverages with their prices — the same figures shown to the client. */
+function CoveragesList({ coverages, selected }: { coverages: CotizacionCoverageView[]; selected: string }) {
+  if (!coverages || coverages.length === 0) return null
+  return (
+    <div className="flex flex-col gap-2">
+      <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-faint">
+        Coberturas cotizadas (mismos precios que vio el cliente)
+      </span>
+      <div className="flex flex-col gap-2">
+        {coverages.map(c => {
+          const isSel = c.code === selected
+          const prices = c.paymentOptions.map(p => p.premium).filter(p => p > 0)
+          const best = prices.length ? Math.min(...prices) : null
+          return (
+            <div
+              key={c.code}
+              className={`rounded-xl border px-3.5 py-2.5 ${isSel ? 'border-ember bg-ember-soft' : 'border-line-2 bg-paper'}`}
+            >
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[13.5px] font-medium text-ink">
+                  Cobertura {c.code}
+                  {isSel ? ' · elegida' : ''}
+                </span>
+                {best !== null && (
+                  <span className="text-[14px] font-semibold text-ink">
+                    {ars(best)}
+                    <span className="text-[11px] font-normal text-muted-foreground"> /mes</span>
+                  </span>
+                )}
+              </div>
+              {c.paymentOptions.length > 1 && (
+                <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-[11.5px] text-muted-foreground">
+                  {c.paymentOptions.map((p, i) => (
+                    <span key={`${p.name}-${i}`}>
+                      {p.name}: {ars(p.premium)}
+                      {p.installments > 1 ? ` (${p.installments}×${ars(p.installmentValue)})` : ''}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          )
+        })}
       </div>
     </div>
   )

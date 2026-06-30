@@ -1,16 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { Chevron, inputClass, labelClass } from './form-controls'
 import { OtrosMetodosModal } from './otros-metodos-modal'
 import type { PagoFormHook } from '../hooks/use-pago-form'
 import type { PaymentMethod } from '@/src/types/api/cotizador'
 
-const CARD_COMPANIES = ['VISA', 'MASTERCARD', 'AMERICAN EXPRESS', 'NARANJA', 'CABAL', 'OTRA']
-
 const METHODS: { value: PaymentMethod; label: string; description: string }[] = [
-  { value: 'CREDIT', label: 'Tarjeta de crédito', description: 'Débito automático en tu tarjeta' },
-  { value: 'DEBIT', label: 'Tarjeta de débito', description: 'Débito automático en tu cuenta' },
+  { value: 'CREDIT', label: 'Tarjeta de crédito', description: 'Un asesor coordina el débito al emitir' },
+  { value: 'DEBIT', label: 'Tarjeta de débito', description: 'Un asesor coordina el débito al emitir' },
   { value: 'OTHER', label: 'Otro método de pago', description: 'Un agente te contacta para coordinarlo' },
 ]
 
@@ -35,15 +32,6 @@ const CardIcon = ({ method }: { method: PaymentMethod }) =>
     </svg>
   )
 
-const digitsOnly = (value: string): string => value.replace(/\D/g, '')
-
-const formatCardNumber = (digits: string): string => digits.replace(/(\d{4})(?=\d)/g, '$1 ')
-
-const formatExpiry = (value: string): string => {
-  const digits = digitsOnly(value).slice(0, 4)
-  return digits.length > 2 ? `${digits.slice(0, 2)}/${digits.slice(2)}` : digits
-}
-
 interface PagoStepProps {
   form: PagoFormHook
   phone: string
@@ -54,10 +42,10 @@ interface PagoStepProps {
 }
 
 export function PagoStep({ form: hook, phone, submitting, submitError, onSubmit, onBack }: Readonly<PagoStepProps>) {
-  const { form, paysWithCard, isValid, setMethod, setField } = hook
+  const { form, isValid, setMethod } = hook
   const [modalOpen, setModalOpen] = useState(false)
 
-  const handleSubmit = (e: React.SubmitEvent<HTMLFormElement>) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!isValid || submitting) return
     if (form.method === 'OTHER') setModalOpen(true)
@@ -69,7 +57,8 @@ export function PagoStep({ form: hook, phone, submitting, submitError, onSubmit,
       <div className="text-[10.5px] tracking-[0.24em] uppercase text-faint font-semibold mb-[6px]">Método de pago</div>
       <h3 className="font-display text-[24px] text-ink m-0 mb-2">¿Cómo querés pagar?</h3>
       <p className="text-[13px] text-ink-3 leading-[1.65] m-0 mb-6 max-w-[420px]">
-        El premio se debita todos los meses. Podés cambiar el método de pago cuando quieras hablando con nosotros.
+        Elegí tu método preferido. No te pedimos los datos de la tarjeta acá: un asesor los coordina con vos al emitir
+        la póliza.
       </p>
 
       <div className="grid grid-cols-3 gap-[10px] mb-6 max-[680px]:grid-cols-1">
@@ -97,87 +86,8 @@ export function PagoStep({ form: hook, phone, submitting, submitError, onSubmit,
         })}
       </div>
 
-      {paysWithCard && (
-        <div
-          key={form.method}
-          className="grid grid-cols-2 gap-[14px] mb-2 max-[560px]:grid-cols-1 animate-[step-in_0.35s_ease-out_both]"
-        >
-          <div className="flex flex-col gap-[7px]">
-            <label className={labelClass} htmlFor="card-company">
-              Empresa
-            </label>
-            <div className="relative">
-              <select
-                id="card-company"
-                className={inputClass}
-                value={form.cardCompany}
-                onChange={e => setField('cardCompany', e.target.value)}
-              >
-                <option value="">Seleccioná la empresa</option>
-                {CARD_COMPANIES.map(company => (
-                  <option key={company} value={company}>
-                    {company}
-                  </option>
-                ))}
-              </select>
-              <Chevron />
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-[7px]">
-            <label className={labelClass} htmlFor="card-holder">
-              Titular
-            </label>
-            <input
-              id="card-holder"
-              type="text"
-              className={inputClass}
-              placeholder="Como figura en la tarjeta"
-              value={form.cardHolder}
-              onChange={e => setField('cardHolder', e.target.value)}
-            />
-          </div>
-
-          <div className="flex flex-col gap-[7px]">
-            <label className={labelClass} htmlFor="card-number">
-              Número de tarjeta
-            </label>
-            <input
-              id="card-number"
-              type="text"
-              inputMode="numeric"
-              autoComplete="cc-number"
-              className={inputClass}
-              placeholder="0000 0000 0000 0000"
-              value={formatCardNumber(form.cardNumber)}
-              onChange={e => setField('cardNumber', digitsOnly(e.target.value).slice(0, 19))}
-            />
-          </div>
-
-          <div className="flex flex-col gap-[7px]">
-            <label className={labelClass} htmlFor="card-expiry">
-              Vencimiento
-            </label>
-            <input
-              id="card-expiry"
-              type="text"
-              inputMode="numeric"
-              autoComplete="cc-exp"
-              className={inputClass}
-              placeholder="MM/AA"
-              value={form.cardExpiry}
-              onChange={e => setField('cardExpiry', formatExpiry(e.target.value))}
-            />
-          </div>
-
-          <p className="col-span-2 max-[560px]:col-span-1 text-[11px] text-faint leading-[1.6] m-0">
-            No te cobramos nada ahora: los datos se usan para configurar el débito automático al emitir la póliza.
-          </p>
-        </div>
-      )}
-
-      {form.method === 'OTHER' && (
-        <p className="text-[12.5px] text-ink-3 leading-[1.65] m-0 mb-2 max-w-[420px] animate-[step-in_0.35s_ease-out_both]">
+      {form.method && (
+        <p className="text-[12.5px] text-ink-3 leading-[1.65] m-0 mb-2 max-w-[440px] animate-[step-in_0.35s_ease-out_both]">
           Un agente te va a contactar al <span className="text-ink font-semibold">{phone}</span> para coordinar el pago
           y finalizar la contratación.
         </p>

@@ -49,12 +49,26 @@ export interface LeadDetail {
   selectedPlan: { id: number; name: string; monthlyPrice: number; productType: string } | null
 }
 
+export interface CotizacionPaymentOption {
+  name: string
+  premium: number
+  installmentValue: number
+  installments: number
+}
+
+export interface CotizacionCoverageView {
+  code: string
+  paymentOptions: CotizacionPaymentOption[]
+}
+
 export interface CotizacionDetail {
   kind: 'cotizacion'
   id: number
   status: SolicitudStatus
   notes: string | null
   selectedCoverage: string
+  // All quoted coverages with prices (same figures shown to the client on web/bot).
+  coverages: CotizacionCoverageView[]
   coverageStartDate: string
   applicantType: string
   applicantFirstName: string
