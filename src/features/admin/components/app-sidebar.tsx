@@ -41,6 +41,8 @@ import { Avatar, AvatarFallback } from '@/src/components/ui/avatar'
 import { useAuth } from '../context/auth-context'
 import { useProfile } from '../hooks/use-profile'
 import { useNovedadesStats } from '../hooks/use-novedades-stats'
+import { useInboxConversations } from '../hooks/use-inbox-conversations'
+import { useNewSolicitudesCount } from '../hooks/use-solicitudes'
 
 interface NavItem {
   label: string
@@ -80,6 +82,18 @@ export function AppSidebar() {
   const { logout } = useAuth()
   const { data: profile } = useProfile()
   const { data: novedadesStats } = useNovedadesStats()
+  // "Pending" conversations = a client asked for a human agent → needs attention.
+  const { data: inboxConversations } = useInboxConversations()
+  const inboxPending = inboxConversations?.filter(c => c.status === 'pending').length ?? 0
+  const { data: solicitudesNuevas = 0 } = useNewSolicitudesCount()
+
+  // Count of items needing the advisor's attention, per sidebar section.
+  const alertCount = (href: string): number => {
+    if (href === '/admin/novedades') return novedadesStats?.unreadTotal ?? 0
+    if (href === '/admin/solicitudes') return solicitudesNuevas
+    if (href === '/admin/inbox') return inboxPending
+    return 0
+  }
 
   const initials = profile?.email.slice(0, 2).toUpperCase() ?? 'JP'
   const isOwner = profile?.role === 'OWNER'
@@ -114,9 +128,9 @@ export function AppSidebar() {
           <SidebarGroupLabel className="text-[10.5px] tracking-[0.14em] uppercase">Navegación</SidebarGroupLabel>
           <SidebarMenu className="gap-1">
             {navItems.map(item => {
-              const unread = item.href === '/admin/novedades' ? (novedadesStats?.unreadTotal ?? 0) : 0
+              const unread = alertCount(item.href)
               return (
-                <SidebarMenuItem key={item.href}>
+                <SidebarMenuItem key={item.href} className="relative">
                   <SidebarMenuButton
                     asChild
                     isActive={isActive(pathname, item.href)}
@@ -127,12 +141,24 @@ export function AppSidebar() {
                       <item.icon />
                       <span>{item.label}</span>
                       {unread > 0 && (
-                        <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-ember-2 px-1.5 text-[10.5px] font-semibold text-on-dark group-data-[collapsible=icon]:hidden">
-                          {unread}
+                        // Pulsing count badge (expanded): the ping ring draws the eye
+                        // from any section so a pending item isn't missed.
+                        <span className="relative ml-auto flex items-center justify-center group-data-[collapsible=icon]:hidden">
+                          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-ember-2 opacity-60" />
+                          <span className="relative flex h-5 min-w-5 items-center justify-center rounded-full bg-ember-2 px-1.5 text-[10.5px] font-semibold text-on-dark">
+                            {unread}
+                          </span>
                         </span>
                       )}
                     </Link>
                   </SidebarMenuButton>
+                  {unread > 0 && (
+                    // Pulsing dot for the collapsed (icon-only) sidebar.
+                    <span className="pointer-events-none absolute right-1 top-1 hidden size-2 group-data-[collapsible=icon]:flex">
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-ember-2 opacity-75" />
+                      <span className="relative inline-flex size-2 rounded-full bg-ember-2" />
+                    </span>
+                  )}
                 </SidebarMenuItem>
               )
             })}
