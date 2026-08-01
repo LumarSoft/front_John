@@ -2,11 +2,13 @@ import { apiRequest } from '@/src/lib/api-client'
 import type {
   CreateOrganizationRequest,
   CreateProducerCodeRequest,
+  CreateOrgUserRequest,
   CreateSuperAdminRequest,
   OrganizationCode,
   OrganizationDetail,
   OrganizationSummary,
   OrganizationUser,
+  UpdateOrgUserRequest,
   UpdateProducerCodeRequest,
 } from '@/src/types/api/organizations'
 
@@ -39,4 +41,16 @@ export const organizationsService = {
 
   addSuperAdmin: (token: string, id: number, data: CreateSuperAdminRequest): Promise<OrganizationUser> =>
     apiRequest<OrganizationUser>(`/owner/organizations/${id}/superadmins`, { method: 'POST', token, body: data }),
+
+  addUser: (token: string, id: number, data: CreateOrgUserRequest): Promise<OrganizationUser> =>
+    apiRequest<OrganizationUser>(`/owner/organizations/${id}/users`, { method: 'POST', token, body: data }),
+
+  updateUser: (token: string, id: number, userId: number, data: UpdateOrgUserRequest): Promise<OrganizationUser> =>
+    apiRequest<OrganizationUser>(`/owner/organizations/${id}/users/${userId}`, { method: 'PATCH', token, body: data }),
+
+  removeUser: (token: string, id: number, userId: number): Promise<{ id: number; deleted: boolean }> =>
+    apiRequest<{ id: number; deleted: boolean }>(`/owner/organizations/${id}/users/${userId}`, {
+      method: 'DELETE',
+      token,
+    }),
 }
