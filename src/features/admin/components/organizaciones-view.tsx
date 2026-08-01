@@ -1,11 +1,11 @@
 'use client'
 
 import { useState, type FormEvent } from 'react'
-import { Building2, KeyRound, Loader2, Plus, ShieldCheck, UserPlus } from 'lucide-react'
+import Link from 'next/link'
+import { Building2, KeyRound, Loader2, Plus } from 'lucide-react'
 import { toast } from 'sonner'
 import { Card } from '@/src/components/ui/card'
 import { Button } from '@/src/components/ui/button'
-import { Badge } from '@/src/components/ui/badge'
 import { Input } from '@/src/components/ui/input'
 import { Label } from '@/src/components/ui/label'
 import { Skeleton } from '@/src/components/ui/skeleton'
@@ -18,11 +18,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/src/components/ui/dialog'
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/src/components/ui/sheet'
 import { ApiError } from '@/src/lib/api-client'
-import type { OrganizationSummary } from '@/src/types/api/organizations'
 import { useRole } from '../hooks/use-role'
-import { useOrganization, useOrganizations, useOrganizationMutations } from '../hooks/use-organizations'
+import { useOrganizations, useOrganizationMutations } from '../hooks/use-organizations'
 
 function errMsg(error: unknown, fallback = 'No se pudo guardar. Intentá de nuevo.') {
   if (error instanceof ApiError && error.status === 409) return 'Ese correo o código ya está en uso.'
@@ -157,193 +155,11 @@ function CreateOrgForm({ onDone }: { onDone: () => void }) {
 }
 
 // ── Organization detail (codes + admins) ─────────────────
-function OrgDetail({ orgId }: { orgId: number }) {
-  const { data: org, isLoading } = useOrganization(orgId)
-  const { addCode, updateCode, addSuperAdmin } = useOrganizationMutations(orgId)
-
-  const [newCode, setNewCode] = useState('')
-  const [newCodeHolder, setNewCodeHolder] = useState('')
-  const [saEmail, setSaEmail] = useState('')
-  const [saPass, setSaPass] = useState('')
-
-  if (isLoading || !org) {
-    return (
-      <div className="flex flex-col gap-3 py-4">
-        <Skeleton className="h-6 w-40" />
-        <Skeleton className="h-24 w-full" />
-        <Skeleton className="h-24 w-full" />
-      </div>
-    )
-  }
-
-  const submitCode = (e: FormEvent) => {
-    e.preventDefault()
-    if (!newCode.trim()) return
-    addCode.mutate(
-      { id: orgId, data: { code: newCode.trim(), holderName: newCodeHolder.trim() || undefined } },
-      {
-        onSuccess: () => {
-          toast.success('Código agregado')
-          setNewCode('')
-          setNewCodeHolder('')
-        },
-        onError: e => toast.error(errMsg(e)),
-      },
-    )
-  }
-
-  const submitSa = (e: FormEvent) => {
-    e.preventDefault()
-    addSuperAdmin.mutate(
-      { id: orgId, data: { email: saEmail, password: saPass } },
-      {
-        onSuccess: () => {
-          toast.success('SuperAdmin creado')
-          setSaEmail('')
-          setSaPass('')
-        },
-        onError: e => toast.error(errMsg(e)),
-      },
-    )
-  }
-
-  return (
-    <div className="flex flex-col gap-6 py-4">
-      <div className="flex flex-wrap items-center gap-2 text-[13px] text-muted-foreground">
-        <Badge variant="secondary">slug: {org.slug}</Badge>
-        {org.masterCode && <Badge variant="secondary">master {org.masterCode}</Badge>}
-        <Badge variant={org.isActive ? 'secondary' : 'destructive'}>{org.isActive ? 'Activa' : 'Inactiva'}</Badge>
-      </div>
-
-      {/* Codes */}
-      <section className="flex flex-col gap-2">
-        <h3 className="text-[13px] font-semibold text-ink">Códigos de productor ({org.codes.length})</h3>
-        <div className="max-h-52 overflow-y-auto rounded-md border border-line-2">
-          {org.codes.map(c => (
-            <div
-              key={c.id}
-              className="flex items-center justify-between border-b border-line-2 px-3 py-2 last:border-0"
-            >
-              <span className="text-[13px] text-ink">
-                <span className="font-medium">{c.code}</span>
-                {c.holderName ? <span className="text-muted-foreground"> · {c.holderName}</span> : null}
-                {c.isMaster && (
-                  <Badge variant="secondary" className="ml-2">
-                    master
-                  </Badge>
-                )}
-              </span>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 text-[12px]"
-                disabled={updateCode.isPending}
-                onClick={() =>
-                  updateCode.mutate(
-                    { id: orgId, codeId: c.id, data: { isActive: !c.isActive } },
-                    {
-                      onError: () => toast.error('No se pudo actualizar.'),
-                    },
-                  )
-                }
-              >
-                {c.isActive ? 'Desactivar' : 'Activar'}
-              </Button>
-            </div>
-          ))}
-          {org.codes.length === 0 && <p className="px-3 py-3 text-[13px] text-muted-foreground">Sin códigos.</p>}
-        </div>
-        <form onSubmit={submitCode} className="flex items-end gap-2">
-          <div className="flex flex-1 flex-col gap-1">
-            <Label htmlFor="new-code" className="text-[11px]">
-              Código
-            </Label>
-            <Input
-              id="new-code"
-              value={newCode}
-              onChange={e => setNewCode(e.target.value)}
-              placeholder="8074"
-              className="h-9"
-            />
-          </div>
-          <div className="flex flex-[2] flex-col gap-1">
-            <Label htmlFor="new-code-holder" className="text-[11px]">
-              Titular
-            </Label>
-            <Input
-              id="new-code-holder"
-              value={newCodeHolder}
-              onChange={e => setNewCodeHolder(e.target.value)}
-              placeholder="Nombre (opcional)"
-              className="h-9"
-            />
-          </div>
-          <Button type="submit" size="icon" className="size-9" disabled={addCode.isPending}>
-            <Plus className="size-4" />
-          </Button>
-        </form>
-      </section>
-
-      {/* Admins */}
-      <section className="flex flex-col gap-2">
-        <h3 className="text-[13px] font-semibold text-ink">SuperAdmins ({org.users.length})</h3>
-        <div className="rounded-md border border-line-2">
-          {org.users.map(u => (
-            <div key={u.id} className="flex items-center gap-2 border-b border-line-2 px-3 py-2 last:border-0">
-              <ShieldCheck className="size-3.5 text-ember-2" />
-              <span className="text-[13px] text-ink">{u.email}</span>
-              <Badge variant="secondary" className="ml-auto text-[11px]">
-                {u.role === 'SUPERADMIN' ? 'SuperAdmin' : u.role === 'OWNER' ? 'Owner' : 'Admin'}
-              </Badge>
-            </div>
-          ))}
-          {org.users.length === 0 && <p className="px-3 py-3 text-[13px] text-muted-foreground">Sin usuarios.</p>}
-        </div>
-        <form onSubmit={submitSa} className="flex items-end gap-2">
-          <div className="relative flex-[2]">
-            <Label htmlFor="sa-email" className="text-[11px]">
-              Correo
-            </Label>
-            <Input
-              id="sa-email"
-              type="email"
-              value={saEmail}
-              onChange={e => setSaEmail(e.target.value)}
-              placeholder="admin@org.com"
-              className="h-9"
-              required
-            />
-          </div>
-          <div className="relative flex-1">
-            <Label htmlFor="sa-pass" className="text-[11px]">
-              Contraseña
-            </Label>
-            <Input
-              id="sa-pass"
-              type="password"
-              minLength={6}
-              value={saPass}
-              onChange={e => setSaPass(e.target.value)}
-              placeholder="••••••"
-              className="h-9"
-              required
-            />
-          </div>
-          <Button type="submit" size="icon" className="size-9" disabled={addSuperAdmin.isPending}>
-            <UserPlus className="size-4" />
-          </Button>
-        </form>
-      </section>
-    </div>
-  )
-}
-
 // ── Main view ────────────────────────────────────────────
 export function OrganizacionesView() {
   const { isOwner, isLoading: roleLoading } = useRole()
   const { data: orgs, isLoading } = useOrganizations(isOwner)
   const [createOpen, setCreateOpen] = useState(false)
-  const [selected, setSelected] = useState<OrganizationSummary | null>(null)
 
   if (!roleLoading && !isOwner) {
     return (
@@ -443,8 +259,8 @@ export function OrganizacionesView() {
                 <TableCell className="text-[13px] text-ink-3">{o.counts.phoneNumbers}</TableCell>
                 <TableCell className="pr-5">
                   <div className="flex justify-end">
-                    <Button variant="ghost" size="sm" className="h-8" onClick={() => setSelected(o)}>
-                      Gestionar
+                    <Button asChild variant="ghost" size="sm" className="h-8">
+                      <Link href={`/admin/organizaciones/${o.id}`}>Gestionar</Link>
                     </Button>
                   </div>
                 </TableCell>
@@ -463,16 +279,6 @@ export function OrganizacionesView() {
           {createOpen && <CreateOrgForm onDone={() => setCreateOpen(false)} />}
         </DialogContent>
       </Dialog>
-
-      <Sheet open={!!selected} onOpenChange={open => !open && setSelected(null)}>
-        <SheetContent className="w-full overflow-y-auto sm:max-w-md">
-          <SheetHeader>
-            <SheetTitle className="font-display text-[20px]">{selected?.name}</SheetTitle>
-            <SheetDescription>Códigos de productor y SuperAdmins de esta organización.</SheetDescription>
-          </SheetHeader>
-          <div className="px-4">{selected && <OrgDetail orgId={selected.id} />}</div>
-        </SheetContent>
-      </Sheet>
     </div>
   )
 }
