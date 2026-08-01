@@ -312,10 +312,7 @@ export function NumerosView() {
                     : '—'}
                 </TableCell>
                 <TableCell className="text-[13px]">
-                  <div className="flex flex-col">
-                    <span className="font-medium text-ink">{money(n.usage.accruedUsd)}</span>
-                    <span className="text-[11px] text-muted-foreground">de {money(n.usage.billedUsd)} al cierre</span>
-                  </div>
+                  <span className="font-medium text-ink">{money(n.usage.accruedUsd)}</span>
                 </TableCell>
                 <TableCell className="text-[13px] text-ink-3">
                   {n.monthlyBudgetUsd != null ? money(n.monthlyBudgetUsd) : 'Por defecto'}
