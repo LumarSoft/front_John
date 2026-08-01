@@ -6,12 +6,22 @@ export interface PhoneNumberCodeRef {
 
 export interface PhoneNumberUsage {
   period: string
-  openaiCostUsd: number
-  metaCostUsd: number
-  totalCostUsd: number
+  /** Activity of the number: the client may see its own volume. */
   inputTokens: number
   outputTokens: number
   metaConversations: number
+  /** Full monthly charge for the number. */
+  billedUsd: number
+  /** Portion of that charge run up so far this month. */
+  accruedUsd: number
+  /**
+   * Provider cost and margin. Only present for the platform OWNER — the API
+   * omits these fields for tenant roles, so the client never sees our cost.
+   */
+  openaiCostUsd?: number
+  metaCostUsd?: number
+  totalCostUsd?: number
+  marginUsd?: number
 }
 
 export interface AdminPhoneNumber {

@@ -200,7 +200,8 @@ export function NumerosView() {
     )
   }
 
-  const grandTotal = (numbers ?? []).reduce((sum, n) => sum + n.usage.totalCostUsd, 0)
+  // Tenants see what they are charged; the provider cost is not sent to them.
+  const grandTotal = (numbers ?? []).reduce((sum, n) => sum + n.usage.accruedUsd, 0)
 
   return (
     <div className="mx-auto w-full max-w-6xl px-5 py-8 md:px-8 md:py-10">
@@ -226,7 +227,7 @@ export function NumerosView() {
       </div>
 
       <Card className="mb-4 flex items-center justify-between border-line-2 p-4">
-        <span className="text-[13px] text-muted-foreground">Costo total del mes (todos los números)</span>
+        <span className="text-[13px] text-muted-foreground">Facturado a hoy (todos los números)</span>
         <span className="font-display text-[20px] text-ink">{money(grandTotal)}</span>
       </Card>
 
@@ -240,7 +241,7 @@ export function NumerosView() {
               <TableHead className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
                 Responsable
               </TableHead>
-              <TableHead className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">Costo mes</TableHead>
+              <TableHead className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">Facturado</TableHead>
               <TableHead className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
                 Presupuesto
               </TableHead>
@@ -312,10 +313,8 @@ export function NumerosView() {
                 </TableCell>
                 <TableCell className="text-[13px]">
                   <div className="flex flex-col">
-                    <span className="font-medium text-ink">{money(n.usage.totalCostUsd)}</span>
-                    <span className="text-[11px] text-muted-foreground">
-                      OpenAI {money(n.usage.openaiCostUsd)} · Meta {money(n.usage.metaCostUsd)}
-                    </span>
+                    <span className="font-medium text-ink">{money(n.usage.accruedUsd)}</span>
+                    <span className="text-[11px] text-muted-foreground">de {money(n.usage.billedUsd)} al cierre</span>
                   </div>
                 </TableCell>
                 <TableCell className="text-[13px] text-ink-3">
