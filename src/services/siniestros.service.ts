@@ -146,6 +146,9 @@ export type SiniestroEstadoFilter = SiniestroEstado | 'todos'
 export interface AdminSiniestrosQuery {
   estado?: SiniestroEstado
   search?: string
+  // SuperAdmin section filter: by producer code OR by phone number/sucursal.
+  producerCodeId?: number
+  phoneNumberId?: number
   page?: number
   pageSize?: number
 }
@@ -169,6 +172,8 @@ function buildSiniestrosQuery(params: AdminSiniestrosQuery): string {
   const sp = new URLSearchParams()
   if (params.estado) sp.set('estado', params.estado)
   if (params.search?.trim()) sp.set('search', params.search.trim())
+  if (params.producerCodeId) sp.set('producerCodeId', String(params.producerCodeId))
+  if (params.phoneNumberId) sp.set('phoneNumberId', String(params.phoneNumberId))
   if (params.page) sp.set('page', String(params.page))
   if (params.pageSize) sp.set('pageSize', String(params.pageSize))
   const qs = sp.toString()

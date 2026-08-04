@@ -4,12 +4,14 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   Bell,
+  Building2,
   ChevronsUpDown,
   ClipboardList,
   FileWarning,
   LayoutDashboard,
   LogOut,
   MessageSquare,
+  Phone,
   ShieldCheck,
   UserCog,
   Users,
@@ -39,11 +41,17 @@ import { Avatar, AvatarFallback } from '@/src/components/ui/avatar'
 import { useAuth } from '../context/auth-context'
 import { useProfile } from '../hooks/use-profile'
 import { useNovedadesStats } from '../hooks/use-novedades-stats'
+import { useInboxConversations } from '../hooks/use-inbox-conversations'
+import { useNewSolicitudesCount } from '../hooks/use-solicitudes'
 
 interface NavItem {
   label: string
   href: string
   icon: LucideIcon
+  // Only visible to SUPERADMIN (org-wide management). OWNER sees these too.
+  superAdminOnly?: boolean
+  // Only visible to the platform OWNER (Lumar): provision organizations.
+  ownerOnly?: boolean
 }
 
 const NAV_ITEMS: NavItem[] = [
@@ -54,7 +62,9 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Siniestros', href: '/admin/siniestros', icon: FileWarning },
   { label: 'Asegurados', href: '/admin/asegurados', icon: ShieldCheck },
   { label: 'Cobranzas', href: '/admin/cobranzas', icon: Wallet },
-  { label: 'Usuarios', href: '/admin/usuarios', icon: Users },
+  { label: 'Usuarios', href: '/admin/usuarios', icon: Users, superAdminOnly: true },
+  { label: 'Números', href: '/admin/numeros', icon: Phone, superAdminOnly: true },
+  { label: 'Organizaciones', href: '/admin/organizaciones', icon: Building2, ownerOnly: true },
   { label: 'Configuración', href: '/admin/configuracion', icon: UserCog },
 ]
 
@@ -72,8 +82,28 @@ export function AppSidebar() {
   const { logout } = useAuth()
   const { data: profile } = useProfile()
   const { data: novedadesStats } = useNovedadesStats()
+  // "Pending" conversations = a client asked for a human agent → needs attention.
+  const { data: inboxConversations } = useInboxConversations()
+  const inboxPending = inboxConversations?.filter(c => c.status === 'pending').length ?? 0
+  const { data: solicitudesNuevas = 0 } = useNewSolicitudesCount()
+
+  // Count of items needing the advisor's attention, per sidebar section.
+  const alertCount = (href: string): number => {
+    if (href === '/admin/novedades') return novedadesStats?.unreadTotal ?? 0
+    if (href === '/admin/solicitudes') return solicitudesNuevas
+    if (href === '/admin/inbox') return inboxPending
+    return 0
+  }
 
   const initials = profile?.email.slice(0, 2).toUpperCase() ?? 'JP'
+  const isOwner = profile?.role === 'OWNER'
+  const isSuperAdmin = profile?.role === 'SUPERADMIN'
+  const roleLabel = isOwner ? 'Owner · Lumar' : isSuperAdmin ? 'SuperAdmin' : 'Administrador'
+  // The OWNER's only interface is "Organizaciones": show owner-only items and
+  // nothing else. Everyone else sees their items (SuperAdmin-only hidden for admins).
+  const navItems = isOwner
+    ? NAV_ITEMS.filter(item => item.ownerOnly)
+    : NAV_ITEMS.filter(item => !item.ownerOnly && (!item.superAdminOnly || isSuperAdmin))
 
   const handleLogout = () => {
     logout()
@@ -97,10 +127,10 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupLabel className="text-[10.5px] tracking-[0.14em] uppercase">Navegación</SidebarGroupLabel>
           <SidebarMenu className="gap-1">
-            {NAV_ITEMS.map(item => {
-              const unread = item.href === '/admin/novedades' ? (novedadesStats?.unreadTotal ?? 0) : 0
+            {navItems.map(item => {
+              const unread = alertCount(item.href)
               return (
-                <SidebarMenuItem key={item.href}>
+                <SidebarMenuItem key={item.href} className="relative">
                   <SidebarMenuButton
                     asChild
                     isActive={isActive(pathname, item.href)}
@@ -111,12 +141,24 @@ export function AppSidebar() {
                       <item.icon />
                       <span>{item.label}</span>
                       {unread > 0 && (
-                        <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-ember-2 px-1.5 text-[10.5px] font-semibold text-on-dark group-data-[collapsible=icon]:hidden">
-                          {unread}
+                        // Pulsing count badge (expanded): the ping ring draws the eye
+                        // from any section so a pending item isn't missed.
+                        <span className="relative ml-auto flex items-center justify-center group-data-[collapsible=icon]:hidden">
+                          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-ember-2 opacity-60" />
+                          <span className="relative flex h-5 min-w-5 items-center justify-center rounded-full bg-ember-2 px-1.5 text-[10.5px] font-semibold text-on-dark">
+                            {unread}
+                          </span>
                         </span>
                       )}
                     </Link>
                   </SidebarMenuButton>
+                  {unread > 0 && (
+                    // Pulsing dot for the collapsed (icon-only) sidebar.
+                    <span className="pointer-events-none absolute right-1 top-1 hidden size-2 group-data-[collapsible=icon]:flex">
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-ember-2 opacity-75" />
+                      <span className="relative inline-flex size-2 rounded-full bg-ember-2" />
+                    </span>
+                  )}
                 </SidebarMenuItem>
               )
             })}
@@ -142,7 +184,7 @@ export function AppSidebar() {
                     <span className="truncate text-[13px] font-medium text-sidebar-foreground">
                       {profile?.email ?? 'Cargando…'}
                     </span>
-                    <span className="truncate text-[11px] text-muted-foreground">Administrador</span>
+                    <span className="truncate text-[11px] text-muted-foreground">{roleLabel}</span>
                   </div>
                   <ChevronsUpDown className="ml-auto size-4 text-muted-foreground" />
                 </SidebarMenuButton>
@@ -156,7 +198,7 @@ export function AppSidebar() {
                 <DropdownMenuLabel className="font-normal">
                   <div className="grid leading-tight">
                     <span className="truncate text-[13px] font-medium">{profile?.email}</span>
-                    <span className="truncate text-[11px] text-muted-foreground">Administrador</span>
+                    <span className="truncate text-[11px] text-muted-foreground">{roleLabel}</span>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />

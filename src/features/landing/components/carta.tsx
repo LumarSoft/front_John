@@ -7,7 +7,7 @@ import { SectionMark } from './section-mark'
 
 const STATS = [
   { value: '< 24h', label: 'Cotización detallada en el día' },
-  { value: '48h', label: 'Liquidación promedio de siniestros' },
+  { value: '24h', label: 'Seguimiento permanente hasta la finalización del siniestro' },
   { value: '+1.500', label: 'Familias y empresas asegurando' },
   { value: '24/7', label: 'Disponibles ante un siniestro' },
 ]

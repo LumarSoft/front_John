@@ -41,6 +41,9 @@ export interface CobranzasStats {
 export interface CobranzasQuery {
   search?: string
   estado?: CobranzaEstadoFilter
+  // SuperAdmin section filter: by producer code OR by phone number/sucursal.
+  producerCodeId?: number
+  phoneNumberId?: number
   page?: number
   pageSize?: number
 }

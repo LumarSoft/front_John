@@ -15,9 +15,10 @@ import { Button } from '@/src/components/ui/button'
 import { Input } from '@/src/components/ui/input'
 import { Label } from '@/src/components/ui/label'
 import { ApiError } from '@/src/lib/api-client'
-import type { AdminUser } from '@/src/types/api/auth'
+import type { AdminRole, AdminUser } from '@/src/types/api/auth'
 import { useCreateUser } from '../hooks/use-create-user'
 import { useUpdateUser } from '../hooks/use-update-user'
+import { useProducerCodes } from '../hooks/use-producer-codes'
 
 interface UserFormDialogProps {
   user: AdminUser | null
@@ -40,13 +41,21 @@ function UserForm({ user, onDone }: { user: AdminUser | null; onDone: () => void
 
   const [email, setEmail] = useState(user?.email ?? '')
   const [password, setPassword] = useState('')
+  const [role, setRole] = useState<AdminRole>(user?.role ?? 'ADMIN')
+  const [codeIds, setCodeIds] = useState<number[]>(user?.producerCodes?.map(pc => pc.producerCode.id) ?? [])
 
+  const { data: producerCodes } = useProducerCodes()
   const pending = createUser.isPending || updateUser.isPending
+
+  const toggleCode = (id: number) =>
+    setCodeIds(prev => (prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]))
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
+    // SuperAdmin sees all codes implicitly; only send grants for ADMIN.
+    const producerCodeIds = role === 'ADMIN' ? codeIds : []
     if (isEdit) {
-      const data = { email, ...(password ? { password } : {}) }
+      const data = { email, role, producerCodeIds, ...(password ? { password } : {}) }
       updateUser.mutate(
         { id: user.id, data },
         {
@@ -59,7 +68,7 @@ function UserForm({ user, onDone }: { user: AdminUser | null; onDone: () => void
       )
     } else {
       createUser.mutate(
-        { email, password },
+        { email, password, role, producerCodeIds },
         {
           onSuccess: () => {
             toast.success('Usuario creado')
@@ -108,6 +117,59 @@ function UserForm({ user, onDone }: { user: AdminUser | null; onDone: () => void
             />
           </div>
         </div>
+
+        <div className="flex flex-col gap-2">
+          <Label>Rol</Label>
+          <div className="grid grid-cols-2 gap-2">
+            {(['ADMIN', 'SUPERADMIN'] as AdminRole[]).map(r => (
+              <button
+                key={r}
+                type="button"
+                onClick={() => setRole(r)}
+                className={`h-10 rounded-md border text-[13px] font-medium transition-colors ${
+                  role === r
+                    ? 'border-ember-2 bg-ember-soft text-ember-2'
+                    : 'border-line-2 text-ink-3 hover:bg-secondary'
+                }`}
+              >
+                {r === 'SUPERADMIN' ? 'SuperAdmin' : 'Administrador'}
+              </button>
+            ))}
+          </div>
+          <p className="text-[12px] text-muted-foreground">
+            {role === 'SUPERADMIN'
+              ? 'Ve todos los códigos de la organización y administra usuarios.'
+              : 'Ve solo los códigos que le asignes abajo.'}
+          </p>
+        </div>
+
+        {role === 'ADMIN' && (
+          <div className="flex flex-col gap-2">
+            <Label>Códigos asignados</Label>
+            <div className="max-h-44 overflow-y-auto rounded-md border border-line-2 p-2">
+              {(producerCodes ?? []).length === 0 && (
+                <p className="px-1 py-2 text-[13px] text-muted-foreground">No hay códigos disponibles.</p>
+              )}
+              {(producerCodes ?? []).map(code => (
+                <label
+                  key={code.id}
+                  className="flex cursor-pointer items-center gap-2 rounded px-1.5 py-1.5 hover:bg-secondary"
+                >
+                  <input
+                    type="checkbox"
+                    className="size-4 accent-ember-2"
+                    checked={codeIds.includes(code.id)}
+                    onChange={() => toggleCode(code.id)}
+                  />
+                  <span className="text-[13px] text-ink">
+                    <span className="font-medium">{code.code}</span>
+                    {code.holderName ? <span className="text-muted-foreground"> · {code.holderName}</span> : null}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       <DialogFooter>
