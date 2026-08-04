@@ -14,6 +14,7 @@ import { formatDate } from '../lib/asegurados-ui'
 import { useNovedades } from '../hooks/use-novedades'
 import { useNovedadesStats } from '../hooks/use-novedades-stats'
 import { useNovedadesActions } from '../hooks/use-novedades-actions'
+import { ScopeFilter, type ScopeFilterValue } from './scope-filter'
 import { SiniestroSheet } from './siniestro-sheet'
 import { AseguradoSheet } from './asegurado-sheet'
 
@@ -145,9 +146,10 @@ export function NovedadesView() {
   const [selectedClientId, setSelectedClientId] = useState<number | null>(null)
   const [searchInput, setSearchInput] = useState('')
   const search = useDebouncedValue(searchInput, 350)
+  const [scope, setScope] = useState<ScopeFilterValue>({})
 
   const type = tab === 'todas' ? undefined : tab
-  const { data: page, isLoading, isError } = useNovedades({ type, search, pageSize: 50 })
+  const { data: page, isLoading, isError } = useNovedades({ type, search, ...scope, pageSize: 50 })
   const { data: stats } = useNovedadesStats()
   const { markRead, markAllRead } = useNovedadesActions()
 
@@ -213,14 +215,17 @@ export function NovedadesView() {
             ))}
           </div>
 
-          <div className="relative sm:w-72">
-            <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={searchInput}
-              onChange={e => setSearchInput(e.target.value)}
-              placeholder="Buscar por DNI o nombre del cliente"
-              className="h-9 pl-8.5 text-[13px]"
-            />
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <ScopeFilter value={scope} onChange={setScope} className="!h-9" />
+            <div className="relative sm:w-72">
+              <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={searchInput}
+                onChange={e => setSearchInput(e.target.value)}
+                placeholder="Buscar por DNI o nombre del cliente"
+                className="h-9 pl-8.5 text-[13px]"
+              />
+            </div>
           </div>
         </div>
 

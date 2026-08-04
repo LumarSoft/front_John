@@ -37,6 +37,9 @@ export interface NovedadesQuery {
   unread?: boolean
   search?: string
   clientId?: number
+  // SuperAdmin section filter: by producer code OR by phone number/sucursal.
+  producerCodeId?: number
+  phoneNumberId?: number
   page?: number
   pageSize?: number
 }

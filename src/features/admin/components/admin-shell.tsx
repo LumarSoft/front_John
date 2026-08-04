@@ -7,6 +7,7 @@ import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/src/components/
 import { Separator } from '@/src/components/ui/separator'
 import { TooltipProvider } from '@/src/components/ui/tooltip'
 import { useAuth } from '../context/auth-context'
+import { useRole } from '../hooks/use-role'
 import { AppSidebar } from './app-sidebar'
 
 const TITLES: Record<string, string> = {
@@ -14,6 +15,7 @@ const TITLES: Record<string, string> = {
   '/admin/solicitudes': 'Solicitudes de cotización',
   '/admin/inbox': 'Bandeja de entrada',
   '/admin/usuarios': 'Usuarios',
+  '/admin/organizaciones': 'Organizaciones',
   '/admin/configuracion': 'Configuración',
 }
 
@@ -21,10 +23,18 @@ export function AdminShell({ children }: { children: ReactNode }) {
   const router = useRouter()
   const pathname = usePathname()
   const { isAuthenticated, hydrated } = useAuth()
+  const { isOwner, isLoading: roleLoading } = useRole()
 
   useEffect(() => {
     if (hydrated && !isAuthenticated) router.replace('/admin/login')
   }, [hydrated, isAuthenticated, router])
+
+  // The OWNER's only interface is "Organizaciones": keep it there.
+  useEffect(() => {
+    if (!roleLoading && isOwner && !pathname.startsWith('/admin/organizaciones')) {
+      router.replace('/admin/organizaciones')
+    }
+  }, [roleLoading, isOwner, pathname, router])
 
   if (!hydrated || !isAuthenticated) {
     return (

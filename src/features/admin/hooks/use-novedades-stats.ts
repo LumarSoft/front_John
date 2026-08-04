@@ -10,5 +10,7 @@ export function useNovedadesStats() {
     queryKey: QUERY_KEYS.admin.novedadesStats,
     queryFn: () => novedadesService.stats(token as string),
     enabled: !!token,
+    // Poll so the sidebar alert appears even while the admin is on another section.
+    refetchInterval: 20_000,
   })
 }

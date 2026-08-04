@@ -9,6 +9,7 @@ import { useInboxConversations } from '../hooks/use-inbox-conversations'
 import { InboxList } from './inbox-list'
 import { InboxThread } from './inbox-thread'
 import { AseguradoSheet } from './asegurado-sheet'
+import { ScopeFilter, type ScopeFilterValue } from './scope-filter'
 import type { InboxConversation } from '@/src/types/api/inbox'
 
 type InboxFilter = 'all' | 'pending' | 'taken'
@@ -46,9 +47,10 @@ export function InboxView() {
   const [selectedClientId, setSelectedClientId] = useState<number | null>(null)
   const [searchInput, setSearchInput] = useState('')
   const [filter, setFilter] = useState<InboxFilter>('all')
+  const [scope, setScope] = useState<ScopeFilterValue>({})
   const search = useDebouncedValue(searchInput, 350)
 
-  const { data: conversations = [], isLoading } = useInboxConversations(undefined, search)
+  const { data: conversations = [], isLoading } = useInboxConversations(undefined, search, scope)
 
   const filtered = conversations.filter(c => matchesFilter(c, filter))
   const selected = conversations.find(c => c.id === selectedId) ?? null
@@ -81,6 +83,8 @@ export function InboxView() {
                 className="h-9 bg-card pl-8 text-[12.5px]"
               />
             </div>
+
+            <ScopeFilter value={scope} onChange={setScope} className="!h-9 w-full" />
 
             <div className="flex gap-0.5 rounded-lg bg-secondary/70 p-0.5">
               {FILTERS.map(f => (
