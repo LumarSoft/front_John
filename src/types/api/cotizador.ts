@@ -18,6 +18,11 @@ export interface CotizacionPaymentOption {
 
 export interface CotizacionCoverage {
   code: string
+  // Commercial wording resolved by the API from the admin "Coberturas" settings
+  name: string
+  tagline: string | null
+  benefits: string[]
+  highlighted: boolean
   paymentOptions: CotizacionPaymentOption[]
 }
 
