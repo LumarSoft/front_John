@@ -32,6 +32,7 @@ export const QUERY_KEYS = {
     solicitud: (kind: string, id: number) => ['admin', 'solicitudes', kind, id] as const,
     pricingPlans: ['admin', 'pricing'] as const,
     businessHours: ['admin', 'business-hours'] as const,
+    coverageSettings: ['admin', 'coverage-settings'] as const,
   },
   owner: {
     organizations: ['owner', 'organizations'] as const,

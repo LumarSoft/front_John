@@ -78,7 +78,7 @@ export function CotizadorForm({ vehicleType }: Readonly<CotizadorFormProps>) {
         {step === 'done' && selectedCard && (
           <SolicitudConfirmada
             name={personalForm.form.firstName.trim()}
-            coverageName={selectedCard.tier.name}
+            coverageName={selectedCard.name}
             startDate={flow.startDate}
             quoteNumber={result?.quoteNumber ?? null}
             otherPayment={pagoForm.form.method === 'OTHER'}

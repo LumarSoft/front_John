@@ -67,12 +67,12 @@ export function CotizacionResultados({ result, onSelect, onReset }: Readonly<Cot
             key={card.code}
             style={{ animationDelay: `${i * 80}ms` }}
             className={`relative flex flex-col gap-4 rounded-2xl border p-5 bg-paper transition-[border-color,box-shadow,transform] duration-[220ms] hover:-translate-y-[3px] animate-[step-in_0.5s_cubic-bezier(0.22,1,0.36,1)_both] ${
-              card.tier.highlighted
+              card.highlighted
                 ? 'border-ember shadow-[0_12px_32px_-12px_rgba(232,168,32,0.35)] hover:shadow-[0_18px_40px_-12px_rgba(232,168,32,0.45)]'
                 : 'border-line-2 hover:border-line-strong hover:shadow-[0_14px_32px_-16px_rgba(15,13,10,0.25)]'
             }`}
           >
-            {card.tier.highlighted && (
+            {card.highlighted && (
               <span className="absolute -top-[10px] left-1/2 -translate-x-1/2 bg-ember text-paper text-[9.5px] tracking-[0.18em] uppercase font-semibold px-3 py-[3px] rounded-full whitespace-nowrap">
                 Recomendada
               </span>
@@ -82,13 +82,13 @@ export function CotizacionResultados({ result, onSelect, onReset }: Readonly<Cot
               <div className="text-[10.5px] tracking-[0.2em] uppercase text-faint font-semibold mb-1">
                 Cobertura {card.code}
               </div>
-              <div className="font-display text-[18px] text-ink leading-tight">{card.tier.name}</div>
-              {card.tier.tagline && <div className="text-[12px] text-ink-3 mt-1 leading-snug">{card.tier.tagline}</div>}
+              <div className="font-display text-[18px] text-ink leading-tight">{card.name}</div>
+              {card.tagline && <div className="text-[12px] text-ink-3 mt-1 leading-snug">{card.tagline}</div>}
             </div>
 
             <div>
               <div className="font-display text-[24px] text-ink leading-none">{formatARS(card.displayPrice)}</div>
-              <div className="text-[11px] text-faint mt-[6px] tracking-[0.02em]">Premio contado</div>
+              <div className="text-[11px] text-faint mt-[6px] tracking-[0.02em]">Premio desde</div>
             </div>
 
             {card.paymentOptions.length > 1 && (
@@ -102,9 +102,9 @@ export function CotizacionResultados({ result, onSelect, onReset }: Readonly<Cot
               </ul>
             )}
 
-            {card.tier.benefits.length > 0 && (
+            {card.benefits.length > 0 && (
               <ul className="flex flex-col gap-[7px] m-0 p-0 list-none border-t border-line pt-3">
-                {card.tier.benefits.map(benefit => (
+                {card.benefits.map(benefit => (
                   <li key={benefit} className="flex items-start gap-2 text-[12px] text-ink-3 leading-snug">
                     <Check />
                     {benefit}
@@ -117,7 +117,7 @@ export function CotizacionResultados({ result, onSelect, onReset }: Readonly<Cot
               type="button"
               onClick={() => onSelect(card)}
               className={`mt-auto w-full py-[11px] rounded-full text-[12.5px] font-semibold tracking-[-0.005em] cursor-pointer transition-[background-color,border-color,color,box-shadow] duration-[180ms] ${
-                card.tier.highlighted
+                card.highlighted
                   ? 'bg-ember text-paper border-none hover:bg-ember-2 hover:shadow-[0_10px_24px_-8px_rgba(232,168,32,0.55)]'
                   : 'bg-transparent text-ink border border-line-strong hover:border-ember hover:text-ember-2'
               }`}
