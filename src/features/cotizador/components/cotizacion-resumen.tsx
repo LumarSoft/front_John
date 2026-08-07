@@ -22,7 +22,7 @@ export function CotizacionResumen({
     <aside className="flex flex-col gap-4 rounded-2xl border border-ember/40 bg-paper p-5 shadow-[0_12px_32px_-16px_rgba(232,168,32,0.35)] md:sticky md:top-[96px]">
       <div>
         <div className="text-[10px] tracking-[0.2em] uppercase text-faint font-semibold mb-[6px]">Tu selección</div>
-        <div className="font-display text-[19px] text-ink leading-tight">{card.tier.name}</div>
+        <div className="font-display text-[19px] text-ink leading-tight">{card.name}</div>
         {vehicleLabel && <div className="text-[12px] text-ink-3 mt-1 leading-snug">{vehicleLabel}</div>}
       </div>
 
@@ -31,7 +31,7 @@ export function CotizacionResumen({
           <span className="font-display text-[28px] text-ink leading-none">{formatARS(card.displayPrice)}</span>
           <span className="text-[12px] text-faint">/mes</span>
         </div>
-        <div className="text-[11px] text-faint mt-[6px] tracking-[0.02em]">Premio contado</div>
+        <div className="text-[11px] text-faint mt-[6px] tracking-[0.02em]">Premio desde</div>
       </div>
 
       <dl className="flex flex-col gap-[10px] m-0 border-t border-line pt-4 text-[12.5px]">

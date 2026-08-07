@@ -1,103 +1,42 @@
 import type { CotizacionCoverage, CotizacionPaymentOption } from '@/src/types/api/cotizador'
 
-export interface CoverageTier {
-  prefix: string
-  name: string
-  tagline: string
-  benefits: string[]
-  highlighted?: boolean
-}
-
-// Triunfo coverage codes group by letter prefix, from basic liability (A) to full coverage (D)
-export const COVERAGE_TIERS: CoverageTier[] = [
-  {
-    prefix: 'A',
-    name: 'Responsabilidad Civil',
-    tagline: 'La cobertura obligatoria para circular',
-    benefits: [
-      'Daños a terceros, personas y cosas',
-      'Cobertura obligatoria (Ley 24.449)',
-      'Asistencia y defensa legal',
-      'Validez en países limítrofes',
-    ],
-  },
-  {
-    prefix: 'B',
-    name: 'Todo Total',
-    tagline: 'Responsabilidad civil + pérdidas totales',
-    benefits: [
-      'Todo lo de Responsabilidad Civil',
-      'Robo y hurto total',
-      'Incendio total',
-      'Destrucción total por accidente',
-    ],
-  },
-  {
-    prefix: 'C',
-    name: 'Terceros Completo',
-    tagline: 'La más elegida',
-    highlighted: true,
-    benefits: [
-      'Todo lo de Todo Total',
-      'Robo, hurto e incendio parcial',
-      'Rotura de cristales y cerraduras',
-      'Granizo, inundación y terremoto',
-    ],
-  },
-  {
-    prefix: 'D',
-    name: 'Todo Riesgo',
-    tagline: 'Protección máxima para tu vehículo',
-    benefits: [
-      'Todo lo de Terceros Completo',
-      'Daños parciales por accidente',
-      'Franquicia según plan',
-      'Cobertura integral del vehículo',
-    ],
-  },
-]
-
+/**
+ * A coverage as shown in the results grid.
+ *
+ * The wording (name, tagline, benefits) and the order come from the API, which
+ * resolves them from the admin "Coberturas" settings. There is deliberately no
+ * hardcoded catalog here: which coverages exist, which are shown and how they
+ * read is a business decision the broker owns, not a constant in the front.
+ */
 export interface CoverageCard {
-  tier: CoverageTier
   code: string
+  name: string
+  tagline: string | null
+  benefits: string[]
+  highlighted: boolean
   displayPrice: number
   paymentOptions: CotizacionPaymentOption[]
 }
 
+// Cheapest of the payment methods the API exposes (Débito Automático and Plan
+// de Pago). Contado is quoted by Triunfo but the API filters it out, so it never
+// reaches this point.
 const displayPrice = (coverage: CotizacionCoverage): number => {
-  const contado = coverage.paymentOptions.find(p => p.name.toLowerCase().includes('contado'))
-  if (contado && contado.premium > 0) return contado.premium
   const premiums = coverage.paymentOptions.map(p => p.premium).filter(p => p > 0)
   return premiums.length > 0 ? Math.min(...premiums) : 0
 }
 
+/** One card per coverage, in the order the API already sorted them. */
 export function buildCoverageCards(coverages: CotizacionCoverage[]): CoverageCard[] {
-  const cards: CoverageCard[] = []
-
-  for (const tier of COVERAGE_TIERS) {
-    const matches = coverages.filter(c => c.code.toUpperCase().startsWith(tier.prefix))
-    if (matches.length === 0) continue
-    const cheapest = matches.reduce((best, c) => (displayPrice(c) < displayPrice(best) ? c : best), matches[0])
-    cards.push({
-      tier,
-      code: cheapest.code,
-      displayPrice: displayPrice(cheapest),
-      paymentOptions: cheapest.paymentOptions,
-    })
-  }
-
-  const knownPrefixes = COVERAGE_TIERS.map(t => t.prefix)
-  for (const coverage of coverages) {
-    if (knownPrefixes.some(p => coverage.code.toUpperCase().startsWith(p))) continue
-    cards.push({
-      tier: { prefix: coverage.code, name: `Cobertura ${coverage.code}`, tagline: '', benefits: [] },
-      code: coverage.code,
-      displayPrice: displayPrice(coverage),
-      paymentOptions: coverage.paymentOptions,
-    })
-  }
-
-  return cards.sort((a, b) => a.displayPrice - b.displayPrice)
+  return coverages.map(coverage => ({
+    code: coverage.code,
+    name: coverage.name,
+    tagline: coverage.tagline,
+    benefits: coverage.benefits,
+    highlighted: coverage.highlighted,
+    displayPrice: displayPrice(coverage),
+    paymentOptions: coverage.paymentOptions,
+  }))
 }
 
 const arsFormatter = new Intl.NumberFormat('es-AR', {

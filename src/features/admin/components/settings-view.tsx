@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, type FormEvent } from 'react'
-import { Bot, Clock, KeyRound, Loader2, Mail, Tags, UserRound } from 'lucide-react'
+import { Bot, Clock, KeyRound, Loader2, Mail, ShieldCheck, Tags, UserRound } from 'lucide-react'
 import { toast } from 'sonner'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/src/components/ui/card'
 import { Button } from '@/src/components/ui/button'
@@ -17,6 +17,7 @@ import { useProducerConfig } from '../hooks/use-producer-config'
 import { useUpdateProducerConfig } from '../hooks/use-update-producer-config'
 import { PricingPlansSection } from './pricing-plans-section'
 import { BusinessHoursSection } from './business-hours-section'
+import { CoverageSettingsSection } from './coverage-settings-section'
 
 function SettingsForm({ initialEmail }: { initialEmail: string }) {
   const updateProfile = useUpdateProfile()
@@ -181,6 +182,7 @@ const TABS = [
   { value: 'asistente', label: 'Asistente', icon: Bot },
   { value: 'horarios', label: 'Horarios', icon: Clock },
   { value: 'precios', label: 'Precios', icon: Tags },
+  { value: 'coberturas', label: 'Coberturas', icon: ShieldCheck },
 ] as const
 
 function FormSkeleton() {
@@ -238,6 +240,10 @@ export function SettingsView() {
 
         <TabsContent value="horarios" className="mt-6">
           <BusinessHoursSection />
+        </TabsContent>
+
+        <TabsContent value="coberturas" className="mt-6">
+          <CoverageSettingsSection />
         </TabsContent>
 
         <TabsContent value="precios" className="mt-6">
