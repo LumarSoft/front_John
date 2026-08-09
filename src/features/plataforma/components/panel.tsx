@@ -83,7 +83,7 @@ export function Panel() {
                 <span className="h-[9px] w-[9px] rounded-full bg-line-strong/40" />
               </div>
               <div className="mx-auto max-w-[320px] flex-1 truncate rounded-full bg-paper px-4 py-[5px] text-center text-[11px] text-faint">
-                jpellegrini.ar/admin
+                jpmanagementgroup.com.ar/admin
               </div>
             </div>
 
