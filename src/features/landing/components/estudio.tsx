@@ -108,22 +108,22 @@ export function Estudio() {
               </div>
               <div className="flex flex-col gap-[6px]">
                 <a
-                  href="tel:+541148150099"
+                  href="tel:+5493412757294"
                   className="text-[15px] text-ink font-semibold tracking-[-0.01em] hover:text-ember-2 transition-colors"
                 >
-                  +54 11 4815-0099
+                  +54 9 341 275-7294
                 </a>
                 <a
-                  href="https://wa.me/5491162341198"
+                  href="https://wa.me/5493412757294"
                   className="text-[13.5px] text-ink-3 hover:text-ember-2 transition-colors"
                 >
-                  WhatsApp · +54 9 11 6234-1198
+                  Escribinos por WhatsApp
                 </a>
                 <a
-                  href="mailto:hola@jpellegrini.ar"
+                  href="mailto:mp_seguros@segurosmp.com"
                   className="text-[13.5px] text-ink-3 hover:text-ember-2 transition-colors"
                 >
-                  hola@jpellegrini.ar
+                  mp_seguros@segurosmp.com
                 </a>
               </div>
             </div>

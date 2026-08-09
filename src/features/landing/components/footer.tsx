@@ -52,16 +52,19 @@ export function Footer() {
             <a href="/coberturas" className="block py-1 hover:text-ember transition-colors">
               Cotizar online
             </a>
+            <a href="/plataforma" className="block py-1 hover:text-ember transition-colors">
+              Plataforma de WhatsApp
+            </a>
           </div>
           <div>
             <h5 className="text-[10.5px] tracking-[0.24em] uppercase text-paper/50 mb-4 mt-0 font-semibold">
               Contacto
             </h5>
-            <a href="tel:+541148150099" className="block py-1 hover:text-ember transition-colors">
-              +54 11 4815-0099
+            <a href="tel:+5493412757294" className="block py-1 hover:text-ember transition-colors">
+              +54 9 341 275-7294
             </a>
-            <a href="mailto:hola@jpellegrini.ar" className="block py-1 hover:text-ember transition-colors">
-              hola@jpellegrini.ar
+            <a href="mailto:mp_seguros@segurosmp.com" className="block py-1 hover:text-ember transition-colors">
+              mp_seguros@segurosmp.com
             </a>
             <a className="block py-1">Blvd. 27 de Febrero 275, Rosario</a>
             <a className="block py-1">

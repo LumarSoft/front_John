@@ -10,20 +10,20 @@ export function CtaSection() {
   const contactItems = [
     {
       label: 'Teléfono',
-      value: '+54 11 4815-0099',
-      href: 'tel:+541148150099',
+      value: '+54 9 341 275-7294',
+      href: 'tel:+5493412757294',
       sub: attentionHours,
     },
     {
       label: 'WhatsApp',
-      value: '+54 9 11 6234-1198',
-      href: 'https://wa.me/5491162341198',
+      value: '+54 9 341 275-7294',
+      href: 'https://wa.me/5493412757294',
       sub: 'Respuesta en menos de 1 hora',
     },
     {
       label: 'Correo',
-      value: 'hola@jpellegrini.ar',
-      href: 'mailto:hola@jpellegrini.ar',
+      value: 'mp_seguros@segurosmp.com',
+      href: 'mailto:mp_seguros@segurosmp.com',
       sub: 'Respondemos el mismo día hábil',
     },
     {
@@ -79,7 +79,7 @@ export function CtaSection() {
 
           <motion.div variants={fadeUp} className="flex flex-col sm:flex-row sm:flex-wrap gap-3 mt-8 md:mt-10">
             <a
-              href="https://wa.me/5491162341198"
+              href="https://wa.me/5493412757294"
               target="_blank"
               rel="noopener noreferrer"
               className="btn-shimmer inline-flex items-center justify-center gap-3 bg-ember rounded-full px-6 md:px-7 py-[14px] md:py-[15px] font-semibold text-[14px] tracking-[-0.005em] text-paper transition-[background-color,box-shadow] hover:bg-ember-2 hover:shadow-[0_12px_36px_-8px_rgba(232,168,32,0.55)]"
@@ -90,7 +90,7 @@ export function CtaSection() {
               Escribinos por WhatsApp
             </a>
             <a
-              href="tel:+541148150099"
+              href="tel:+5493412757294"
               className="inline-flex items-center justify-center gap-3 border border-paper/20 rounded-full px-6 md:px-7 py-[14px] md:py-[15px] font-medium text-[14px] tracking-[-0.005em] text-paper/85 transition-[border-color,color] hover:border-paper hover:text-paper"
             >
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -100,7 +100,7 @@ export function CtaSection() {
                   strokeLinejoin="round"
                 />
               </svg>
-              +54 11 4815-0099
+              +54 9 341 275-7294
             </a>
           </motion.div>
         </motion.div>
