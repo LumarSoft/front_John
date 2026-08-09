@@ -171,7 +171,7 @@ export function Nav() {
 
             <div className="flex items-center gap-2 shrink-0 max-[1024px]:hidden">
               <a
-                href="tel:+541148150099"
+                href="tel:+5493412757294"
                 className="rounded-full px-4 py-[10px] text-[13px] font-medium text-ink-3 transition-colors hover:text-ink"
               >
                 Llamanos
@@ -277,7 +277,7 @@ export function Nav() {
 
         <div className="grid grid-cols-2 gap-3 mt-8">
           <a
-            href="tel:+541148150099"
+            href="tel:+5493412757294"
             onClick={close}
             className="flex items-center justify-center gap-2 h-[52px] border border-line-2 rounded-2xl text-[13.5px] font-semibold text-ink-2 tracking-[-0.01em]"
           >
@@ -291,7 +291,7 @@ export function Nav() {
             Llamar
           </a>
           <a
-            href="https://wa.me/5491162341198"
+            href="https://wa.me/5493412757294"
             target="_blank"
             rel="noopener noreferrer"
             onClick={close}
