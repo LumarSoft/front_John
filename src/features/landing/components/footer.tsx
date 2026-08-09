@@ -55,6 +55,9 @@ export function Footer() {
             <a href="/plataforma" className="block py-1 hover:text-ember transition-colors">
               Plataforma de WhatsApp
             </a>
+            <a href="/privacidad" className="block py-1 hover:text-ember transition-colors">
+              Política de privacidad
+            </a>
           </div>
           <div>
             <h5 className="text-[10.5px] tracking-[0.24em] uppercase text-paper/50 mb-4 mt-0 font-semibold">
