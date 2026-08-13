@@ -18,6 +18,7 @@ export const QUERY_KEYS = {
     users: ['admin', 'users'] as const,
     producerCodes: ['admin', 'producer-codes'] as const,
     phoneNumbers: ['admin', 'phone-numbers'] as const,
+    embeddedSignupConfig: ['admin', 'embedded-signup-config'] as const,
     clients: (params?: AdminClientsQuery) => ['admin', 'clients', 'list', params ?? {}] as const,
     clientsStats: ['admin', 'clients', 'stats'] as const,
     client: (id: number) => ['admin', 'clients', id] as const,
