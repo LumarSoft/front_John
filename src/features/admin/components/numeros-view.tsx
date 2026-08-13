@@ -5,6 +5,7 @@ import { Loader2, Phone, Plus, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Card } from '@/src/components/ui/card'
 import { Button } from '@/src/components/ui/button'
+import { ConectarWhatsapp } from './conectar-whatsapp'
 import { Badge } from '@/src/components/ui/badge'
 import { Input } from '@/src/components/ui/input'
 import { Label } from '@/src/components/ui/label'
@@ -225,6 +226,20 @@ export function NumerosView() {
           <Plus className="size-4" /> Registrar número
         </Button>
       </div>
+
+      {/* Alta por Embedded Signup: el número queda conectado y suscripto a los
+          webhooks sin cargar nada a mano. "Registrar número" queda para los
+          casos en que el número ya existe en Meta y solo hay que darlo de alta acá. */}
+      <Card className="mb-4 border-line-2 p-4">
+        <div className="mb-3">
+          <h2 className="font-display text-[15px] text-ink">Conectar un número desde Meta</h2>
+          <p className="mt-1 text-[13px] text-muted-foreground">
+            Abre el alta de Meta y deja el número listo para recibir mensajes. El número sigue funcionando en la app de
+            WhatsApp Business del celular.
+          </p>
+        </div>
+        <ConectarWhatsapp />
+      </Card>
 
       <Card className="mb-4 flex items-center justify-between border-line-2 p-4">
         <span className="text-[13px] text-muted-foreground">Facturado a hoy (todos los números)</span>
