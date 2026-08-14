@@ -1,6 +1,4 @@
-import { getToken } from './portal-auth.service'
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'
+import { portalFetch } from './portal-client'
 
 export interface Vehiculo {
   id: number
@@ -69,23 +67,14 @@ export function proximaCuota(cuotas: Cuota[]): Cuota | null {
   return cuotas[cuotas.length - 1] // last paid
 }
 
-function authHeaders(): HeadersInit {
-  const token = getToken()
-  return token ? { Authorization: `Bearer ${token}` } : {}
-}
-
 export async function fetchPolizas(): Promise<PolizaListItem[]> {
-  const res = await fetch(`${API_URL}/clients/me/polizas`, {
-    headers: authHeaders(),
-  })
+  const res = await portalFetch('/clients/me/polizas')
   if (!res.ok) throw new Error('Error al cargar las pólizas')
   return res.json() as Promise<PolizaListItem[]>
 }
 
 export async function fetchPoliza(id: number): Promise<PolizaDetail> {
-  const res = await fetch(`${API_URL}/clients/me/polizas/${id}`, {
-    headers: authHeaders(),
-  })
+  const res = await portalFetch(`/clients/me/polizas/${id}`)
   if (!res.ok) throw new Error('Póliza no encontrada')
   return res.json() as Promise<PolizaDetail>
 }
