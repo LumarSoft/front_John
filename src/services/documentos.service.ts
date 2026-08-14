@@ -1,6 +1,4 @@
-import { getToken } from './portal-auth.service'
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'
+import { portalFetch } from './portal-client'
 
 export interface Documento {
   codigo: string
@@ -8,16 +6,9 @@ export interface Documento {
   url: string
 }
 
-function authHeaders(): HeadersInit {
-  const token = getToken()
-  return token ? { Authorization: `Bearer ${token}` } : {}
-}
-
 // Fetches a policy's documents on demand. The API resolves them live from Triunfo.
 export async function fetchPolizaDocumentos(polizaId: number): Promise<Documento[]> {
-  const res = await fetch(`${API_URL}/clients/me/polizas/${polizaId}/documentos`, {
-    headers: authHeaders(),
-  })
+  const res = await portalFetch(`/clients/me/polizas/${polizaId}/documentos`)
   if (!res.ok) throw new Error('No se pudieron cargar los documentos')
   return res.json() as Promise<Documento[]>
 }

@@ -1,5 +1,5 @@
 import { apiRequest } from '@/src/lib/api-client'
-import { getToken } from './portal-auth.service'
+import { portalFetch } from './portal-client'
 import type { RiskType } from './polizas.service'
 // Admin panel UI helpers (RISK_LABELS / RiskIcon) are keyed by this narrower RiskType.
 import type { RiskType as AdminRiskType } from '@/src/types/api/clients'
@@ -47,28 +47,19 @@ export interface CreateSiniestroInput {
   adjuntos: File[]
 }
 
-function authHeaders(): HeadersInit {
-  const token = getToken()
-  return token ? { Authorization: `Bearer ${token}` } : {}
-}
-
 // Resolves a stored attachment URL (which is API-relative) to an absolute URL.
 export function adjuntoUrl(adjunto: Adjunto): string {
   return adjunto.url.startsWith('http') ? adjunto.url : `${API_URL}${adjunto.url}`
 }
 
 export async function fetchSiniestros(): Promise<Siniestro[]> {
-  const res = await fetch(`${API_URL}/clients/me/siniestros`, {
-    headers: authHeaders(),
-  })
+  const res = await portalFetch('/clients/me/siniestros')
   if (!res.ok) throw new Error('Error al cargar los siniestros')
   return res.json() as Promise<Siniestro[]>
 }
 
 export async function fetchSiniestro(id: number): Promise<Siniestro> {
-  const res = await fetch(`${API_URL}/clients/me/siniestros/${id}`, {
-    headers: authHeaders(),
-  })
+  const res = await portalFetch(`/clients/me/siniestros/${id}`)
   if (!res.ok) throw new Error('Siniestro no encontrado')
   return res.json() as Promise<Siniestro>
 }
@@ -84,9 +75,8 @@ export async function createSiniestro(input: CreateSiniestroInput): Promise<Sini
   }
 
   // Note: do NOT set Content-Type — the browser sets the multipart boundary.
-  const res = await fetch(`${API_URL}/clients/me/siniestros`, {
+  const res = await portalFetch('/clients/me/siniestros', {
     method: 'POST',
-    headers: authHeaders(),
     body: form,
   })
 
