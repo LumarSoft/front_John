@@ -10,7 +10,8 @@ export interface EmbeddedSignupConfig {
 export interface OnboardWhatsappRequest {
   code: string
   wabaId: string
-  phoneNumberId: string
+  /** May be omitted by Meta's Coexistence finish event; the API resolves it. */
+  phoneNumberId?: string
   number?: string
   isCoexistence?: boolean
   pin?: string
@@ -26,4 +27,6 @@ export interface OnboardWhatsappResponse {
   subscribed: boolean
   /** False when Meta rejected /register — expected on Coexistence. */
   pinSet: boolean
+  historySyncRequested: boolean
+  contactsSyncRequested: boolean
 }
