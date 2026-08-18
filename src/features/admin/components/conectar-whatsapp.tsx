@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState, type RefObject } from 'react'
 import { Button } from '@/src/components/ui/button'
 import { useEmbeddedSignupConfig, useOnboardWhatsapp } from '../hooks/use-whatsapp-onboarding'
 
@@ -25,6 +25,14 @@ interface SessionInfo {
   wabaId?: string
   phoneNumberId?: string
   finished: boolean
+}
+
+const waitForSessionInfo = async (session: RefObject<SessionInfo>, timeoutMs = 5_000) => {
+  const startedAt = Date.now()
+  while (!session.current?.wabaId && Date.now() - startedAt < timeoutMs) {
+    await new Promise(resolve => window.setTimeout(resolve, 50))
+  }
+  return session.current
 }
 
 interface FbLoginResponse {
@@ -159,26 +167,32 @@ export function ConectarWhatsapp({ coexistence = true, pin, responsibleProducerC
           setError('No recibimos el código de Meta. Puede que hayas cerrado la ventana antes de terminar.')
           return
         }
-        const { wabaId, phoneNumberId } = session.current
-        if (!wabaId || !phoneNumberId) {
-          setError('Meta no devolvió el identificador de la cuenta o del número. Repetí el proceso.')
-          return
-        }
 
-        onboard.mutate(
-          {
-            code,
-            wabaId,
-            phoneNumberId,
-            isCoexistence: coexistence,
-            pin,
-            responsibleProducerCodeId,
-          },
-          {
-            onSuccess: result => onConnected?.(result.metaPhoneNumberId),
-            onError: (err: Error) => setError(err.message),
-          },
-        )
+        // The SDK callback and the WA_EMBEDDED_SIGNUP postMessage are separate
+        // browser events and either one can arrive first. Wait briefly for the
+        // session event so a harmless race does not strand an already-connected
+        // number. Coexistence may omit phone_number_id; the API resolves it.
+        void waitForSessionInfo(session).then(({ wabaId, phoneNumberId, finished }) => {
+          if (!finished || !wabaId || (!coexistence && !phoneNumberId)) {
+            setError('Meta no devolvió los datos completos del alta. Repetí el proceso.')
+            return
+          }
+
+          onboard.mutate(
+            {
+              code,
+              wabaId,
+              phoneNumberId,
+              isCoexistence: coexistence,
+              pin,
+              responsibleProducerCodeId,
+            },
+            {
+              onSuccess: result => onConnected?.(result.metaPhoneNumberId),
+              onError: (err: Error) => setError(err.message),
+            },
+          )
+        })
       },
       {
         config_id: config.configId,
@@ -212,8 +226,8 @@ export function ConectarWhatsapp({ coexistence = true, pin, responsibleProducerC
 
       {coexistence && (
         <p className="text-xs text-muted-foreground max-w-prose">
-          El número sigue funcionando en la app de WhatsApp Business del celular. Durante el proceso hay que escanear un
-          código QR desde ese teléfono.
+          El número sigue funcionando en la app de WhatsApp Business del celular. Meta enviará allí un código de
+          verificación para confirmar la conexión.
         </p>
       )}
 
@@ -223,6 +237,9 @@ export function ConectarWhatsapp({ coexistence = true, pin, responsibleProducerC
         <p className="text-sm text-emerald-600 dark:text-emerald-400 max-w-prose">
           Número conectado y suscripto a los webhooks.
           {!onboard.data.pinSet && ' El PIN de dos pasos no se pudo fijar desde acá — normal en Coexistence.'}
+          {coexistence &&
+            !onboard.data.historySyncRequested &&
+            ' Atención: Meta no aceptó la solicitud de historial; no cierres esta pantalla y revisá los logs.'}
         </p>
       )}
     </div>
