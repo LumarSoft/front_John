@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { BrandMark } from '@/src/components/brand-mark'
 import { useLockBodyScroll } from '../hooks/use-lock-body-scroll'
 
 interface NavItem {
@@ -83,12 +84,11 @@ export function Nav() {
             }`}
           >
             <Link href="/" className="flex items-center gap-[10px] shrink-0 group">
-              <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-ink text-paper transition-transform group-hover:rotate-[-4deg]">
-                <span className="font-display text-[15px] font-semibold italic leading-none tracking-[-0.04em]">
-                  Jp
-                </span>
-                <span className="absolute -bottom-[3px] -right-[3px] block h-[8px] w-[8px] rounded-full bg-ember ring-2 ring-paper" />
-              </div>
+              <BrandMark
+                size={36}
+                priority
+                className="rounded-xl shadow-sm transition-transform group-hover:rotate-[-4deg]"
+              />
               <div className="leading-none">
                 <div className="font-display text-[15px] md:text-[18px] font-semibold tracking-[-0.025em] text-ink">
                   John Pellegrini

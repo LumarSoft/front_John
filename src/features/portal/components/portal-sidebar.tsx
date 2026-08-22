@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { LayoutGrid, FileText, AlertCircle, FolderOpen, LogOut } from 'lucide-react'
+import { BrandMark } from '@/src/components/brand-mark'
 import { clearToken } from '@/src/services/portal-auth.service'
 
 interface NavItem {
@@ -37,10 +38,7 @@ export function PortalSidebar() {
     <aside className="fixed inset-y-0 left-0 z-20 flex w-[220px] flex-col border-r border-line bg-canvas">
       {/* Logo */}
       <div className="flex h-14 shrink-0 items-center gap-2.5 border-b border-line px-4">
-        <div className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-ink text-paper">
-          <span className="font-display text-[13px] font-semibold italic leading-none tracking-[-0.04em]">Jp</span>
-          <span className="absolute -bottom-[3px] -right-[3px] block h-[7px] w-[7px] rounded-full bg-ember ring-2 ring-canvas" />
-        </div>
+        <BrandMark size={32} className="rounded-lg shadow-sm" />
         <div className="min-w-0 leading-none">
           <div className="truncate font-display text-[13.5px] font-semibold tracking-[-0.02em] text-ink">
             John Pellegrini

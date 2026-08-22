@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { BrandMark } from '@/src/components/brand-mark'
 import { getToken, clearToken } from '@/src/services/portal-auth.service'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'
@@ -61,10 +62,7 @@ export function ChangePasswordForm() {
     <div className="min-h-screen bg-canvas flex flex-col items-center justify-center px-4">
       {/* Logo */}
       <Link href="/" className="flex items-center gap-[10px] mb-10 group">
-        <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-ink text-paper transition-transform group-hover:rotate-[-4deg]">
-          <span className="font-display text-[16px] font-semibold italic leading-none tracking-[-0.04em]">Jp</span>
-          <span className="absolute -bottom-[3px] -right-[3px] block h-[9px] w-[9px] rounded-full bg-ember ring-2 ring-canvas" />
-        </div>
+        <BrandMark size={40} className="rounded-xl shadow-sm transition-transform group-hover:rotate-[-4deg]" />
         <div className="leading-none">
           <div className="font-display text-[17px] font-semibold tracking-[-0.025em] text-ink">John Pellegrini</div>
           <div className="mt-[3px] text-[9px] font-medium uppercase tracking-[0.22em] text-faint">
