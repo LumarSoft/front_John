@@ -1,6 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import { BrandMark } from '@/src/components/brand-mark'
 import { fadeUp, fadeUpBlur, stagger, viewport } from '@/src/lib/motion'
 import { SectionMark } from '@/src/features/landing/components/section-mark'
 
@@ -107,9 +108,7 @@ function PhoneMock() {
       <div className="relative rounded-[38px] border border-line-dark-2 bg-ink-2 p-3 shadow-[0_40px_80px_-30px_rgba(0,0,0,0.8)]">
         <div className="rounded-[28px] overflow-hidden bg-[#0b141a]">
           <div className="flex items-center gap-3 bg-[#1f2c33] px-4 py-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-ember text-[13px] font-bold text-ink">
-              JP
-            </div>
+            <BrandMark size={36} className="rounded-full" />
             <div className="min-w-0">
               <div className="truncate text-[13.5px] font-semibold text-white">John Pellegrini Seguros</div>
               <div className="text-[10.5px] text-white/45">en línea</div>

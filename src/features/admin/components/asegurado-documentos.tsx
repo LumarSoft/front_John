@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { Building2, CreditCard, Download, FileText, Shield } from 'lucide-react'
+import { BrandMark } from '@/src/components/brand-mark'
 import { Button } from '@/src/components/ui/button'
 import { Separator } from '@/src/components/ui/separator'
 import type { AdminClientDetail, AdminPolizaDetail } from '@/src/types/api/clients'
@@ -53,9 +54,7 @@ function TarjetaCredencial({ poliza, client }: { poliza: AdminPolizaDetail; clie
               {poliza.company.charAt(0).toUpperCase() + poliza.company.slice(1)} Seguros
             </span>
           </div>
-          <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-amber to-ember-2 font-display text-[12px] font-bold text-[#1a1206] shadow-[0_4px_14px_-4px_rgba(232,168,32,0.65)]">
-            JP
-          </div>
+          <BrandMark size={36} className="rounded-lg shadow-sm" />
         </div>
 
         {/* Client name */}

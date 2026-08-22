@@ -4,6 +4,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { AlertCircle, Eye, EyeOff, Loader2, Lock, Mail } from 'lucide-react'
+import { BrandMark } from '@/src/components/brand-mark'
 import { Button } from '@/src/components/ui/button'
 import { Input } from '@/src/components/ui/input'
 import { Label } from '@/src/components/ui/label'
@@ -57,9 +58,7 @@ export function LoginForm() {
         className="relative w-full max-w-[400px]"
       >
         <div className="mb-8 text-center">
-          <div className="mb-5 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-amber to-ember-2 font-display text-[17px] text-[#1a1206] shadow-[0_10px_30px_-8px_rgba(232,168,32,0.6)]">
-            JP
-          </div>
+          <BrandMark size={48} className="mx-auto mb-5 rounded-2xl shadow-md" />
           <div className="mb-2 text-[10.5px] font-medium uppercase tracking-[0.36em] text-ember-2">
             Panel de administración
           </div>
