@@ -209,6 +209,9 @@ export function ConectarWhatsapp({ coexistence = true, pin, responsibleProducerC
 
   if (loadingConfig) return null
 
+  const onboardingNeedsAttention =
+    coexistence && onboard.isSuccess && (!onboard.data.coexistenceVerified || !onboard.data.historySyncRequested)
+
   if (!config?.ready) {
     return (
       <p className="text-sm text-muted-foreground">
@@ -234,12 +237,22 @@ export function ConectarWhatsapp({ coexistence = true, pin, responsibleProducerC
       {error && <p className="text-sm text-destructive max-w-prose">{error}</p>}
 
       {onboard.isSuccess && !error && (
-        <p className="text-sm text-emerald-600 dark:text-emerald-400 max-w-prose">
+        <p
+          className={`text-sm max-w-prose ${
+            onboardingNeedsAttention ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'
+          }`}
+        >
           Número conectado y suscripto a los webhooks.
+          {coexistence &&
+            onboard.data.coexistenceVerified &&
+            ' Coexistencia verificada con la app de WhatsApp Business.'}
           {!onboard.data.pinSet && ' El PIN de dos pasos no se pudo fijar desde acá — normal en Coexistence.'}
           {coexistence &&
             !onboard.data.historySyncRequested &&
             ' Atención: Meta no aceptó la solicitud de historial; no cierres esta pantalla y revisá los logs.'}
+          {coexistence &&
+            !onboard.data.coexistenceVerified &&
+            ' Atención: Meta no confirmó is_on_biz_app=true. No habilites el bot hasta revisar el estado del número.'}
         </p>
       )}
     </div>
