@@ -29,4 +29,8 @@ export interface OnboardWhatsappResponse {
   pinSet: boolean
   historySyncRequested: boolean
   contactsSyncRequested: boolean
+  /** True only when Graph confirms Business app + Cloud API on the number. */
+  coexistenceVerified: boolean | null
+  isOnBizApp: boolean | null
+  platformType: string | null
 }
