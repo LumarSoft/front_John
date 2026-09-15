@@ -9,6 +9,6 @@ export function useGroups(vehicleType: VehicleType, brandId: number | null, quer
   return useQuery({
     queryKey: QUERY_KEYS.infoauto.groups(vehicleType, brandId ?? 0, query),
     queryFn: () => infoAutoService.getGroups(vehicleType, brandId!, query),
-    enabled: infoAutoEnabled && brandId !== null,
+    enabled: infoAutoEnabled && vehicleType === 'auto' && brandId !== null,
   })
 }

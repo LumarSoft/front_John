@@ -8,7 +8,10 @@ const infoAutoEnabled = process.env.NEXT_PUBLIC_INFOAUTO_ENABLED !== 'false'
 export function useModels(vehicleType: VehicleType, brandId: number | null, groupId: number | null, query?: string) {
   return useQuery({
     queryKey: QUERY_KEYS.infoauto.models(vehicleType, brandId ?? 0, groupId ?? 0, query),
-    queryFn: () => infoAutoService.getModels(vehicleType, brandId!, groupId!, query),
-    enabled: infoAutoEnabled && brandId !== null && groupId !== null,
+    queryFn: () =>
+      vehicleType === 'moto'
+        ? infoAutoService.getBrandModels(vehicleType, brandId!, query)
+        : infoAutoService.getModels(vehicleType, brandId!, groupId!, query),
+    enabled: infoAutoEnabled && brandId !== null && (vehicleType === 'moto' || groupId !== null),
   })
 }

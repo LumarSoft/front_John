@@ -70,7 +70,11 @@ export function useCotizadorVehiculoForm({
     brandsData?.data.map(b => ({ value: String(b.id), label: b.name, logo: b.logo_url })) ?? []
   const groupOptions: SelectOption[] = groupsData?.data.map(g => ({ value: String(g.id), label: g.name })) ?? []
   const modelOptions: SelectOption[] =
-    modelsData?.data.map(m => ({ value: String(m.codia), label: m.description })) ?? []
+    modelsData?.data.map(m => ({
+      value: String(m.codia),
+      label: m.description,
+      logo: vehicleType === 'moto' ? m.photo_url : null,
+    })) ?? []
 
   const isValid = Boolean(form.brandId && form.codia && form.year && form.postalCode.trim())
 

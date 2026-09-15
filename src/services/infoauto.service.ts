@@ -42,6 +42,9 @@ export const infoAutoService = {
   getGroups: (vehicleType: VehicleType, brandId: number, query?: string) =>
     requestAll<Group>(`/infoauto/${vehicleType}/brands/${brandId}/groups`, { query_string: query }),
 
+  getBrandModels: (vehicleType: VehicleType, brandId: number, query?: string) =>
+    requestAll<VehicleModel>(`/infoauto/${vehicleType}/brands/${brandId}/models`, { query_string: query }),
+
   getModels: (vehicleType: VehicleType, brandId: number, groupId: number, query?: string) =>
     requestAll<VehicleModel>(`/infoauto/${vehicleType}/brands/${brandId}/groups/${groupId}/models`, {
       query_string: query,
