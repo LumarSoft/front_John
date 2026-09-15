@@ -51,8 +51,28 @@ export function VehiculoStep({ form: hook, vehicleType }: Readonly<VehiculoStepP
             onChange={handleBrandChange}
             placeholder="Buscá una marca…"
             loading={loadingBrands}
+            visuals={vehicleType === 'moto'}
           />
         </div>
+
+        {vehicleType === 'moto' && (
+          <div className="flex flex-col gap-[7px]">
+            <label className={`${labelClass} ${!form.brandId ? 'opacity-40' : ''}`} htmlFor="vehicle-model">
+              Modelo
+            </label>
+            <SelectSearch
+              inputId="vehicle-model"
+              options={modelOptions}
+              value={form.codia ? String(form.codia) : ''}
+              onChange={handleCodiaChange}
+              placeholder="Ej: NAVI 110"
+              disabledPlaceholder="Primero elegí una marca"
+              disabled={!form.brandId}
+              loading={loadingModels}
+              visuals
+            />
+          </div>
+        )}
 
         <div className="flex flex-col gap-[7px]">
           <label className={labelClass} htmlFor="vehicle-year">
@@ -76,37 +96,41 @@ export function VehiculoStep({ form: hook, vehicleType }: Readonly<VehiculoStepP
           </div>
         </div>
 
-        <div className="flex flex-col gap-[7px]">
-          <label className={`${labelClass} ${!form.brandId ? 'opacity-40' : ''}`} htmlFor="vehicle-group">
-            Modelo
-          </label>
-          <SelectSearch
-            inputId="vehicle-group"
-            options={groupOptions}
-            value={form.groupId ? String(form.groupId) : ''}
-            onChange={handleGroupChange}
-            placeholder="Buscá el modelo…"
-            disabledPlaceholder="Primero elegí una marca"
-            disabled={!form.brandId}
-            loading={loadingGroups}
-          />
-        </div>
+        {vehicleType === 'auto' && (
+          <div className="flex flex-col gap-[7px]">
+            <label className={`${labelClass} ${!form.brandId ? 'opacity-40' : ''}`} htmlFor="vehicle-group">
+              Modelo
+            </label>
+            <SelectSearch
+              inputId="vehicle-group"
+              options={groupOptions}
+              value={form.groupId ? String(form.groupId) : ''}
+              onChange={handleGroupChange}
+              placeholder="Buscá el modelo…"
+              disabledPlaceholder="Primero elegí una marca"
+              disabled={!form.brandId}
+              loading={loadingGroups}
+            />
+          </div>
+        )}
 
-        <div className="flex flex-col gap-[7px]">
-          <label className={`${labelClass} ${!form.groupId ? 'opacity-40' : ''}`} htmlFor="vehicle-model">
-            Versión
-          </label>
-          <SelectSearch
-            inputId="vehicle-model"
-            options={modelOptions}
-            value={form.codia ? String(form.codia) : ''}
-            onChange={handleCodiaChange}
-            placeholder="Buscá la versión…"
-            disabledPlaceholder="Primero elegí el modelo"
-            disabled={!form.groupId}
-            loading={loadingModels}
-          />
-        </div>
+        {vehicleType === 'auto' && (
+          <div className="flex flex-col gap-[7px]">
+            <label className={`${labelClass} ${!form.groupId ? 'opacity-40' : ''}`} htmlFor="vehicle-model">
+              Versión
+            </label>
+            <SelectSearch
+              inputId="vehicle-model"
+              options={modelOptions}
+              value={form.codia ? String(form.codia) : ''}
+              onChange={handleCodiaChange}
+              placeholder="Buscá la versión…"
+              disabledPlaceholder="Primero elegí el modelo"
+              disabled={!form.groupId}
+              loading={loadingModels}
+            />
+          </div>
+        )}
 
         <div className="flex flex-col gap-[7px]">
           <label className={labelClass} htmlFor="vehicle-postal-code">

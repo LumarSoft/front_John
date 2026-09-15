@@ -17,6 +17,7 @@ interface SelectSearchProps {
   disabled?: boolean
   loading?: boolean
   inputId?: string
+  visuals?: boolean
 }
 
 const inputClass =
@@ -31,6 +32,7 @@ export function SelectSearch({
   disabled = false,
   loading = false,
   inputId,
+  visuals = false,
 }: SelectSearchProps) {
   const [query, setQuery] = useState('')
   const [open, setOpen] = useState(false)
@@ -38,7 +40,7 @@ export function SelectSearch({
 
   const selectedOption = options.find(o => o.value === value) ?? null
   const isDisabled = disabled || loading
-  const hasLogo = options.some(o => o.logo)
+  const showVisuals = visuals || options.some(o => o.logo)
 
   const displayValue = open ? query : (selectedOption?.label ?? '')
 
@@ -78,22 +80,15 @@ export function SelectSearch({
   return (
     <div ref={containerRef} className={`relative ${isDisabled ? 'opacity-40' : ''}`} onBlur={handleBlur}>
       <div className="relative flex items-center">
-        {selectedOption?.logo && !open && (
+        {selectedOption && showVisuals && !open && (
           <div className="absolute left-3 flex items-center pointer-events-none">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={selectedOption.logo}
-              alt={selectedOption.label}
-              width={20}
-              height={20}
-              className="object-contain rounded-sm"
-            />
+            <OptionVisual option={selectedOption} />
           </div>
         )}
         <input
           id={inputId}
           type="text"
-          className={`${inputClass} ${isDisabled ? 'cursor-not-allowed' : ''} ${selectedOption?.logo && !open ? 'pl-10' : 'pl-4'}`}
+          className={`${inputClass} ${isDisabled ? 'cursor-not-allowed' : ''} ${selectedOption && showVisuals && !open ? 'pl-10' : 'pl-4'}`}
           placeholder={loading ? 'Cargando…' : isDisabled && disabledPlaceholder ? disabledPlaceholder : placeholder}
           value={displayValue}
           onChange={handleChange}
@@ -137,16 +132,7 @@ export function SelectSearch({
                 opt.value === value ? 'text-ink bg-canvas-2' : 'text-ink-3 hover:bg-canvas-2 hover:text-ink'
               }`}
             >
-              {hasLogo && (
-                <div className="w-5 h-5 shrink-0 flex items-center justify-center">
-                  {opt.logo ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={opt.logo} alt={opt.label} width={20} height={20} className="object-contain rounded-sm" />
-                  ) : (
-                    <div className="w-5 h-5 rounded-sm bg-canvas-2" />
-                  )}
-                </div>
-              )}
+              {showVisuals && <OptionVisual option={opt} />}
               {opt.label}
             </li>
           ))}
@@ -159,5 +145,28 @@ export function SelectSearch({
         </div>
       )}
     </div>
+  )
+}
+
+function OptionVisual({ option }: Readonly<{ option: SelectOption }>) {
+  return (
+    <span className="relative flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded-md bg-canvas-2 text-[10px] font-bold text-ember-2">
+      {option.label.trim().charAt(0).toUpperCase()}
+      {option.logo && (
+        // InfoAuto omits most motorcycle brand logos. Keep the initial behind
+        // the image so a missing or broken provider image still looks intentional.
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={option.logo}
+          alt=""
+          width={24}
+          height={24}
+          className="absolute inset-0 h-full w-full bg-paper object-contain"
+          onError={event => {
+            event.currentTarget.style.display = 'none'
+          }}
+        />
+      )}
+    </span>
   )
 }
