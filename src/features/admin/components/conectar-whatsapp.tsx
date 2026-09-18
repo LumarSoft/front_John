@@ -24,6 +24,7 @@ const SDK_SRC = 'https://connect.facebook.net/en_US/sdk.js'
 interface SessionInfo {
   wabaId?: string
   phoneNumberId?: string
+  finishEvent?: string
   finished: boolean
 }
 
@@ -143,6 +144,7 @@ export function ConectarWhatsapp({ coexistence = true, pin, responsibleProducerC
       session.current = {
         wabaId: payload.data?.waba_id,
         phoneNumberId: payload.data?.phone_number_id,
+        finishEvent: payload.event,
         // Coexistence closes with its own event name instead of the usual FINISH.
         finished:
           payload.event === 'FINISH' ||
@@ -172,9 +174,21 @@ export function ConectarWhatsapp({ coexistence = true, pin, responsibleProducerC
         // browser events and either one can arrive first. Wait briefly for the
         // session event so a harmless race does not strand an already-connected
         // number. Coexistence may omit phone_number_id; the API resolves it.
-        void waitForSessionInfo(session).then(({ wabaId, phoneNumberId, finished }) => {
+        void waitForSessionInfo(session).then(({ wabaId, phoneNumberId, finishEvent, finished }) => {
           if (!finished || !wabaId || (!coexistence && !phoneNumberId)) {
             setError('Meta no devolvió los datos completos del alta. Repetí el proceso.')
+            return
+          }
+
+          // Meta can silently fall back to the ordinary Cloud API signup even
+          // when we requested the Business-app feature. Never send that result
+          // to our API as Coexistence: it would register a Cloud-only number and
+          // misleadingly show it as connected in the panel.
+          if (coexistence && finishEvent !== 'FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING') {
+            setError(
+              'Meta finalizó el alta como Cloud API convencional, no como Coexistence. No guardamos el número. ' +
+                'Volvé a intentarlo con un número activo en WhatsApp Business y elegí conectar la app existente.',
+            )
             return
           }
 
