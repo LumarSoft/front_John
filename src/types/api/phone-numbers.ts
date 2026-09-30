@@ -10,6 +10,9 @@ export interface PhoneNumberUsage {
   inputTokens: number
   outputTokens: number
   metaConversations: number
+  metaMessages: number
+  metaBillableMessages: number
+  openaiCalls: number
   /** Full monthly charge for the number. */
   billedUsd: number
   /** Portion of that charge run up so far this month. */

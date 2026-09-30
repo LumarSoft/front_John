@@ -1,4 +1,4 @@
-export type NovedadType = 'siniestro' | 'handoff'
+export type NovedadType = 'siniestro' | 'handoff' | 'baja_poliza'
 
 export interface NovedadClient {
   id: number
@@ -30,6 +30,7 @@ export interface NovedadesStats {
   unreadTotal: number
   unreadSiniestros: number
   unreadHandoff: number
+  unreadBajas: number
 }
 
 export interface NovedadesQuery {

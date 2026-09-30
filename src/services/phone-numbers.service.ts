@@ -6,8 +6,10 @@ import type {
 } from '@/src/types/api/phone-numbers'
 
 export const phoneNumbersService = {
-  list: (token: string): Promise<AdminPhoneNumber[]> =>
-    apiRequest<AdminPhoneNumber[]>('/admin/phone-numbers', { token }),
+  list: (token: string, period?: string): Promise<AdminPhoneNumber[]> =>
+    apiRequest<AdminPhoneNumber[]>(`/admin/phone-numbers${period ? `?period=${encodeURIComponent(period)}` : ''}`, {
+      token,
+    }),
 
   create: (token: string, data: CreatePhoneNumberRequest): Promise<{ id: number }> =>
     apiRequest<{ id: number }>('/admin/phone-numbers', { method: 'POST', token, body: data }),

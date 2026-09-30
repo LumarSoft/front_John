@@ -101,7 +101,7 @@ function NovedadTableRow({ novedad, onOpen, onOpenClient }: NovedadRowProps) {
               : 'border-ember/25 bg-ember-soft text-ember-2',
           )}
         >
-          {isSiniestro ? 'Siniestro' : 'Asesor'}
+          {isSiniestro ? 'Siniestro' : novedad.type === 'baja_poliza' ? 'Baja de póliza' : 'Asesor'}
         </Badge>
       </td>
 
@@ -169,6 +169,7 @@ export function NovedadesView() {
   const tabs: { value: TabValue; label: string; count: number }[] = [
     { value: 'todas', label: 'Todas', count: stats?.unreadTotal ?? 0 },
     { value: 'siniestro', label: 'Siniestros', count: stats?.unreadSiniestros ?? 0 },
+    { value: 'baja_poliza', label: 'Bajas de póliza', count: stats?.unreadBajas ?? 0 },
     { value: 'handoff', label: 'Asesor', count: stats?.unreadHandoff ?? 0 },
   ]
 
