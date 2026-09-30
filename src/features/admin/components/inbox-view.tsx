@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { MessagesSquare, Search } from 'lucide-react'
 import { Input } from '@/src/components/ui/input'
 import { cn } from '@/src/lib/utils'
@@ -42,8 +43,18 @@ function InboxListSkeleton() {
   )
 }
 
+/** Link to the inbox with a conversation already open (used by Novedades). */
+export function inboxConversationHref(conversationId: number): string {
+  return `/admin/inbox?conversation=${conversationId}`
+}
+
 export function InboxView() {
-  const [selectedId, setSelectedId] = useState<number | null>(null)
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  // The open chat lives in the URL (?conversation=123): a Novedad can link
+  // straight to it, and a reload keeps the same chat open.
+  const selectedId = Number(searchParams.get('conversation')) || null
+  const selectConversation = (id: number) => router.replace(inboxConversationHref(id), { scroll: false })
   const [selectedClientId, setSelectedClientId] = useState<number | null>(null)
   const [searchInput, setSearchInput] = useState('')
   const [filter, setFilter] = useState<InboxFilter>('all')
@@ -117,7 +128,7 @@ export function InboxView() {
             {isLoading ? (
               <InboxListSkeleton />
             ) : (
-              <InboxList conversations={filtered} selectedId={selectedId} onSelect={setSelectedId} />
+              <InboxList conversations={filtered} selectedId={selectedId} onSelect={selectConversation} />
             )}
           </div>
         </aside>
@@ -131,12 +142,21 @@ export function InboxView() {
               <div className="flex size-16 items-center justify-center rounded-2xl bg-ember-soft text-ember-2 ring-1 ring-ember-ring">
                 <MessagesSquare className="size-7" />
               </div>
-              <div className="max-w-sm">
-                <p className="font-display text-[16px] text-ink">Elegí una conversación</p>
-                <p className="mt-1.5 text-[13px] leading-relaxed text-muted-foreground">
-                  Seleccioná un chat de la lista para ver el historial completo y responderle al cliente por WhatsApp.
-                </p>
-              </div>
+              {selectedId && !isLoading ? (
+                <div className="max-w-sm">
+                  <p className="font-display text-[16px] text-ink">No encontramos esa conversación</p>
+                  <p className="mt-1.5 text-[13px] leading-relaxed text-muted-foreground">
+                    Puede estar cerrada o fuera de los filtros actuales. Elegí un chat de la lista.
+                  </p>
+                </div>
+              ) : (
+                <div className="max-w-sm">
+                  <p className="font-display text-[16px] text-ink">Elegí una conversación</p>
+                  <p className="mt-1.5 text-[13px] leading-relaxed text-muted-foreground">
+                    Seleccioná un chat de la lista para ver el historial completo y responderle al cliente por WhatsApp.
+                  </p>
+                </div>
+              )}
             </div>
           )}
         </main>
