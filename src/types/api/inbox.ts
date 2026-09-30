@@ -7,6 +7,7 @@ export interface InboxConversation {
   assignedTo: { id: number; email: string } | null
   handedOverAt: string | null
   lastMessageAt: string | null
+  lastInboundMessageAt?: string | null
   sessionStartedAt: string | null
   phoneNumberId: string | null
   client: { id: number; firstName: string; lastName: string; dni: string } | null

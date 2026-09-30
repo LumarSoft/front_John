@@ -43,6 +43,7 @@ import { useAuth } from '../context/auth-context'
 import { useProfile } from '../hooks/use-profile'
 import { useNovedadesStats } from '../hooks/use-novedades-stats'
 import { useInboxConversations } from '../hooks/use-inbox-conversations'
+import { useInboxMessageSound } from '../hooks/use-inbox-message-sound'
 import { useNewSolicitudesCount } from '../hooks/use-solicitudes'
 
 interface NavItem {
@@ -85,6 +86,7 @@ export function AppSidebar() {
   const { data: novedadesStats } = useNovedadesStats()
   // "Pending" conversations = a client asked for a human agent → needs attention.
   const { data: inboxConversations } = useInboxConversations()
+  useInboxMessageSound(inboxConversations)
   const inboxPending = inboxConversations?.filter(c => c.status === 'pending').length ?? 0
   const { data: solicitudesNuevas = 0 } = useNewSolicitudesCount()
 
