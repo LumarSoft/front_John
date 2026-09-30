@@ -12,5 +12,7 @@ export function useInboxConversations(status?: string, search?: string, scope?: 
     queryFn: () => inboxService.listConversations(token as string, status, search, scope),
     enabled: !!token,
     refetchInterval: 5_000,
+    // Keep inbox alerts alive while the admin is working in another browser tab.
+    refetchIntervalInBackground: true,
   })
 }
