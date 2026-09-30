@@ -3,6 +3,8 @@ export interface InboxConversation {
   waId: string
   status: 'open' | 'pending' | 'closed'
   botPaused: boolean
+  /** True when the SuperAdmin activated human attention for the whole organization. */
+  globalBotDisabled: boolean
   assignedToUserId: number | null
   assignedTo: { id: number; email: string } | null
   handedOverAt: string | null
