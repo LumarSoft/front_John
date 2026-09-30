@@ -1,8 +1,27 @@
-import { AlertTriangle, ShieldAlert, ShieldCheck } from 'lucide-react'
+import { AlertTriangle, Ban, CalendarClock, ShieldAlert, ShieldCheck } from 'lucide-react'
 import { Badge } from '@/src/components/ui/badge'
 import type { PolizaStatus } from '../lib/asegurados-ui'
 
 export function PolizaStatusBadge({ status }: { status: PolizaStatus }) {
+  if (status.estado === 'anulada') {
+    return (
+      <Badge variant="secondary" className="gap-1 text-[11px] text-muted-foreground">
+        <Ban className="size-3" />
+        {status.label}
+      </Badge>
+    )
+  }
+  if (status.estado === 'proxima') {
+    return (
+      <Badge
+        variant="secondary"
+        className="gap-1 bg-sky-50 text-[11px] text-sky-700 dark:bg-sky-950/40 dark:text-sky-400"
+      >
+        <CalendarClock className="size-3" />
+        {status.label}
+      </Badge>
+    )
+  }
   if (status.estado === 'vencida') {
     return (
       <Badge variant="destructive" className="gap-1 text-[11px]">

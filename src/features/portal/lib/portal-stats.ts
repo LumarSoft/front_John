@@ -58,16 +58,12 @@ export function computePortalStats(polizas: PolizaListItem[]): PortalStats {
   const monthlyMap = new Map<string, number>()
 
   for (const poliza of polizas) {
-    // Policy validity
-    const hasta = poliza.vigenciaHasta ? new Date(poliza.vigenciaHasta) : null
-    if (hasta) {
-      if (hasta < now) vencidas++
-      else {
-        vigentes++
-        if (hasta <= expiringLimit) porVencer++
-      }
-    } else if (poliza.status.toUpperCase().includes('VIGENTE')) {
+    // Policy validity (computed by the API: dates + cancellation)
+    if (poliza.estadoVigencia === 'vigente') {
       vigentes++
+      if (poliza.vigenciaHasta && new Date(poliza.vigenciaHasta) <= expiringLimit) porVencer++
+    } else if (poliza.estadoVigencia === 'vencida' || poliza.estadoVigencia === 'anulada') {
+      vencidas++
     }
 
     // Ramo distribution

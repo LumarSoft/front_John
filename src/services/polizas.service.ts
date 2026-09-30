@@ -1,4 +1,5 @@
 import { portalFetch } from './portal-client'
+import type { EstadoVigencia } from '@/src/types/api/clients'
 
 export interface Vehiculo {
   id: number
@@ -45,6 +46,7 @@ export interface PolizaListItem {
   company: string
   riskType: RiskType
   status: string
+  estadoVigencia: EstadoVigencia
   vigenciaDesde: string | null
   vigenciaHasta: string | null
   premio: string | null

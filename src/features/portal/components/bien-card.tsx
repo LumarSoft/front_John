@@ -3,14 +3,14 @@
 import Link from 'next/link'
 import { MapPin, User } from 'lucide-react'
 import type { PolizaListItem } from '@/src/services/polizas.service'
-import { effectiveRiskType, formatCurrency, formatDate, isVigente, RISK_ICONS, RISK_LABELS } from '../lib/portal-ui'
+import { effectiveRiskType, formatCurrency, formatDate, RISK_ICONS, RISK_LABELS, vigenciaBadge } from '../lib/portal-ui'
 
 export function BienCard({ poliza }: { poliza: PolizaListItem }) {
   const ramo = effectiveRiskType(poliza)
   const Icon = RISK_ICONS[ramo]
   const v = poliza.vehiculo
   const b = poliza.bien
-  const vigente = isVigente(poliza.status)
+  const { label: estadoLabel, vigente } = vigenciaBadge(poliza)
 
   return (
     <Link
@@ -29,7 +29,7 @@ export function BienCard({ poliza }: { poliza: PolizaListItem }) {
               : 'border border-line-2 bg-canvas-2 text-faint',
           ].join(' ')}
         >
-          {poliza.status}
+          {estadoLabel}
         </span>
       </div>
 

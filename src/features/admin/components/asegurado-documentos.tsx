@@ -15,7 +15,7 @@ type DocFormat = 'credencial' | 'certificado'
 // ─── Tarjeta credencial ─────────────────────────────────────────────────────────
 
 function TarjetaCredencial({ poliza, client }: { poliza: AdminPolizaDetail; client: AdminClientDetail }) {
-  const status = polizaStatus(poliza.vigenciaHasta)
+  const status = polizaStatus(poliza)
 
   const statusPill =
     status.estado === 'vigente'
@@ -113,7 +113,7 @@ function TarjetaCredencial({ poliza, client }: { poliza: AdminPolizaDetail; clie
 // ─── Certificado de cobertura ─────────────────────────────────────────────────────
 
 function CertificadoCard({ poliza, client }: { poliza: AdminPolizaDetail; client: AdminClientDetail }) {
-  const status = polizaStatus(poliza.vigenciaHasta)
+  const status = polizaStatus(poliza)
 
   return (
     <div className="overflow-hidden rounded-2xl border border-line-2 bg-card shadow-sm">

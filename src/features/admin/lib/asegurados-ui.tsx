@@ -1,5 +1,5 @@
 import { Car, Home, LifeBuoy, Shield, Store } from 'lucide-react'
-import type { AdminPolizaSummary, RiskType } from '@/src/types/api/clients'
+import type { AdminPolizaSummary, EstadoVigencia, RiskType } from '@/src/types/api/clients'
 
 export const RISK_LABELS: Record<RiskType, string> = {
   auto: 'Automotor',
@@ -25,7 +25,13 @@ export function RiskIcon({ type, className }: { type: RiskType; className?: stri
   }
 }
 
-export type PolizaEstado = 'vigente' | 'expiring' | 'vencida'
+export type PolizaEstado = 'vigente' | 'expiring' | 'vencida' | 'anulada' | 'proxima'
+
+type PolizaVigencia = {
+  estadoVigencia: EstadoVigencia
+  vigenciaDesde: string | null
+  vigenciaHasta: string | null
+}
 
 export interface PolizaStatus {
   label: string
@@ -35,10 +41,17 @@ export interface PolizaStatus {
 
 const EXPIRING_WINDOW_DAYS = 30
 
-export function polizaStatus(vigenciaHasta: string | null | undefined): PolizaStatus {
+/** Badge for a policy, from the API's estadoVigencia plus the days left when in force. */
+export function polizaStatus(poliza: PolizaVigencia): PolizaStatus {
+  if (poliza.estadoVigencia === 'anulada') return { label: 'Anulada', estado: 'anulada', daysLeft: null }
+  if (poliza.estadoVigencia === 'proxima') {
+    return { label: `Desde ${formatDate(poliza.vigenciaDesde)}`, estado: 'proxima', daysLeft: null }
+  }
   const now = new Date()
-  const expiry = vigenciaHasta ? new Date(vigenciaHasta) : null
-  if (!expiry || expiry < now) return { label: 'Vencida', estado: 'vencida', daysLeft: null }
+  const expiry = poliza.vigenciaHasta ? new Date(poliza.vigenciaHasta) : null
+  if (poliza.estadoVigencia === 'vencida' || !expiry || expiry < now) {
+    return { label: 'Vencida', estado: 'vencida', daysLeft: null }
+  }
   const daysLeft = Math.ceil((expiry.getTime() - now.getTime()) / 86_400_000)
   if (daysLeft <= EXPIRING_WINDOW_DAYS) return { label: `Vence en ${daysLeft}d`, estado: 'expiring', daysLeft }
   return { label: 'Vigente', estado: 'vigente', daysLeft }
@@ -72,11 +85,11 @@ const CLIENT_STATUS_STYLES: Record<ClientStatusKey, ClientStatusStyle> = {
 }
 
 /** Overall health of a client, derived from the best status across all their policies. */
-export function clientStatus(polizas: { vigenciaHasta: string | null }[]): ClientStatusStyle {
+export function clientStatus(polizas: PolizaVigencia[]): ClientStatusStyle {
   if (polizas.length === 0) return CLIENT_STATUS_STYLES.none
   let best: ClientStatusKey = 'vencida'
   for (const p of polizas) {
-    const estado = polizaStatus(p.vigenciaHasta).estado
+    const estado = polizaStatus(p).estado
     if (estado === 'vigente') return CLIENT_STATUS_STYLES.vigente
     if (estado === 'expiring') best = 'expiring'
   }
@@ -94,8 +107,7 @@ export function ramoSummary(polizas: AdminPolizaSummary[]): {
     if (!ramos.includes(p.riskType)) ramos.push(p.riskType)
   }
   const dominio = polizas.find(p => p.vehiculo?.dominio)?.vehiculo?.dominio ?? null
-  const now = new Date()
-  const vigentes = polizas.filter(p => p.vigenciaHasta && new Date(p.vigenciaHasta) >= now).length
+  const vigentes = polizas.filter(p => p.estadoVigencia === 'vigente').length
   return { ramos, dominio, vigentes }
 }
 
