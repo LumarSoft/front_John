@@ -10,6 +10,9 @@ export interface InboxConversation {
   handedOverAt: string | null
   lastMessageAt: string | null
   lastInboundMessageAt?: string | null
+  unreadCount: number
+  lastReadAt: string | null
+  customerMessageCount: number
   sessionStartedAt: string | null
   phoneNumberId: string | null
   client: { id: number; firstName: string; lastName: string; dni: string } | null
@@ -20,4 +23,11 @@ export interface InboxMessage {
   role: 'user' | 'assistant' | 'agent'
   content: string
   createdAt: string
+  media: {
+    url: string
+    mimeType: string
+    originalName: string
+    size: number | null
+    tipo: string | null
+  } | null
 }
