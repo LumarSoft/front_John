@@ -38,13 +38,11 @@ function fecha(iso: string | null) {
 
 /** Month-to-date summary for the whole organization. */
 export function BillingSummary({ billing }: { billing: OrganizationBilling }) {
-  const pct = Math.round(billing.elapsedFraction * 100)
-
   const cards = [
     { label: 'Números activos', value: int(billing.activeNumbers) },
     { label: 'Costo real del mes', value: usd(billing.costUsd), hint: 'OpenAI + Meta' },
-    { label: 'Devengado a hoy', value: usd(billing.accruedUsd), hint: `${pct}% del mes transcurrido` },
-    { label: 'Total al cierre', value: usd(billing.billedUsd), hint: 'si el consumo sigue igual' },
+    { label: 'Total estimado del mes', value: usd(billing.billedUsd), hint: 'Costo acumulado × 3' },
+    { label: 'Ganancia estimada', value: usd(billing.marginUsd), hint: 'Total menos costo de proveedores' },
   ]
 
   return (
@@ -82,10 +80,10 @@ export function NumbersSection({ numbers }: { numbers: OrganizationNumber[] }) {
               <TableHead>Número</TableHead>
               <TableHead>Código</TableHead>
               <TableHead className="text-right">Tokens</TableHead>
-              <TableHead className="text-right">Conv. Meta</TableHead>
+              <TableHead className="text-right">Mensajes Meta</TableHead>
               <TableHead className="text-right">Costo</TableHead>
-              <TableHead className="text-right">Devengado</TableHead>
-              <TableHead className="text-right">Al cierre</TableHead>
+              <TableHead className="text-right">Total del mes</TableHead>
+              <TableHead className="text-right">Ganancia</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -122,18 +120,20 @@ export function NumbersSection({ numbers }: { numbers: OrganizationNumber[] }) {
                       <span className="text-muted-foreground">sin asignar</span>
                     )}
                   </TableCell>
-                  <TableCell className="text-right text-[12px] text-muted-foreground">{int(tokens)}</TableCell>
                   <TableCell className="text-right text-[12px] text-muted-foreground">
-                    {int(n.usage.metaConversations)}
+                    {int(n.usage.openaiCalls)} llamadas · {int(tokens)} tokens
+                  </TableCell>
+                  <TableCell className="text-right text-[12px] text-muted-foreground">
+                    {int(n.usage.metaMessages)}
                   </TableCell>
                   <TableCell className="text-right text-[12px] text-muted-foreground">
                     {usd(n.usage.totalCostUsd)}
                   </TableCell>
                   <TableCell className="text-right text-[13px] font-medium text-ink">
-                    {usd(n.usage.accruedUsd)}
+                    {usd(n.usage.billedUsd)}
                   </TableCell>
                   <TableCell className="text-right text-[12px] text-muted-foreground">
-                    {usd(n.usage.billedUsd)}
+                    {usd(n.usage.marginUsd)}
                   </TableCell>
                 </TableRow>
               )

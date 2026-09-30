@@ -186,7 +186,9 @@ function NumberForm({ existing, onDone }: { existing: AdminPhoneNumber | null; o
 
 export function NumerosView() {
   const { isSuperAdmin, isLoading: roleLoading } = useRole()
-  const { data: numbers, isLoading } = usePhoneNumbers(isSuperAdmin)
+  const currentMonth = new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Argentina/Cordoba' }).slice(0, 7)
+  const [period, setPeriod] = useState(currentMonth)
+  const { data: numbers, isLoading, isError } = usePhoneNumbers(isSuperAdmin, period)
   const { remove } = usePhoneNumberMutations()
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editing, setEditing] = useState<AdminPhoneNumber | null>(null)
@@ -202,7 +204,7 @@ export function NumerosView() {
   }
 
   // Tenants see what they are charged; the provider cost is not sent to them.
-  const grandTotal = (numbers ?? []).reduce((sum, n) => sum + n.usage.accruedUsd, 0)
+  const grandTotal = (numbers ?? []).reduce((sum, n) => sum + n.usage.billedUsd, 0)
 
   return (
     <div className="mx-auto w-full max-w-6xl px-5 py-8 md:px-8 md:py-10">
@@ -241,9 +243,38 @@ export function NumerosView() {
         <ConectarWhatsapp />
       </Card>
 
+      <div className="mb-4 flex flex-wrap items-end gap-3">
+        <div>
+          <Label htmlFor="billing-period">Mes de consumo</Label>
+          <Input
+            id="billing-period"
+            type="month"
+            value={period}
+            max={currentMonth}
+            onChange={event => {
+              if (event.target.value) setPeriod(event.target.value)
+            }}
+            className="mt-1 w-48"
+          />
+        </div>
+        <p className="text-[13px] text-muted-foreground">
+          El total se calcula con los mensajes de Meta y el uso de OpenAI del mes seleccionado.
+        </p>
+      </div>
+      {isError && (
+        <p role="alert" className="mb-4 text-destructive">
+          No se pudo cargar el consumo de este mes.
+        </p>
+      )}
+      {period < '2026-10' && (
+        <p className="mb-4 text-[13px] text-muted-foreground">
+          El conteo de mensajes y llamadas comienza con la actualización de octubre. Los meses anteriores conservan el
+          consumo registrado.
+        </p>
+      )}
       <Card className="mb-4 flex items-center justify-between border-line-2 p-4">
-        <span className="text-[13px] text-muted-foreground">Facturado a hoy (todos los números)</span>
-        <span className="font-display text-[20px] text-ink">{money(grandTotal)}</span>
+        <span className="text-[13px] text-muted-foreground">Total estimado · {period} (todos los números)</span>
+        <span className="font-display text-[20px] text-ink">{numbers && !isError ? money(grandTotal) : '—'}</span>
       </Card>
 
       <Card className="overflow-hidden border-line-2 py-0 shadow-sm">
@@ -256,10 +287,14 @@ export function NumerosView() {
               <TableHead className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
                 Responsable
               </TableHead>
-              <TableHead className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">Facturado</TableHead>
+              <TableHead className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+                Total del mes
+              </TableHead>
               <TableHead className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
                 Presupuesto
               </TableHead>
+              <TableHead>Mensajes Meta</TableHead>
+              <TableHead>Llamadas OpenAI</TableHead>
               <TableHead className="w-24 pr-5" />
             </TableRow>
           </TableHeader>
@@ -279,6 +314,12 @@ export function NumerosView() {
                   <TableCell>
                     <Skeleton className="h-4 w-20" />
                   </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-4 w-20" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-4 w-20" />
+                  </TableCell>
                   <TableCell className="pr-5">
                     <Skeleton className="ml-auto h-8 w-16" />
                   </TableCell>
@@ -287,7 +328,7 @@ export function NumerosView() {
 
             {numbers && numbers.length === 0 && (
               <TableRow>
-                <TableCell colSpan={5} className="py-16 text-center">
+                <TableCell colSpan={7} className="py-16 text-center">
                   <div className="flex flex-col items-center gap-3">
                     <div className="flex size-12 items-center justify-center rounded-full bg-secondary text-muted-foreground">
                       <Phone className="size-5" />
@@ -327,10 +368,22 @@ export function NumerosView() {
                     : '—'}
                 </TableCell>
                 <TableCell className="text-[13px]">
-                  <span className="font-medium text-ink">{money(n.usage.accruedUsd)}</span>
+                  <span className="font-medium text-ink">{money(n.usage.billedUsd)}</span>
                 </TableCell>
                 <TableCell className="text-[13px] text-ink-3">
                   {n.monthlyBudgetUsd != null ? money(n.monthlyBudgetUsd) : 'Por defecto'}
+                </TableCell>
+                <TableCell className="text-[13px]">
+                  {n.usage.metaMessages.toLocaleString('es-AR')}
+                  <div className="text-[11px] text-muted-foreground">
+                    {n.usage.metaBillableMessages.toLocaleString('es-AR')} con cargo
+                  </div>
+                </TableCell>
+                <TableCell className="text-[13px]">
+                  {n.usage.openaiCalls.toLocaleString('es-AR')}
+                  <div className="text-[11px] text-muted-foreground">
+                    {(n.usage.inputTokens + n.usage.outputTokens).toLocaleString('es-AR')} tokens
+                  </div>
                 </TableCell>
                 <TableCell className="pr-5">
                   <div className="flex justify-end gap-1">

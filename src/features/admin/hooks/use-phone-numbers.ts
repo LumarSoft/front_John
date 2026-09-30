@@ -4,11 +4,11 @@ import { QUERY_KEYS } from '@/src/lib/query-keys'
 import type { CreatePhoneNumberRequest, UpdatePhoneNumberRequest } from '@/src/types/api/phone-numbers'
 import { useAuth } from '../context/auth-context'
 
-export function usePhoneNumbers(enabled = true) {
+export function usePhoneNumbers(enabled = true, period?: string) {
   const { token } = useAuth()
   return useQuery({
-    queryKey: QUERY_KEYS.admin.phoneNumbers,
-    queryFn: () => phoneNumbersService.list(token as string),
+    queryKey: [...QUERY_KEYS.admin.phoneNumbers, period],
+    queryFn: () => phoneNumbersService.list(token as string, period),
     enabled: !!token && enabled,
   })
 }

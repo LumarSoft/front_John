@@ -21,6 +21,9 @@ export interface PhoneNumberUsage {
   openaiOutputTokens: number
   openaiCostUsd: number
   metaConversations: number
+  metaMessages: number
+  metaBillableMessages: number
+  openaiCalls: number
   metaCostUsd: number
   /** What the number costs us (OpenAI + Meta). Measured. */
   totalCostUsd: number
