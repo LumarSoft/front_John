@@ -51,6 +51,7 @@ export function InboxList({ conversations, selectedId, onSelect }: Props) {
       {conversations.map(conv => {
         const name = displayName(conv)
         const isSelected = selectedId === conv.id
+        const isUnread = conv.unreadCount > 0
 
         return (
           <li key={conv.id}>
@@ -59,10 +60,18 @@ export function InboxList({ conversations, selectedId, onSelect }: Props) {
               onClick={() => onSelect(conv.id)}
               className={cn(
                 'relative flex w-full items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-card',
+                isUnread && !isSelected && 'bg-amber-subtle/70 hover:bg-amber-subtle',
                 isSelected && 'bg-ember-soft hover:bg-ember-soft',
               )}
             >
-              {isSelected && <span className="absolute inset-y-1.5 left-0 w-[3px] rounded-r-full bg-ember" />}
+              {(isSelected || isUnread) && (
+                <span
+                  className={cn(
+                    'absolute inset-y-1.5 left-0 w-1 rounded-r-full',
+                    isSelected ? 'bg-ember' : 'bg-amber-500',
+                  )}
+                />
+              )}
 
               <div
                 className={cn(
@@ -76,22 +85,46 @@ export function InboxList({ conversations, selectedId, onSelect }: Props) {
               <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between gap-2">
                   <span className="flex min-w-0 items-center gap-1.5">
-                    {conv.status === 'pending' && (
-                      <span className="size-1.5 shrink-0 rounded-full bg-ember" aria-hidden />
+                    {isUnread && (
+                      <span
+                        className="size-2 shrink-0 rounded-full bg-amber-500 shadow-[0_0_0_3px_rgba(245,158,11,0.16)]"
+                        aria-hidden
+                      />
                     )}
-                    <span className="truncate text-[13px] font-medium text-ink">{name}</span>
+                    <span className={cn('truncate text-[13px] text-ink', isUnread ? 'font-bold' : 'font-medium')}>
+                      {name}
+                    </span>
                   </span>
-                  <span className="shrink-0 text-[11px] tabular-nums text-muted-foreground">
+                  <span
+                    className={cn(
+                      'shrink-0 text-[11px] tabular-nums',
+                      isUnread ? 'font-bold text-amber-700 dark:text-amber' : 'text-muted-foreground',
+                    )}
+                  >
                     {timeAgo(conv.lastMessageAt)}
                   </span>
                 </div>
 
-                <span className="mt-0.5 block truncate text-[11.5px] text-muted-foreground">
-                  {conv.client ? `DNI ${conv.client.dni}` : 'Cliente sin vincular'}
-                </span>
+                <div className="mt-0.5 flex items-center justify-between gap-2">
+                  <span className="block truncate text-[11.5px] text-muted-foreground">
+                    {conv.client ? `DNI ${conv.client.dni}` : 'Cliente sin vincular'}
+                  </span>
+                  <span className={cn('shrink-0 text-[10.5px]', isUnread ? 'font-semibold text-ink-3' : 'text-faint')}>
+                    {conv.customerMessageCount} {conv.customerMessageCount === 1 ? 'mensaje' : 'mensajes'}
+                  </span>
+                </div>
 
-                {(conv.status === 'pending' || conv.botPaused || conv.globalBotDisabled || conv.assignedTo) && (
+                {(isUnread ||
+                  conv.status === 'pending' ||
+                  conv.botPaused ||
+                  conv.globalBotDisabled ||
+                  conv.assignedTo) && (
                   <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                    {isUnread && (
+                      <Badge className="h-5 bg-amber-500 px-2 text-[10px] font-bold text-white hover:bg-amber-500">
+                        {conv.unreadCount} {conv.unreadCount === 1 ? 'nuevo' : 'nuevos'}
+                      </Badge>
+                    )}
                     {conv.status === 'pending' && (
                       <Badge variant="outline" className="h-4 border-amber text-[10px] text-amber-700">
                         Pendiente

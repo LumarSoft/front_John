@@ -7,6 +7,7 @@ import { cn } from '@/src/lib/utils'
 import { useInboxMessages } from '../hooks/use-inbox-messages'
 import { useInboxActions } from '../hooks/use-inbox-actions'
 import type { InboxConversation } from '@/src/types/api/inbox'
+import { adjuntoUrl } from '@/src/services/siniestros.service'
 
 const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000
 
@@ -196,7 +197,42 @@ export function InboxThread({ conversation, onOpenClient }: Props) {
                       roleBubble(msg.role),
                     )}
                   >
-                    {msg.content}
+                    {msg.media?.mimeType.startsWith('image/') ? (
+                      <a
+                        href={adjuntoUrl({
+                          filename: msg.media.originalName,
+                          originalName: msg.media.originalName,
+                          url: msg.media.url,
+                          mimeType: msg.media.mimeType,
+                          size: msg.media.size ?? 0,
+                        })}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="block"
+                        title="Abrir imagen en tamaño completo"
+                      >
+                        {/* Signed API URLs are dynamic and cannot go through Next's image optimizer. */}
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={adjuntoUrl({
+                            filename: msg.media.originalName,
+                            originalName: msg.media.originalName,
+                            url: msg.media.url,
+                            mimeType: msg.media.mimeType,
+                            size: msg.media.size ?? 0,
+                          })}
+                          alt={
+                            msg.media.tipo
+                              ? `Imagen: ${msg.media.tipo.replaceAll('_', ' ')}`
+                              : 'Imagen enviada por el cliente'
+                          }
+                          className="max-h-80 w-auto max-w-full rounded-xl object-contain"
+                        />
+                        <span className="mt-1.5 block text-[11px] opacity-70">Tocá para ampliar</span>
+                      </a>
+                    ) : (
+                      msg.content
+                    )}
                   </div>
                   <span className={cn('px-1 text-[10.5px] text-faint', isUser ? 'text-left' : 'text-right')}>
                     {roleLabel(msg.role)} · {fmtTime(msg.createdAt)}
