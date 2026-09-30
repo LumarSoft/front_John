@@ -17,6 +17,7 @@ import { useNovedadesActions } from '../hooks/use-novedades-actions'
 import { ScopeFilter, type ScopeFilterValue } from './scope-filter'
 import { SiniestroSheet } from './siniestro-sheet'
 import { AseguradoSheet } from './asegurado-sheet'
+import { inboxConversationHref } from './inbox-view'
 
 type TabValue = 'todas' | NovedadType
 
@@ -158,7 +159,8 @@ export function NovedadesView() {
     if (novedad.type === 'siniestro') {
       setSelectedSiniestroId(novedad.refId)
     } else {
-      router.push('/admin/inbox')
+      // Handoff novedades carry the conversation id: open that chat directly.
+      router.push(inboxConversationHref(novedad.refId))
     }
   }
 
