@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import { MessagesSquare, Search } from 'lucide-react'
 import { Input } from '@/src/components/ui/input'
 import { cn } from '@/src/lib/utils'
@@ -49,12 +49,18 @@ export function inboxConversationHref(conversationId: number): string {
 }
 
 export function InboxView() {
-  const router = useRouter()
   const searchParams = useSearchParams()
-  // The open chat lives in the URL (?conversation=123): a Novedad can link
-  // straight to it, and a reload keeps the same chat open.
-  const selectedId = Number(searchParams.get('conversation')) || null
-  const selectConversation = (id: number) => router.replace(inboxConversationHref(id), { scroll: false })
+  // A Novedad links here with ?conversation=123 to open that chat.
+  const linkedId = Number(searchParams.get('conversation')) || null
+  const [pickedId, setPickedId] = useState<number | null>(null)
+  const selectedId = pickedId ?? linkedId
+  // Switching chats is local state, so it is instant and never depends on a
+  // Next navigation round-trip. The URL only mirrors it (replaceState, no
+  // navigation) so a reload or a shared link reopens the same chat.
+  const selectConversation = (id: number) => {
+    setPickedId(id)
+    window.history.replaceState(window.history.state, '', inboxConversationHref(id))
+  }
   const [selectedClientId, setSelectedClientId] = useState<number | null>(null)
   const [searchInput, setSearchInput] = useState('')
   const [filter, setFilter] = useState<InboxFilter>('all')
