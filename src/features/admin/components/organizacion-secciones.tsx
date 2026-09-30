@@ -41,7 +41,7 @@ export function BillingSummary({ billing }: { billing: OrganizationBilling }) {
   const cards = [
     { label: 'Números activos', value: int(billing.activeNumbers) },
     { label: 'Costo real del mes', value: usd(billing.costUsd), hint: 'OpenAI + Meta' },
-    { label: 'Total estimado del mes', value: usd(billing.billedUsd), hint: 'Costo acumulado × 3' },
+    { label: 'Total estimado del mes', value: usd(billing.billedUsd), hint: 'Tarifa mensual según consumo' },
     { label: 'Ganancia estimada', value: usd(billing.marginUsd), hint: 'Total menos costo de proveedores' },
   ]
 

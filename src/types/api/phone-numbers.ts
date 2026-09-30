@@ -6,16 +6,17 @@ export interface PhoneNumberCodeRef {
 
 export interface PhoneNumberUsage {
   period: string
+  pricing: { minimumUsd: number; maximumUsd: number; tokenRatePer1000: number; metaMessageRateUsd: number }
   /** Activity of the number: the client may see its own volume. */
   inputTokens: number
   outputTokens: number
   metaConversations: number
   metaMessages: number
-  metaBillableMessages: number
+  metaBillableMessages?: number
   openaiCalls: number
   /** Full monthly charge for the number. */
   billedUsd: number
-  /** Portion of that charge run up so far this month. */
+  /** Compatibility alias for the accumulated commercial charge. */
   accruedUsd: number
   /**
    * Provider cost and margin. Only present for the platform OWNER — the API

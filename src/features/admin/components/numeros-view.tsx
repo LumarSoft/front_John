@@ -258,9 +258,19 @@ export function NumerosView() {
           />
         </div>
         <p className="text-[13px] text-muted-foreground">
-          El total se calcula con los mensajes de Meta y el uso de OpenAI del mes seleccionado.
+          Servicio mensual según mensajes y tokens utilizados. El mínimo se prorratea durante el mes.
         </p>
       </div>
+      {numbers?.[0]?.usage.pricing && (
+        <p className="mb-4 text-[13px] text-muted-foreground">
+          Por número y mes completo: {money(numbers[0].usage.pricing.minimumUsd)} a{' '}
+          {money(numbers[0].usage.pricing.maximumUsd)}. Sin consumo: USD 0. Tarifa: USD{' '}
+          {numbers[0].usage.pricing.tokenRatePer1000.toLocaleString('es-AR', { maximumFractionDigits: 4 })} por 1.000
+          tokens y USD{' '}
+          {numbers[0].usage.pricing.metaMessageRateUsd.toLocaleString('es-AR', { maximumFractionDigits: 4 })} por
+          mensaje Meta.
+        </p>
+      )}
       {isError && (
         <p role="alert" className="mb-4 text-destructive">
           No se pudo cargar el consumo de este mes.
@@ -373,14 +383,13 @@ export function NumerosView() {
                 <TableCell className="text-[13px] text-ink-3">
                   {n.monthlyBudgetUsd != null ? money(n.monthlyBudgetUsd) : 'Por defecto'}
                 </TableCell>
+                <TableCell className="text-[13px]">{n.usage.metaMessages.toLocaleString('es-AR')}</TableCell>
                 <TableCell className="text-[13px]">
-                  {n.usage.metaMessages.toLocaleString('es-AR')}
-                  <div className="text-[11px] text-muted-foreground">
-                    {n.usage.metaBillableMessages.toLocaleString('es-AR')} con cargo
-                  </div>
-                </TableCell>
-                <TableCell className="text-[13px]">
-                  {n.usage.openaiCalls.toLocaleString('es-AR')}
+                  {n.usage.openaiCalls > 0
+                    ? n.usage.openaiCalls.toLocaleString('es-AR')
+                    : n.usage.inputTokens + n.usage.outputTokens > 0
+                      ? '—'
+                      : '0'}
                   <div className="text-[11px] text-muted-foreground">
                     {(n.usage.inputTokens + n.usage.outputTokens).toLocaleString('es-AR')} tokens
                   </div>
