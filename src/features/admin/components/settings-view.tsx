@@ -1,7 +1,19 @@
 'use client'
 
 import { useState, type FormEvent } from 'react'
-import { Bot, Clock, KeyRound, Loader2, Mail, ShieldCheck, Tags, UserRound } from 'lucide-react'
+import {
+  Bot,
+  Clock,
+  KeyRound,
+  Loader2,
+  Mail,
+  Power,
+  PowerOff,
+  ShieldAlert,
+  ShieldCheck,
+  Tags,
+  UserRound,
+} from 'lucide-react'
 import { toast } from 'sonner'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/src/components/ui/card'
 import { Button } from '@/src/components/ui/button'
@@ -9,12 +21,25 @@ import { Input } from '@/src/components/ui/input'
 import { Label } from '@/src/components/ui/label'
 import { Skeleton } from '@/src/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/src/components/ui/tabs'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/src/components/ui/alert-dialog'
 import { ApiError } from '@/src/lib/api-client'
 import type { UpdateProfileRequest } from '@/src/types/api/auth'
 import { useProfile } from '../hooks/use-profile'
 import { useUpdateProfile } from '../hooks/use-update-profile'
 import { useProducerConfig } from '../hooks/use-producer-config'
 import { useUpdateProducerConfig } from '../hooks/use-update-producer-config'
+import { useSetBotStatus } from '../hooks/use-set-bot-status'
+import { useRole } from '../hooks/use-role'
 import { PricingPlansSection } from './pricing-plans-section'
 import { BusinessHoursSection } from './business-hours-section'
 import { CoverageSettingsSection } from './coverage-settings-section'
@@ -177,6 +202,100 @@ function BotConfigForm({ initialName }: { initialName: string }) {
   )
 }
 
+function BotStatusControl({ botEnabled, canManage }: { botEnabled: boolean; canManage: boolean }) {
+  const setStatus = useSetBotStatus()
+
+  const updateBotEnabled = (nextBotEnabled: boolean) => {
+    setStatus.mutate(nextBotEnabled, {
+      onSuccess: () =>
+        toast.success(
+          nextBotEnabled
+            ? 'La atención humana global se desactivó y el bot volvió a responder'
+            : 'La atención humana global quedó activa en todos los chats',
+        ),
+      onError: () => toast.error('No se pudo cambiar el estado del bot. Intentá de nuevo.'),
+    })
+  }
+
+  return (
+    <>
+      <Card className={botEnabled ? 'max-w-xl border-line-2 shadow-sm' : 'max-w-xl border-destructive/40 shadow-sm'}>
+        <CardHeader>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <CardTitle className="flex items-center gap-2 font-display text-[18px]">
+                {botEnabled ? (
+                  <Power className="size-4 text-emerald-600" />
+                ) : (
+                  <PowerOff className="size-4 text-destructive" />
+                )}
+                Atención humana global
+              </CardTitle>
+              <CardDescription className="mt-1.5">
+                Este control afecta todos los chats de WhatsApp de la organización.
+              </CardDescription>
+            </div>
+            <span
+              className={
+                botEnabled
+                  ? 'rounded-full bg-secondary px-2.5 py-1 text-[11px] font-semibold text-muted-foreground'
+                  : 'rounded-full bg-destructive/10 px-2.5 py-1 text-[11px] font-semibold text-destructive'
+              }
+            >
+              {botEnabled ? 'INACTIVA' : 'ACTIVA'}
+            </span>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="flex gap-3 rounded-lg border border-line-2 bg-secondary/30 p-3 text-[12.5px] leading-relaxed text-muted-foreground">
+            <ShieldAlert className="mt-0.5 size-4 shrink-0 text-ember-2" />
+            <p>
+              Al activar esta modalidad, los mensajes y fotos siguen entrando a la bandeja, pero el bot no responde, no
+              avanza flujos ni envía avisos automáticos. Los chats tomados por una persona conservan su estado.
+            </p>
+          </div>
+        </CardContent>
+        <CardFooter className="flex-col items-start gap-2 sm:flex-row sm:items-center">
+          {canManage ? (
+            botEnabled ? (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button type="button" variant="destructive" disabled={setStatus.isPending}>
+                    <PowerOff className="size-4" />
+                    Activar para todos los chats
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>¿Activar la atención humana en todos los chats?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      El corte es inmediato. El bot dejará de responder en todas las conversaciones y los asesores
+                      podrán contestar sin tomar cada chat por separado.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction variant="destructive" onClick={() => updateBotEnabled(false)}>
+                      Sí, tomar todos los chats
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            ) : (
+              <Button type="button" onClick={() => updateBotEnabled(true)} disabled={setStatus.isPending}>
+                {setStatus.isPending ? <Loader2 className="size-4 animate-spin" /> : <Power className="size-4" />}
+                Desactivar atención global y reactivar el bot
+              </Button>
+            )
+          ) : (
+            <p className="text-[12px] text-muted-foreground">Sólo un SuperAdmin puede cambiar este estado.</p>
+          )}
+        </CardFooter>
+      </Card>
+    </>
+  )
+}
+
 const TABS = [
   { value: 'cuenta', label: 'Cuenta', icon: UserRound },
   { value: 'asistente', label: 'Asistente', icon: Bot },
@@ -203,6 +322,7 @@ function FormSkeleton() {
 export function SettingsView() {
   const { data: profile, isLoading, isError } = useProfile()
   const { data: config } = useProducerConfig()
+  const { isSuperAdmin } = useRole()
 
   return (
     <div className="mx-auto w-full max-w-5xl px-5 py-8 md:px-8 md:py-10">
@@ -232,7 +352,10 @@ export function SettingsView() {
 
         <TabsContent value="asistente" className="mt-6">
           {config ? (
-            <BotConfigForm key={config.botName ?? 'no-name'} initialName={config.botName ?? ''} />
+            <div className="space-y-5">
+              <BotStatusControl botEnabled={config.botEnabled} canManage={isSuperAdmin} />
+              <BotConfigForm key={config.botName ?? 'no-name'} initialName={config.botName ?? ''} />
+            </div>
           ) : (
             <FormSkeleton />
           )}

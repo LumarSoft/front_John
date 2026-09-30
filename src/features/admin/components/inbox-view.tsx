@@ -23,7 +23,7 @@ const FILTERS: { key: InboxFilter; label: string }[] = [
 
 function matchesFilter(conv: InboxConversation, filter: InboxFilter): boolean {
   if (filter === 'pending') return conv.status === 'pending'
-  if (filter === 'taken') return conv.botPaused
+  if (filter === 'taken') return conv.botPaused || conv.globalBotDisabled
   return true
 }
 
@@ -75,7 +75,7 @@ export function InboxView() {
   const counts: Record<InboxFilter, number> = {
     all: conversations.length,
     pending: conversations.filter(c => c.status === 'pending').length,
-    taken: conversations.filter(c => c.botPaused).length,
+    taken: conversations.filter(c => c.botPaused || c.globalBotDisabled).length,
   }
 
   return (

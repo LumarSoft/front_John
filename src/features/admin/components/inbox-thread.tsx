@@ -83,7 +83,8 @@ export function InboxThread({ conversation, onOpenClient }: Props) {
     }
   }, [messages])
 
-  const canSend = conversation.botPaused && !windowExpired
+  const humanAttention = conversation.botPaused || conversation.globalBotDisabled
+  const canSend = humanAttention && !windowExpired
   const isSending = sendMessage.isPending
 
   function handleSend() {
@@ -117,16 +118,20 @@ export function InboxThread({ conversation, onOpenClient }: Props) {
               <span
                 className={cn(
                   'hidden shrink-0 items-center gap-1.5 rounded-full border px-2 py-0.5 text-[10.5px] font-medium sm:inline-flex',
-                  conversation.botPaused
+                  humanAttention
                     ? 'border-ember/25 bg-ember-soft text-ember-2'
                     : 'border-line-2 bg-secondary text-muted-foreground',
                 )}
               >
                 <span
-                  className={cn('size-1.5 rounded-full', conversation.botPaused ? 'bg-ember-2' : 'bg-faint-2')}
+                  className={cn('size-1.5 rounded-full', humanAttention ? 'bg-ember-2' : 'bg-faint-2')}
                   aria-hidden
                 />
-                {conversation.botPaused ? 'Atención humana' : 'Bot activo'}
+                {conversation.globalBotDisabled
+                  ? 'Atención humana global'
+                  : conversation.botPaused
+                    ? 'Atención humana'
+                    : 'Bot activo'}
               </span>
             </div>
             <p className="mt-0.5 truncate text-[11.5px] text-muted-foreground">
@@ -141,7 +146,7 @@ export function InboxThread({ conversation, onOpenClient }: Props) {
               Ver ficha
             </Button>
           )}
-          {!conversation.botPaused ? (
+          {conversation.globalBotDisabled ? null : !conversation.botPaused ? (
             <Button size="sm" variant="outline" onClick={() => takeover.mutate()} disabled={takeover.isPending}>
               {takeover.isPending ? <Loader2 className="size-3.5 animate-spin" /> : <UserCheck className="size-3.5" />}
               Tomar
@@ -215,7 +220,13 @@ export function InboxThread({ conversation, onOpenClient }: Props) {
               </span>
             </div>
           )}
-          {!conversation.botPaused && (
+          {conversation.globalBotDisabled && (
+            <div className="mb-2.5 flex items-start gap-2 rounded-lg border border-ember/25 bg-ember-soft px-3 py-2 text-[11.5px] leading-relaxed text-ember-2">
+              <Info className="mt-px size-3.5 shrink-0" />
+              <span>La atención humana global está activa. Podés responder sin tomar este chat individualmente.</span>
+            </div>
+          )}
+          {!humanAttention && (
             <div className="mb-2.5 flex items-start gap-2 rounded-lg border border-line-2 bg-secondary/50 px-3 py-2 text-[11.5px] leading-relaxed text-muted-foreground">
               <Info className="mt-px size-3.5 shrink-0" />
               <span>

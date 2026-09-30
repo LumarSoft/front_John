@@ -90,7 +90,7 @@ export function InboxList({ conversations, selectedId, onSelect }: Props) {
                   {conv.client ? `DNI ${conv.client.dni}` : 'Cliente sin vincular'}
                 </span>
 
-                {(conv.status === 'pending' || conv.botPaused || conv.assignedTo) && (
+                {(conv.status === 'pending' || conv.botPaused || conv.globalBotDisabled || conv.assignedTo) && (
                   <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
                     {conv.status === 'pending' && (
                       <Badge variant="outline" className="h-4 border-amber text-[10px] text-amber-700">
@@ -100,6 +100,11 @@ export function InboxList({ conversations, selectedId, onSelect }: Props) {
                     {conv.botPaused && (
                       <Badge variant="outline" className="h-4 border-ember-2 text-[10px] text-ember-2">
                         Tomada
+                      </Badge>
+                    )}
+                    {conv.globalBotDisabled && !conv.botPaused && (
+                      <Badge variant="outline" className="h-4 border-ember-2 text-[10px] text-ember-2">
+                        Atención global
                       </Badge>
                     )}
                     {conv.assignedTo && (
