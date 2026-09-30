@@ -12,7 +12,7 @@ import {
   effectiveRiskType,
   formatCurrency,
   formatDate,
-  isVigente,
+  vigenciaBadge,
   polizaSubject,
   RISK_ICONS,
   RISK_LABELS,
@@ -57,13 +57,12 @@ function summarizeCuotas(cuotas: Cuota[]): CuotaSummary {
 }
 
 function matchesEstado(p: PolizaListItem, estado: EstadoFilter): boolean {
-  const hasta = p.vigenciaHasta ? new Date(p.vigenciaHasta) : null
-  const now = new Date()
-  if (!hasta) return estado === 'vigente' && isVigente(p.status)
-  if (estado === 'vencida') return hasta < now
-  if (estado === 'vigente') return hasta >= now
+  if (estado === 'vencida') return p.estadoVigencia === 'vencida' || p.estadoVigencia === 'anulada'
+  // An upcoming renewal is listed with the current ones.
+  if (estado === 'vigente') return p.estadoVigencia === 'vigente' || p.estadoVigencia === 'proxima'
   // por_vencer
-  return hasta >= now && hasta <= new Date(now.getTime() + EXPIRING_DAYS * DAY_MS)
+  if (p.estadoVigencia !== 'vigente' || !p.vigenciaHasta) return false
+  return new Date(p.vigenciaHasta) <= new Date(Date.now() + EXPIRING_DAYS * DAY_MS)
 }
 
 function matchesSearch(p: PolizaListItem, q: string): boolean {
@@ -132,7 +131,7 @@ function PolizaRow({ poliza }: { poliza: PolizaListItem }) {
   const ramo = effectiveRiskType(poliza)
   const Icon = RISK_ICONS[ramo]
   const v = poliza.vehiculo
-  const vigente = isVigente(poliza.status)
+  const { label: estadoLabel, vigente } = vigenciaBadge(poliza)
 
   return (
     <Link
@@ -159,7 +158,7 @@ function PolizaRow({ poliza }: { poliza: PolizaListItem }) {
                 : 'border border-line-2 bg-canvas-2 text-faint',
             ].join(' ')}
           >
-            {poliza.status}
+            {estadoLabel}
           </span>
         </div>
 

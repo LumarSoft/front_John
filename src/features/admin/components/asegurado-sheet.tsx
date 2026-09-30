@@ -122,7 +122,7 @@ function ContactButton({ label, href, accent, external, children }: ContactButto
 }
 
 function PolizaCard({ poliza }: { poliza: AdminPolizaDetail }) {
-  const status = polizaStatus(poliza.vigenciaHasta)
+  const status = polizaStatus(poliza)
   const paidCount = poliza.cuotas.filter(c => c.status === 'paid').length
   const overdueCount = poliza.cuotas.filter(c => c.status === 'overdue').length
   const nextCuota = poliza.cuotas.find(c => c.status === 'pending' || c.status === 'overdue')

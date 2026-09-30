@@ -27,11 +27,19 @@ export interface AdminCuota {
   status: 'pending' | 'paid' | 'overdue' | 'rejected'
 }
 
+/**
+ * Validity computed by the API from the dates and the Triunfo movement:
+ * `status` is the last movement ("REFACTURACION", "ANULA POR VENTA"…), not a
+ * validity flag, and a cancelled policy keeps its original end date.
+ */
+export type EstadoVigencia = 'vigente' | 'proxima' | 'vencida' | 'anulada'
+
 export interface AdminPolizaSummary {
   id: number
   certificado: string
   riskType: RiskType
   status: string
+  estadoVigencia: EstadoVigencia
   vigenciaDesde: string | null
   vigenciaHasta: string | null
   premio: string | null
@@ -45,6 +53,7 @@ export interface AdminPolizaDetail {
   company: string
   riskType: RiskType
   status: string
+  estadoVigencia: EstadoVigencia
   vigenciaDesde: string | null
   vigenciaHasta: string | null
   premio: string | null

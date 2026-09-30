@@ -62,8 +62,21 @@ export function polizaSubject(p: PolizaListItem): string {
   return `Póliza ${p.certificado}`
 }
 
-export function isVigente(status: string): boolean {
-  return status.toUpperCase().includes('VIGENTE')
+/** Badge text for a policy and whether it covers today (see EstadoVigencia). */
+export function vigenciaBadge(p: Pick<PolizaListItem, 'estadoVigencia' | 'vigenciaDesde'>): {
+  label: string
+  vigente: boolean
+} {
+  switch (p.estadoVigencia) {
+    case 'vigente':
+      return { label: 'Vigente', vigente: true }
+    case 'proxima':
+      return { label: p.vigenciaDesde ? `Desde ${formatDate(p.vigenciaDesde)}` : 'Próxima', vigente: false }
+    case 'anulada':
+      return { label: 'Anulada', vigente: false }
+    default:
+      return { label: 'Vencida', vigente: false }
+  }
 }
 
 export function formatCurrency(raw: string | number | null): string {

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Loader2 } from 'lucide-react'
+import { FileText, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/src/components/ui/button'
 import { Skeleton } from '@/src/components/ui/skeleton'
@@ -13,6 +13,7 @@ import type {
   SolicitudKind,
   SolicitudStatus,
 } from '@/src/types/api/solicitudes'
+import { adjuntoUrl, type Adjunto } from '@/src/services/siniestros.service'
 import { useSolicitud } from '../hooks/use-solicitudes'
 import { useSolicitudActions } from '../hooks/use-solicitud-actions'
 import { buildSolicitudWhatsappUrl, productLabel, STATUS_LABELS, STATUS_ORDER, timeAgo } from '../lib/solicitudes-ui'
@@ -249,8 +250,59 @@ function detailProductType(d: SolicitudDetail): string {
   return d.kind === 'lead' ? d.productType : d.cotizacion.vehicleType.toLowerCase()
 }
 
+// Readable labels for the fields the WhatsApp bot stores on a quoted-coverage lead.
+const PAYLOAD_LABELS: Record<string, string> = {
+  cobertura: 'Cobertura elegida',
+  vehiculo: 'Vehículo',
+  anio: 'Año',
+  codigoPostal: 'Código postal',
+  precio: 'Precio desde',
+  gnc: 'GNC',
+  dni: 'DNI',
+}
+
+// Documents the customer sends over WhatsApp to take out the coverage.
+const DOC_LABELS: Record<string, string> = {
+  dni_frente: 'DNI (frente)',
+  dni_dorso: 'DNI (dorso)',
+  tarjeta_azul: 'Tarjeta azul',
+}
+
+type LeadAdjunto = Adjunto & { tipo?: string }
+
+function leadAdjuntos(payload: Record<string, unknown> | null): LeadAdjunto[] {
+  const list = payload?.adjuntos
+  return Array.isArray(list)
+    ? list.filter((a): a is LeadAdjunto => !!a && typeof (a as { url?: unknown }).url === 'string')
+    : []
+}
+
+function LeadDocument({ adjunto }: { adjunto: LeadAdjunto }) {
+  const url = adjuntoUrl(adjunto)
+  const label = (adjunto.tipo && DOC_LABELS[adjunto.tipo]) || adjunto.originalName
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="group flex flex-col gap-1.5 rounded-xl border border-line-2 bg-paper p-2 transition-colors hover:border-ember-ring hover:bg-ember-soft"
+    >
+      {adjunto.mimeType?.startsWith('image/') ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={url} alt={label} className="aspect-[4/3] w-full rounded-lg object-cover" />
+      ) : (
+        <div className="flex aspect-[4/3] w-full items-center justify-center rounded-lg bg-secondary text-muted-foreground">
+          <FileText className="size-5" />
+        </div>
+      )}
+      <span className="truncate px-1 text-[12px] font-medium text-ink-3 group-hover:text-ember-2">{label}</span>
+    </a>
+  )
+}
+
 function LeadExtra({ data }: { data: LeadDetail }) {
-  const entries = Object.entries(data.payload ?? {}).filter(([, v]) => v !== null && v !== '')
+  const documents = leadAdjuntos(data.payload)
+  const entries = Object.entries(data.payload ?? {}).filter(([k, v]) => k !== 'adjuntos' && v !== null && v !== '')
   return (
     <div className="flex flex-col gap-2.5">
       {data.selectedPlan && (
@@ -266,7 +318,7 @@ function LeadExtra({ data }: { data: LeadDetail }) {
       {entries.length > 0 ? (
         <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
           {entries.map(([k, v]) => (
-            <Row key={k} label={k} value={String(v)} />
+            <Row key={k} label={PAYLOAD_LABELS[k] ?? k} value={String(v)} />
           ))}
         </div>
       ) : (
@@ -275,6 +327,18 @@ function LeadExtra({ data }: { data: LeadDetail }) {
             Sin datos adicionales — el cliente pidió que lo contacten.
           </p>
         )
+      )}
+      {documents.length > 0 && (
+        <div className="flex flex-col gap-2">
+          <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-faint">
+            Documentación enviada por WhatsApp
+          </span>
+          <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+            {documents.map((a, i) => (
+              <LeadDocument key={`${a.url}-${i}`} adjunto={a} />
+            ))}
+          </div>
+        </div>
       )}
     </div>
   )
