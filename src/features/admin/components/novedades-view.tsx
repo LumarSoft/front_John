@@ -220,9 +220,27 @@ export function NovedadesView() {
                     )}
                     {matter.title}
                   </button>
-                  <p className="mt-1 line-clamp-3 max-w-2xl whitespace-pre-wrap break-words text-[13px] text-muted-foreground">
-                    {matter.body || 'Pidió atención de un asesor. Revisar la conversación para precisar el motivo.'}
+                  <p className="mt-1 max-w-2xl whitespace-pre-wrap break-words text-[13px] text-muted-foreground">
+                    {matter.summary || matter.body || 'No se registró el motivo. Revisar el pedido.'}
                   </p>
+                  {matter.outcome && (
+                    <p className="mt-2 text-[12px] text-ink">
+                      <span className="font-semibold">Cómo quedó: </span>
+                      {matter.outcome}
+                    </p>
+                  )}
+                  {matter.nextAction && (
+                    <p className="mt-2 max-w-2xl rounded-md bg-ember-soft/40 px-3 py-2 text-[13px] text-ink">
+                      <span className="font-semibold">Próxima acción sugerida: </span>
+                      {matter.nextAction}
+                    </p>
+                  )}
+                  {matter.body && (
+                    <details className="mt-2 max-w-2xl text-[12px] text-muted-foreground">
+                      <summary className="cursor-pointer hover:text-ink">Ver motivo original</summary>
+                      <p className="mt-2 whitespace-pre-wrap break-words">{matter.body}</p>
+                    </details>
+                  )}
                   <div className="mt-2 flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground">
                     <span>
                       Recibido: {formatDate(matter.createdAt)} ·{' '}

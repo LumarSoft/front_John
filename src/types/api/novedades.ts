@@ -23,6 +23,9 @@ export const MATTER_STATUS_LABELS: Record<MatterStatus, string> = {
   resolved: 'Resuelto',
 }
 export interface NovedadItem {
+  summary?: string
+  outcome?: string
+  nextAction?: string | null
   category: MatterCategory
   status: MatterStatus
   resolvedAt: string | null
