@@ -11,6 +11,7 @@ export function useNovedades(params: NovedadesQuery) {
     queryKey: QUERY_KEYS.admin.novedades(params),
     queryFn: () => novedadesService.list(params, token as string),
     enabled: !!token,
+    refetchInterval: 20_000,
     placeholderData: keepPreviousData,
   })
 }

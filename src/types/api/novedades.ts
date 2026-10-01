@@ -1,4 +1,4 @@
-export type NovedadType = 'siniestro' | 'handoff' | 'baja_poliza'
+export type NovedadType = 'siniestro' | 'handoff' | 'baja_poliza' | 'lead' | 'solicitud'
 
 export interface NovedadClient {
   id: number
@@ -7,7 +7,25 @@ export interface NovedadClient {
   dni: string
 }
 
+export type MatterCategory = 'baja' | 'pagos' | 'cotizacion' | 'siniestro' | 'documentos' | 'other'
+export type MatterStatus = 'pending' | 'in_progress' | 'resolved'
+export const MATTER_LABELS: Record<MatterCategory, string> = {
+  baja: 'Bajas',
+  pagos: 'Pagos y cobranza',
+  cotizacion: 'Cotizaciones y contratación',
+  siniestro: 'Siniestros',
+  documentos: 'Documentación y cambios',
+  other: 'Por clasificar',
+}
+export const MATTER_STATUS_LABELS: Record<MatterStatus, string> = {
+  pending: 'Pendiente',
+  in_progress: 'En atención',
+  resolved: 'Resuelto',
+}
 export interface NovedadItem {
+  category: MatterCategory
+  status: MatterStatus
+  resolvedAt: string | null
   id: number
   type: NovedadType
   refId: number
@@ -27,6 +45,8 @@ export interface NovedadesPage {
 }
 
 export interface NovedadesStats {
+  actionableTotal: number
+  actionableByCategory: Record<MatterCategory, number>
   unreadTotal: number
   unreadSiniestros: number
   unreadHandoff: number
@@ -34,6 +54,10 @@ export interface NovedadesStats {
 }
 
 export interface NovedadesQuery {
+  category?: MatterCategory
+  status?: MatterStatus
+  actionable?: boolean
+  since?: string
   type?: NovedadType
   unread?: boolean
   search?: string

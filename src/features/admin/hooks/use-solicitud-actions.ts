@@ -18,6 +18,7 @@ export function useSolicitudActions() {
     mutationFn: ({ kind, id, data }: UpdateVariables) => solicitudesService.update(kind, id, data, token as string),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['admin', 'solicitudes'] })
+      void queryClient.invalidateQueries({ queryKey: ['admin', 'novedades'] })
       void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.admin.dashboard })
     },
   })

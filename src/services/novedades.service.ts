@@ -1,8 +1,20 @@
 import { apiRequest } from '@/src/lib/api-client'
-import type { NovedadesPage, NovedadesQuery, NovedadesStats, NovedadItem, NovedadType } from '@/src/types/api/novedades'
+import type {
+  NovedadesPage,
+  NovedadesQuery,
+  NovedadesStats,
+  NovedadItem,
+  NovedadType,
+  MatterCategory,
+  MatterStatus,
+} from '@/src/types/api/novedades'
 
 function buildQuery(params: NovedadesQuery): string {
   const search = new URLSearchParams()
+  if (params.category) search.set('category', params.category)
+  if (params.status) search.set('status', params.status)
+  if (params.actionable) search.set('actionable', 'true')
+  if (params.since) search.set('since', params.since)
   if (params.type) search.set('type', params.type)
   if (params.unread) search.set('unread', 'true')
   if (params.search?.trim()) search.set('search', params.search.trim())
@@ -18,7 +30,12 @@ function buildQuery(params: NovedadesQuery): string {
 export const novedadesService = {
   list: (params: NovedadesQuery, token: string) =>
     apiRequest<NovedadesPage>(`/admin/novedades${buildQuery(params)}`, { token }),
-  stats: (token: string) => apiRequest<NovedadesStats>('/admin/novedades/stats', { token }),
+  stats: (token: string, scope: NovedadesQuery = {}) =>
+    apiRequest<NovedadesStats>(`/admin/novedades/stats${buildQuery(scope)}`, { token }),
+  visit: (token: string) =>
+    apiRequest<{ previousVisitAt: string | null }>('/admin/novedades/visit', { method: 'POST', token }),
+  updateMatter: (id: number, changes: { category?: MatterCategory; status?: MatterStatus }, token: string) =>
+    apiRequest<NovedadItem>(`/admin/novedades/${id}/matter`, { method: 'PATCH', token, body: changes }),
   markRead: (id: number, token: string) =>
     apiRequest<NovedadItem>(`/admin/novedades/${id}/read`, { method: 'PATCH', token }),
   markAllRead: (type: NovedadType | undefined, token: string) =>
