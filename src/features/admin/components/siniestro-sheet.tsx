@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogTitle } from '@/src/components/ui/dialog'
 import { Input } from '@/src/components/ui/input'
 import { Label } from '@/src/components/ui/label'
 import { Skeleton } from '@/src/components/ui/skeleton'
+import { ApiError } from '@/src/lib/api-client'
 import {
   adjuntoUrl,
   type AdminSiniestroDetail,
@@ -205,7 +206,9 @@ function SiniestroContent({ siniestro }: { siniestro: AdminSiniestroDetail }) {
 }
 
 export function SiniestroSheet({ siniestroId, onClose }: SiniestroSheetProps) {
-  const { data: siniestro, isLoading } = useAdminSiniestro(siniestroId)
+  const { data: siniestro, isLoading, isFetching, isError, error, refetch } = useAdminSiniestro(siniestroId)
+  const invalidReference = siniestroId !== null && (!Number.isInteger(siniestroId) || siniestroId <= 0)
+  const notFound = invalidReference || (error instanceof ApiError && error.status === 404)
 
   return (
     <Dialog open={siniestroId !== null} onOpenChange={open => !open && onClose()}>
@@ -213,7 +216,28 @@ export function SiniestroSheet({ siniestroId, onClose }: SiniestroSheetProps) {
         aria-describedby={undefined}
         className="flex max-h-[88vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl"
       >
-        {isLoading || !siniestro ? (
+        {invalidReference || isError || (!isLoading && !isFetching && !siniestro) ? (
+          <div className="space-y-4 p-6" role="alert">
+            <DialogTitle className="font-display text-[19px] text-ink">
+              {notFound ? 'Siniestro no encontrado' : 'No se pudo cargar el siniestro'}
+            </DialogTitle>
+            <p className="text-[13px] text-muted-foreground">
+              {notFound
+                ? 'La referencia no corresponde a un siniestro disponible. Podés cerrar esta ventana y revisar la novedad.'
+                : 'Hubo un problema al consultar el detalle. Podés volver a intentarlo.'}
+            </p>
+            <div className="flex gap-2">
+              {!notFound && (
+                <Button disabled={isFetching} onClick={() => void refetch()}>
+                  Reintentar
+                </Button>
+              )}
+              <Button variant="outline" onClick={onClose}>
+                Cerrar
+              </Button>
+            </div>
+          </div>
+        ) : isLoading || !siniestro ? (
           <div className="flex flex-col gap-4 p-6">
             <DialogTitle className="sr-only">Cargando siniestro</DialogTitle>
             <Skeleton className="h-6 w-56" />

@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { adminSiniestrosService, type UpdateSiniestroInput } from '@/src/services/siniestros.service'
+import { ApiError } from '@/src/lib/api-client'
 import { QUERY_KEYS } from '@/src/lib/query-keys'
 import { useAuth } from '../context/auth-context'
 
@@ -9,7 +10,9 @@ export function useAdminSiniestro(id: number | null) {
   return useQuery({
     queryKey: QUERY_KEYS.admin.siniestro(id ?? 0),
     queryFn: () => adminSiniestrosService.get(id as number, token as string),
-    enabled: !!token && id !== null,
+    enabled: !!token && id !== null && Number.isInteger(id) && id > 0,
+    retry: (failureCount, error) =>
+      !(error instanceof ApiError && [400, 401, 403, 404].includes(error.status)) && failureCount < 2,
   })
 }
 
