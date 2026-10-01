@@ -1,15 +1,22 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { AlertTriangle, Bell, CheckCheck, ChevronRight, IdCard, MessageSquare, Search } from 'lucide-react'
-import { Badge } from '@/src/components/ui/badge'
+import { Bell, Search } from 'lucide-react'
+import { toast } from 'sonner'
 import { Button } from '@/src/components/ui/button'
 import { Input } from '@/src/components/ui/input'
-import { Skeleton } from '@/src/components/ui/skeleton'
 import { cn } from '@/src/lib/utils'
 import { useDebouncedValue } from '@/src/hooks/use-debounced-value'
-import type { NovedadItem, NovedadType } from '@/src/types/api/novedades'
+import {
+  MATTER_LABELS,
+  MATTER_STATUS_LABELS,
+  type MatterCategory,
+  type MatterStatus,
+  type NovedadItem,
+} from '@/src/types/api/novedades'
+import { novedadesService } from '@/src/services/novedades.service'
+import { useAuth } from '../context/auth-context'
 import { formatDate } from '../lib/asegurados-ui'
 import { useNovedades } from '../hooks/use-novedades'
 import { useNovedadesStats } from '../hooks/use-novedades-stats'
@@ -19,294 +26,281 @@ import { SiniestroSheet } from './siniestro-sheet'
 import { AseguradoSheet } from './asegurado-sheet'
 import { inboxConversationHref } from './inbox-view'
 
-type TabValue = 'todas' | NovedadType
-
-const TH = 'px-4 py-2.5 text-left text-[10.5px] font-semibold uppercase tracking-[0.14em] text-faint'
-
-function timeAgo(iso: string): string {
-  const diff = Date.now() - new Date(iso).getTime()
-  const min = Math.floor(diff / 60000)
-  if (min < 1) return 'recién'
-  if (min < 60) return `hace ${min} min`
-  const h = Math.floor(min / 60)
-  if (h < 24) return `hace ${h} h`
-  const d = Math.floor(h / 24)
-  if (d < 7) return `hace ${d} ${d === 1 ? 'día' : 'días'}`
-  return formatDate(iso)
-}
-
-interface NovedadRowProps {
-  novedad: NovedadItem
-  onOpen: (n: NovedadItem) => void
-  onOpenClient: (clientId: number) => void
-}
-
-function NovedadTableRow({ novedad, onOpen, onOpenClient }: NovedadRowProps) {
-  const unread = novedad.readAt === null
-  const isSiniestro = novedad.type === 'siniestro'
-  const Icon = isSiniestro ? AlertTriangle : MessageSquare
-  const client = novedad.client
-
-  return (
-    <tr
-      role="button"
-      tabIndex={0}
-      onClick={() => onOpen(novedad)}
-      onKeyDown={e => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault()
-          onOpen(novedad)
-        }
-      }}
-      className={cn(
-        'group cursor-pointer border-b border-line/70 transition-colors last:border-b-0 hover:bg-secondary/40 focus-visible:bg-secondary/40 focus-visible:outline-none',
-        unread && 'bg-ember-soft/25',
-      )}
-    >
-      {/* Novedad */}
-      <td className="px-4 py-3">
-        <div className="flex items-start gap-3">
-          <div
-            className={cn(
-              'flex size-9 shrink-0 items-center justify-center rounded-lg',
-              isSiniestro ? 'bg-destructive/10 text-destructive' : 'bg-ember-soft text-ember-2',
-            )}
-          >
-            <Icon className="size-4.5" />
-          </div>
-          <div className="min-w-0">
-            <div className="flex items-center gap-1.5">
-              {unread && <span className="size-2 shrink-0 rounded-full bg-ember-2" aria-label="No leída" />}
-              <span
-                className={cn('truncate text-[13.5px]', unread ? 'font-semibold text-ink' : 'font-medium text-ink-3')}
-              >
-                {novedad.title}
-              </span>
-            </div>
-            {novedad.body && (
-              <p className="mt-0.5 line-clamp-1 max-w-[420px] text-[12.5px] text-muted-foreground">{novedad.body}</p>
-            )}
-          </div>
-        </div>
-      </td>
-
-      {/* Tipo */}
-      <td className="px-4 py-3">
-        <Badge
-          variant="outline"
-          className={cn(
-            'h-5 gap-1 px-1.5 text-[10.5px]',
-            isSiniestro
-              ? 'border-destructive/20 bg-destructive/10 text-destructive'
-              : 'border-ember/25 bg-ember-soft text-ember-2',
-          )}
-        >
-          {isSiniestro ? 'Siniestro' : novedad.type === 'baja_poliza' ? 'Baja de póliza' : 'Asesor'}
-        </Badge>
-      </td>
-
-      {/* Cliente */}
-      <td className="hidden px-4 py-3 md:table-cell">
-        {client ? (
-          <button
-            type="button"
-            onClick={e => {
-              e.stopPropagation()
-              onOpenClient(client.id)
-            }}
-            className="flex items-center gap-1.5 text-[12.5px] text-ink-3 transition-colors hover:text-ember-2"
-          >
-            <IdCard className="size-3.5" />
-            DNI {client.dni}
-          </button>
-        ) : (
-          <span className="text-[12.5px] text-faint">—</span>
-        )}
-      </td>
-
-      {/* Recibido */}
-      <td className="hidden whitespace-nowrap px-4 py-3 text-[12.5px] text-muted-foreground sm:table-cell">
-        {timeAgo(novedad.createdAt)}
-      </td>
-
-      {/* Acción */}
-      <td className="px-4 py-3">
-        <span className="flex items-center justify-end gap-1.5 text-[11.5px] text-muted-foreground">
-          <span className="hidden lg:inline">{isSiniestro ? 'Gestionar' : 'Ver en Bandeja'}</span>
-          <ChevronRight className="size-4 text-faint transition-colors group-hover:text-muted-foreground" />
-        </span>
-      </td>
-    </tr>
-  )
-}
+const categories = Object.keys(MATTER_LABELS) as MatterCategory[]
+const selectClass = 'h-9 rounded-md border border-line-2 bg-card px-2 text-[12px] text-ink'
 
 export function NovedadesView() {
   const router = useRouter()
-  const [tab, setTab] = useState<TabValue>('todas')
+  const { token } = useAuth()
+  const visitStarted = useRef(false)
+  const [previousVisit, setPreviousVisit] = useState<string | null>(null)
+  const [sinceVisit, setSinceVisit] = useState(false)
+  const [category, setCategory] = useState<MatterCategory | ''>('')
+  const [status, setStatus] = useState<MatterStatus | 'actionable' | 'all'>('actionable')
+  const [pageNumber, setPageNumber] = useState(1)
   const [selectedSiniestroId, setSelectedSiniestroId] = useState<number | null>(null)
   const [selectedClientId, setSelectedClientId] = useState<number | null>(null)
   const [searchInput, setSearchInput] = useState('')
   const search = useDebouncedValue(searchInput, 350)
   const [scope, setScope] = useState<ScopeFilterValue>({})
+  const {
+    data: page,
+    isLoading,
+    isError,
+    isFetching,
+  } = useNovedades({
+    category: category || undefined,
+    status: status === 'actionable' || status === 'all' ? undefined : status,
+    actionable: status === 'actionable',
+    since: sinceVisit ? (previousVisit ?? undefined) : undefined,
+    search,
+    ...scope,
+    page: pageNumber,
+    pageSize: 20,
+  })
+  const { data: stats } = useNovedadesStats(scope)
+  const { markRead, updateMatter } = useNovedadesActions()
 
-  const type = tab === 'todas' ? undefined : tab
-  const { data: page, isLoading, isError } = useNovedades({ type, search, ...scope, pageSize: 50 })
-  const { data: stats } = useNovedadesStats()
-  const { markRead, markAllRead } = useNovedadesActions()
+  useEffect(() => {
+    if (!token || visitStarted.current) return
+    visitStarted.current = true
+    void novedadesService
+      .visit(token)
+      .then(result => setPreviousVisit(result.previousVisitAt))
+      .catch(() => {
+        toast.error('No se pudo registrar la visita. Podés seguir viendo todos los asuntos.')
+      })
+  }, [token])
 
-  const handleOpen = (novedad: NovedadItem) => {
-    if (novedad.readAt === null) markRead.mutate(novedad.id)
-    if (novedad.type === 'siniestro') {
-      setSelectedSiniestroId(novedad.refId)
-    } else {
-      // Handoff novedades carry the conversation id: open that chat directly.
-      router.push(inboxConversationHref(novedad.refId))
-    }
+  const handleOpen = (matter: NovedadItem) => {
+    if (!matter.readAt) markRead.mutate(matter.id, { onError: () => toast.error('No se pudo marcar como leído') })
+    if (matter.type === 'siniestro') setSelectedSiniestroId(matter.refId)
+    else if (matter.type === 'handoff' || matter.type === 'baja_poliza')
+      router.push(inboxConversationHref(matter.refId))
+    else router.push(`/admin/solicitudes?kind=${matter.type === 'lead' ? 'lead' : 'cotizacion'}&id=${matter.refId}`)
   }
-
-  const items = page?.data ?? []
-
-  const tabs: { value: TabValue; label: string; count: number }[] = [
-    { value: 'todas', label: 'Todas', count: stats?.unreadTotal ?? 0 },
-    { value: 'siniestro', label: 'Siniestros', count: stats?.unreadSiniestros ?? 0 },
-    { value: 'baja_poliza', label: 'Bajas de póliza', count: stats?.unreadBajas ?? 0 },
-    { value: 'handoff', label: 'Asesor', count: stats?.unreadHandoff ?? 0 },
-  ]
+  const changeMatter = (id: number, changes: { category?: MatterCategory; status?: MatterStatus }) => {
+    updateMatter.mutate(
+      { id, ...changes },
+      {
+        onError: () => toast.error('No se pudo actualizar el asunto'),
+        onSuccess: () => {
+          if (page?.data.length === 1 && pageNumber > 1) setPageNumber(n => n - 1)
+        },
+      },
+    )
+  }
+  const resetPage = () => setPageNumber(1)
 
   return (
     <div className="mx-auto w-full max-w-[1600px] px-4 py-6 sm:px-6 lg:px-8">
-      <header className="mb-5 flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="flex items-center gap-2 font-display text-[22px] tracking-tight text-ink">
-            <Bell className="size-5 text-ember-2" />
-            Novedades
-          </h1>
-          <p className="mt-1 text-[13px] text-muted-foreground">
-            Siniestros nuevos y clientes que pidieron hablar con un asesor.
-          </p>
-        </div>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="h-8 shrink-0 gap-1.5 border-line-2 text-[12.5px] text-ink-3"
-          disabled={!stats || stats.unreadTotal === 0 || markAllRead.isPending}
-          onClick={() => markAllRead.mutate(type)}
-        >
-          <CheckCheck className="size-4" />
-          Marcar todo como leído
-        </Button>
+      <header className="mb-5">
+        <h1 className="flex items-center gap-2 font-display text-[22px] tracking-tight text-ink">
+          <Bell className="size-5 text-ember-2" />
+          Asuntos pendientes
+        </h1>
+        <p className="mt-1 text-[13px] text-muted-foreground">
+          Lo que necesita atención del equipo. Leer una conversación no resuelve el asunto.
+        </p>
       </header>
-
+      <div className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-6">
+        {categories.map(key => (
+          <button
+            key={key}
+            type="button"
+            onClick={() => {
+              setCategory(category === key ? '' : key)
+              setStatus('actionable')
+              resetPage()
+            }}
+            className={cn(
+              'rounded-xl border bg-card p-4 text-left transition-colors hover:border-ember/50',
+              category === key ? 'border-ember bg-ember-soft' : 'border-line-2',
+            )}
+          >
+            <span className="block text-[12px] text-muted-foreground">{MATTER_LABELS[key]}</span>
+            <span className="mt-2 block text-2xl font-semibold tabular-nums text-ink">
+              {stats?.actionableByCategory[key] ?? '—'}
+            </span>
+            <span className="text-[11px] text-muted-foreground">por atender</span>
+          </button>
+        ))}
+      </div>
       <div className="overflow-hidden rounded-xl border border-line-2 bg-card">
-        {/* Toolbar */}
-        <div className="flex flex-col gap-3 border-b border-line-2 p-3 lg:flex-row lg:items-center lg:justify-between">
-          <div className="grid grid-cols-3 gap-1 rounded-lg bg-secondary/60 p-1 lg:w-auto">
-            {tabs.map(t => (
-              <button
-                key={t.value}
-                type="button"
-                onClick={() => setTab(t.value)}
-                className={cn(
-                  'inline-flex items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-[12.5px] font-medium transition-colors lg:px-4',
-                  tab === t.value ? 'bg-card text-ink shadow-sm' : 'text-muted-foreground hover:text-ink',
-                )}
-              >
-                {t.label}
-                {t.count > 0 && <CountBadge n={t.count} />}
-              </button>
+        <div className="flex flex-wrap items-center gap-2 border-b border-line-2 p-3">
+          <select
+            aria-label="Filtrar por asunto"
+            className={selectClass}
+            value={category}
+            onChange={e => {
+              setCategory(e.target.value as MatterCategory | '')
+              resetPage()
+            }}
+          >
+            <option value="">Todos los asuntos</option>
+            {categories.map(key => (
+              <option key={key} value={key}>
+                {MATTER_LABELS[key]}
+              </option>
             ))}
-          </div>
-
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-            <ScopeFilter value={scope} onChange={setScope} className="!h-9" />
-            <div className="relative sm:w-72">
-              <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                value={searchInput}
-                onChange={e => setSearchInput(e.target.value)}
-                placeholder="Buscar por DNI o nombre del cliente"
-                className="h-9 pl-8.5 text-[13px]"
-              />
-            </div>
+          </select>
+          <select
+            aria-label="Filtrar por estado"
+            className={selectClass}
+            value={status}
+            onChange={e => {
+              setStatus(e.target.value as typeof status)
+              resetPage()
+            }}
+          >
+            <option value="actionable">Por atender</option>
+            <option value="all">Todos los estados</option>
+            {Object.entries(MATTER_STATUS_LABELS).map(([key, label]) => (
+              <option key={key} value={key}>
+                {label}
+              </option>
+            ))}
+          </select>
+          <ScopeFilter
+            value={scope}
+            onChange={value => {
+              setScope(value)
+              resetPage()
+            }}
+            className="!h-9"
+          />
+          <label className="flex items-center gap-2 text-[12px] text-muted-foreground">
+            <input
+              type="checkbox"
+              checked={sinceVisit}
+              disabled={!previousVisit}
+              onChange={e => {
+                setSinceVisit(e.target.checked)
+                resetPage()
+              }}
+            />
+            Desde mi última visita
+          </label>
+          <div className="relative sm:ml-auto sm:w-72">
+            <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={searchInput}
+              onChange={e => {
+                setSearchInput(e.target.value)
+                resetPage()
+              }}
+              placeholder="Buscar cliente, teléfono o motivo"
+              className="h-9 pl-8.5 text-[13px]"
+            />
           </div>
         </div>
-
-        {/* Table */}
         {isError ? (
-          <div className="px-4 py-16 text-center text-[13px] text-destructive">
-            No se pudieron cargar las novedades.
-          </div>
-        ) : !isLoading && items.length === 0 ? (
-          <div className="flex flex-col items-center gap-3 px-4 py-20 text-center">
-            <div className="flex size-12 items-center justify-center rounded-full bg-secondary text-muted-foreground">
-              <CheckCheck className="size-5" />
-            </div>
-            <p className="text-[13.5px] text-muted-foreground">
-              {search ? 'No hay novedades para esa búsqueda.' : 'No hay novedades por ahora.'}
-            </p>
-          </div>
+          <p role="alert" className="p-10 text-center text-destructive">
+            No se pudieron cargar los asuntos.
+          </p>
+        ) : isLoading ? (
+          <p className="p-10 text-center text-muted-foreground">Cargando asuntos…</p>
+        ) : !page?.data.length ? (
+          <p className="p-10 text-center text-muted-foreground">No hay asuntos que coincidan con estos filtros.</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[640px]">
-              <thead>
-                <tr className="border-b border-line-2 bg-secondary/30">
-                  <th className={TH}>Novedad</th>
-                  <th className={TH}>Tipo</th>
-                  <th className={cn(TH, 'hidden md:table-cell')}>Cliente</th>
-                  <th className={cn(TH, 'hidden sm:table-cell')}>Recibido</th>
-                  <th className={cn(TH, 'text-right')}>Acción</th>
-                </tr>
-              </thead>
-              <tbody>
-                {isLoading
-                  ? Array.from({ length: 8 }).map((_, i) => (
-                      <tr key={i} className="border-b border-line/70">
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-3">
-                            <Skeleton className="size-9 rounded-lg" />
-                            <div className="space-y-1.5">
-                              <Skeleton className="h-3.5 w-48" />
-                              <Skeleton className="h-3 w-64" />
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-4 py-3">
-                          <Skeleton className="h-5 w-16" />
-                        </td>
-                        <td className="hidden px-4 py-3 md:table-cell">
-                          <Skeleton className="h-3.5 w-20" />
-                        </td>
-                        <td className="hidden px-4 py-3 sm:table-cell">
-                          <Skeleton className="h-3.5 w-16" />
-                        </td>
-                        <td className="px-4 py-3">
-                          <Skeleton className="ml-auto h-4 w-16" />
-                        </td>
-                      </tr>
-                    ))
-                  : items.map(n => (
-                      <NovedadTableRow key={n.id} novedad={n} onOpen={handleOpen} onOpenClient={setSelectedClientId} />
+          <ul className="divide-y divide-line">
+            {page.data.map(matter => (
+              <li
+                key={matter.id}
+                className={cn('flex flex-wrap items-start gap-4 p-4', !matter.readAt && 'bg-ember-soft/25')}
+              >
+                <div className="min-w-0 flex-1 basis-64">
+                  <button
+                    type="button"
+                    onClick={() => handleOpen(matter)}
+                    className="text-left text-[14px] font-semibold text-ink hover:text-ember-2"
+                  >
+                    {!matter.readAt && (
+                      <span className="mr-2 inline-block size-2 rounded-full bg-ember-2" aria-label="No leído" />
+                    )}
+                    {matter.title}
+                  </button>
+                  <p className="mt-1 line-clamp-3 max-w-2xl whitespace-pre-wrap break-words text-[13px] text-muted-foreground">
+                    {matter.body || 'Pidió atención de un asesor. Revisar la conversación para precisar el motivo.'}
+                  </p>
+                  <div className="mt-2 flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground">
+                    <span>
+                      Recibido: {formatDate(matter.createdAt)} ·{' '}
+                      {new Date(matter.createdAt).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                    {matter.client && (
+                      <button
+                        type="button"
+                        onClick={() => setSelectedClientId(matter.client!.id)}
+                        className="hover:text-ember-2"
+                      >
+                        DNI {matter.client.dni}
+                      </button>
+                    )}
+                    {matter.status === 'resolved' && <span className="text-emerald-700">Resuelto</span>}
+                  </div>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <select
+                    aria-label={`Categoría de ${matter.title}`}
+                    className={selectClass}
+                    value={matter.category}
+                    disabled={updateMatter.isPending}
+                    onChange={e => changeMatter(matter.id, { category: e.target.value as MatterCategory })}
+                  >
+                    {categories.map(key => (
+                      <option key={key} value={key}>
+                        {MATTER_LABELS[key]}
+                      </option>
                     ))}
-              </tbody>
-            </table>
-          </div>
+                  </select>
+                  <select
+                    aria-label={`Estado de ${matter.title}`}
+                    className={selectClass}
+                    value={matter.status}
+                    disabled={updateMatter.isPending}
+                    onChange={e => changeMatter(matter.id, { status: e.target.value as MatterStatus })}
+                  >
+                    {Object.entries(MATTER_STATUS_LABELS).map(([key, label]) => (
+                      <option key={key} value={key}>
+                        {label}
+                      </option>
+                    ))}
+                  </select>
+                  <Button size="sm" variant="outline" onClick={() => handleOpen(matter)}>
+                    {matter.type === 'handoff' || matter.type === 'baja_poliza' ? 'Ver chat' : 'Ver detalle'}
+                  </Button>
+                </div>
+              </li>
+            ))}
+          </ul>
         )}
+        <div className="flex items-center justify-between border-t border-line-2 p-3 text-[12px] text-muted-foreground">
+          <span>
+            {page?.total ?? 0} asuntos · Página {page?.page ?? 1} de {page?.totalPages ?? 1}
+          </span>
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={pageNumber === 1 || isFetching}
+              onClick={() => setPageNumber(n => n - 1)}
+            >
+              Anterior
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={!page || pageNumber >= page.totalPages || isFetching}
+              onClick={() => setPageNumber(n => n + 1)}
+            >
+              Siguiente
+            </Button>
+          </div>
+        </div>
       </div>
-
       <SiniestroSheet siniestroId={selectedSiniestroId} onClose={() => setSelectedSiniestroId(null)} />
       <AseguradoSheet clientId={selectedClientId} onClose={() => setSelectedClientId(null)} />
     </div>
-  )
-}
-
-function CountBadge({ n }: { n: number }) {
-  return (
-    <Badge
-      variant="secondary"
-      className="h-4 min-w-4 justify-center rounded-full bg-ember-2 px-1 text-[10px] font-semibold text-on-dark"
-    >
-      {n}
-    </Badge>
   )
 }

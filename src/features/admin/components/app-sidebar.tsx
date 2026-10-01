@@ -58,7 +58,7 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { label: 'Inicio', href: '/admin', icon: LayoutDashboard },
-  { label: 'Novedades', href: '/admin/novedades', icon: Bell },
+  { label: 'Asuntos pendientes', href: '/admin/novedades', icon: Bell },
   { label: 'Solicitudes', href: '/admin/solicitudes', icon: ClipboardList },
   { label: 'Bandeja', href: '/admin/inbox', icon: MessageSquare },
   { label: 'Siniestros', href: '/admin/siniestros', icon: FileWarning },
@@ -92,7 +92,7 @@ export function AppSidebar() {
 
   // Count of items needing the advisor's attention, per sidebar section.
   const alertCount = (href: string): number => {
-    if (href === '/admin/novedades') return novedadesStats?.unreadTotal ?? 0
+    if (href === '/admin/novedades') return novedadesStats?.actionableTotal ?? 0
     if (href === '/admin/solicitudes') return solicitudesNuevas
     if (href === '/admin/inbox') return inboxPending
     return 0

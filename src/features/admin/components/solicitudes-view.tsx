@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { ChevronRight, ClipboardList, Globe, Phone, Search, Zap } from 'lucide-react'
 import { Badge } from '@/src/components/ui/badge'
 import { Input } from '@/src/components/ui/input'
@@ -101,13 +102,20 @@ function SolicitudTableRow({ item, onOpen }: { item: SolicitudListItem; onOpen: 
 }
 
 export function SolicitudesView() {
+  const searchParams = useSearchParams()
+  const linkedKind = searchParams.get('kind')
+  const linkedId = Number(searchParams.get('id'))
   const [tab, setTab] = useState<StatusTab>('todas')
   const [productType, setProductType] = useState<string>('')
   const [kind, setKind] = useState<SolicitudKind | ''>('')
   const [searchInput, setSearchInput] = useState('')
   const search = useDebouncedValue(searchInput, 350)
   const [scope, setScope] = useState<ScopeFilterValue>({})
-  const [target, setTarget] = useState<{ kind: SolicitudKind; id: number } | null>(null)
+  const [target, setTarget] = useState<{ kind: SolicitudKind; id: number } | null>(() =>
+    (linkedKind === 'lead' || linkedKind === 'cotizacion') && Number.isInteger(linkedId) && linkedId > 0
+      ? { kind: linkedKind, id: linkedId }
+      : null,
+  )
 
   const status = tab === 'todas' ? undefined : tab
   const {
