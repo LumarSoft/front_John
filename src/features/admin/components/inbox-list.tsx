@@ -4,6 +4,7 @@ import { MessageCircle } from 'lucide-react'
 import { Badge } from '@/src/components/ui/badge'
 import { cn } from '@/src/lib/utils'
 import type { InboxConversation } from '@/src/types/api/inbox'
+import { consultedClientLabel, contactDisplayName } from '../lib/inbox-contact'
 
 interface Props {
   conversations: InboxConversation[]
@@ -20,11 +21,6 @@ function timeAgo(iso: string | null): string {
   const h = Math.floor(m / 60)
   if (h < 24) return `${h}h`
   return `${Math.floor(h / 24)}d`
-}
-
-function displayName(conv: InboxConversation): string {
-  if (conv.client) return `${conv.client.firstName} ${conv.client.lastName}`
-  return conv.waId
 }
 
 function initialsOf(name: string): string {
@@ -49,7 +45,8 @@ export function InboxList({ conversations, selectedId, onSelect }: Props) {
   return (
     <ul className="divide-y divide-line">
       {conversations.map(conv => {
-        const name = displayName(conv)
+        const name = contactDisplayName(conv)
+        const named = name !== conv.waId
         const isSelected = selectedId === conv.id
         const isUnread = conv.unreadCount > 0
 
@@ -76,10 +73,10 @@ export function InboxList({ conversations, selectedId, onSelect }: Props) {
               <div
                 className={cn(
                   'flex size-9 shrink-0 items-center justify-center rounded-full text-[12px] font-semibold',
-                  conv.client ? 'bg-ember-soft text-ember-2' : 'bg-secondary text-muted-foreground',
+                  named ? 'bg-ember-soft text-ember-2' : 'bg-secondary text-muted-foreground',
                 )}
               >
-                {conv.client ? initialsOf(name) : <MessageCircle className="size-4" />}
+                {named ? initialsOf(name) : <MessageCircle className="size-4" />}
               </div>
 
               <div className="min-w-0 flex-1">
@@ -107,7 +104,7 @@ export function InboxList({ conversations, selectedId, onSelect }: Props) {
 
                 <div className="mt-0.5 flex items-center justify-between gap-2">
                   <span className="block truncate text-[11.5px] text-muted-foreground">
-                    {conv.client ? `DNI ${conv.client.dni}` : 'Cliente sin vincular'}
+                    {consultedClientLabel(conv) ?? (named ? conv.waId : 'Cliente sin vincular')}
                   </span>
                   <span className={cn('shrink-0 text-[10.5px]', isUnread ? 'font-semibold text-ink-3' : 'text-faint')}>
                     {conv.customerMessageCount} {conv.customerMessageCount === 1 ? 'mensaje' : 'mensajes'}
