@@ -16,11 +16,11 @@ export interface InboxConversation {
   sessionStartedAt: string | null
   phoneNumberId: string | null
   /** Who writes from this number: address-book name, else their WhatsApp profile name. */
-  contactName: string | null
+  contactName?: string | null
   /** Last insured the writer identified with — not necessarily the writer. */
   client: { id: number; firstName: string; lastName: string; dni: string } | null
-  /** True when the linked client's stored phone is this WhatsApp number. */
-  clientIsContact: boolean
+  /** True when the linked client's stored phone is this WhatsApp number (absent on older APIs). */
+  clientIsContact?: boolean
 }
 
 export interface InboxMessage {
