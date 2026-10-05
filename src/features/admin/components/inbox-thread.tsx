@@ -9,6 +9,7 @@ import { useInboxActions } from '../hooks/use-inbox-actions'
 import type { InboxConversation } from '@/src/types/api/inbox'
 import { adjuntoUrl } from '@/src/services/siniestros.service'
 import { consultedClientLabel, contactDisplayName } from '../lib/inbox-contact'
+import { InboxAudio } from './inbox-audio'
 
 const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000
 
@@ -232,6 +233,17 @@ export function InboxThread({ conversation, onOpenClient }: Props) {
                         />
                         <span className="mt-1.5 block text-[11px] opacity-70">Tocá para ampliar</span>
                       </a>
+                    ) : msg.media?.mimeType.startsWith('audio/') ? (
+                      <InboxAudio
+                        src={adjuntoUrl({
+                          filename: msg.media.originalName,
+                          originalName: msg.media.originalName,
+                          url: msg.media.url,
+                          mimeType: msg.media.mimeType,
+                          size: msg.media.size ?? 0,
+                        })}
+                        transcript={msg.content}
+                      />
                     ) : (
                       msg.content
                     )}
