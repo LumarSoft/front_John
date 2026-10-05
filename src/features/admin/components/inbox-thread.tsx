@@ -8,6 +8,7 @@ import { useInboxMessages } from '../hooks/use-inbox-messages'
 import { useInboxActions } from '../hooks/use-inbox-actions'
 import type { InboxConversation } from '@/src/types/api/inbox'
 import { adjuntoUrl } from '@/src/services/siniestros.service'
+import { consultedClientLabel, contactDisplayName } from '../lib/inbox-contact'
 
 const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000
 
@@ -102,8 +103,9 @@ export function InboxThread({ conversation, onOpenClient }: Props) {
   }
 
   const client = conversation.client
-  const clientName = client ? `${client.firstName} ${client.lastName}` : conversation.waId
-  const initials = client ? initialsOf(clientName) : ''
+  const contactName = contactDisplayName(conversation)
+  const initials = contactName !== conversation.waId ? initialsOf(contactName) : ''
+  const consulted = consultedClientLabel(conversation)
 
   return (
     <div className="flex h-full flex-col bg-background">
@@ -115,7 +117,7 @@ export function InboxThread({ conversation, onOpenClient }: Props) {
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <p className="truncate text-[14px] font-semibold text-ink">{clientName}</p>
+              <p className="truncate text-[14px] font-semibold text-ink">{contactName}</p>
               <span
                 className={cn(
                   'hidden shrink-0 items-center gap-1.5 rounded-full border px-2 py-0.5 text-[10.5px] font-medium sm:inline-flex',
@@ -136,7 +138,7 @@ export function InboxThread({ conversation, onOpenClient }: Props) {
               </span>
             </div>
             <p className="mt-0.5 truncate text-[11.5px] text-muted-foreground">
-              {client ? `DNI ${client.dni} · ${conversation.waId}` : conversation.waId}
+              {consulted ? `${consulted} · ${conversation.waId}` : conversation.waId}
             </p>
           </div>
         </div>
