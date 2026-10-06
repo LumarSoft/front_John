@@ -20,12 +20,21 @@ import { Skeleton } from '@/src/components/ui/skeleton'
 import type { CoverageSetting, UpdateCoverageSettingRequest } from '@/src/types/api/coverage-settings'
 import { useCoverageSettings, useCoverageSettingsActions } from '../hooks/use-coverage-settings'
 
+const rangeLabel = (from: number | null, to: number | null): string | null => {
+  if (from === null && to === null) return null
+  if (from !== null && to !== null) return `${from}–${to}`
+  if (from !== null) return `${from} en adelante`
+  return `hasta ${to}`
+}
+
 const yearLabel = (coverage: CoverageSetting): string | null => {
-  const { yearFrom, yearTo } = coverage
-  if (yearFrom === null && yearTo === null) return null
-  if (yearFrom !== null && yearTo !== null) return `Años ${yearFrom}–${yearTo}`
-  if (yearFrom !== null) return `Desde ${yearFrom}`
-  return `Hasta ${yearTo}`
+  const range = rangeLabel(coverage.yearFrom, coverage.yearTo)
+  return range && `Años ${range}`
+}
+
+const recommendedLabel = (coverage: CoverageSetting): string => {
+  const range = rangeLabel(coverage.highlightYearFrom ?? null, coverage.highlightYearTo ?? null)
+  return range ? `Recomendada ${range}` : 'Recomendada'
 }
 
 const parseYear = (value: string): number | null => {
@@ -49,11 +58,19 @@ function EditCoverageDialog({ coverage, saving, onClose, onSave }: Readonly<Edit
   const [highlighted, setHighlighted] = useState(coverage.highlighted)
   const [yearFrom, setYearFrom] = useState(coverage.yearFrom?.toString() ?? '')
   const [yearTo, setYearTo] = useState(coverage.yearTo?.toString() ?? '')
+  const [highlightFrom, setHighlightFrom] = useState(coverage.highlightYearFrom?.toString() ?? '')
+  const [highlightTo, setHighlightTo] = useState(coverage.highlightYearTo?.toString() ?? '')
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault()
     if (!name.trim()) {
       toast.error('El nombre no puede quedar vacío')
+      return
+    }
+    const recommendedFrom = highlighted ? parseYear(highlightFrom) : null
+    const recommendedTo = highlighted ? parseYear(highlightTo) : null
+    if (recommendedFrom !== null && recommendedTo !== null && recommendedFrom > recommendedTo) {
+      toast.error('En "Recomendada", el año desde no puede ser mayor que el año hasta')
       return
     }
     onSave({
@@ -66,6 +83,8 @@ function EditCoverageDialog({ coverage, saving, onClose, onSave }: Readonly<Edit
       highlighted,
       yearFrom: parseYear(yearFrom),
       yearTo: parseYear(yearTo),
+      highlightYearFrom: recommendedFrom,
+      highlightYearTo: recommendedTo,
     })
   }
 
@@ -141,8 +160,39 @@ function EditCoverageDialog({ coverage, saving, onClose, onSave }: Readonly<Edit
             className="justify-start gap-2"
           >
             <Star className={`size-4 ${highlighted ? 'fill-current' : ''}`} />
-            {highlighted ? 'Destacada en la vitrina' : 'Destacar en la vitrina'}
+            {highlighted ? 'Recomendada ("La más elegida")' : 'Marcar como recomendada ("La más elegida")'}
           </Button>
+
+          {highlighted && (
+            <>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="coverage-highlight-from">Recomendada desde el año</Label>
+                  <Input
+                    id="coverage-highlight-from"
+                    value={highlightFrom}
+                    inputMode="numeric"
+                    placeholder="Sin límite"
+                    onChange={e => setHighlightFrom(e.target.value)}
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="coverage-highlight-to">Recomendada hasta el año</Label>
+                  <Input
+                    id="coverage-highlight-to"
+                    value={highlightTo}
+                    inputMode="numeric"
+                    placeholder="Sin límite"
+                    onChange={e => setHighlightTo(e.target.value)}
+                  />
+                </div>
+              </div>
+              <p className="text-muted-foreground -mt-2 text-xs">
+                Para autos de esos años aparece primera y con el distintivo, en la web y en WhatsApp. Por ejemplo, desde
+                2010 para recomendarla a autos 2010 en adelante. Vacíos: recomendada para todos los años.
+              </p>
+            </>
+          )}
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>
@@ -270,7 +320,7 @@ export function CoverageSettingsSection() {
                 {coverage.highlighted && (
                   <Badge variant="secondary" className="gap-1">
                     <Star className="size-3 fill-current" />
-                    Destacada
+                    {recommendedLabel(coverage)}
                   </Badge>
                 )}
                 {!coverage.isConfigured && <Badge variant="outline">Sin configurar</Badge>}
