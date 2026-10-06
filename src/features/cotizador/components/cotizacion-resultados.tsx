@@ -1,7 +1,7 @@
 'use client'
 
 import type { CotizarVehiculoResponse } from '@/src/types/api/cotizador'
-import { buildCoverageCards, formatARS, type CoverageCard } from '../lib/coverages'
+import { buildCoverageCards, formatARS, formatSumInsured, type CoverageCard } from '../lib/coverages'
 
 const Check = () => (
   <svg
@@ -25,6 +25,7 @@ interface CotizacionResultadosProps {
 
 export function CotizacionResultados({ result, onSelect, onReset }: Readonly<CotizacionResultadosProps>) {
   const cards = buildCoverageCards(result.coverages)
+  const sumInsured = formatSumInsured(result.vehicleValue)
 
   if (cards.length === 0) {
     return (
@@ -59,6 +60,15 @@ export function CotizacionResultados({ result, onSelect, onReset }: Readonly<Cot
           {result.quoteNumber && result.validUntil && ' · '}
           {result.validUntil && <>Válido hasta el {result.validUntil}</>}
         </p>
+        {sumInsured && (
+          <div className="mt-4 inline-flex flex-col items-center gap-[2px] rounded-2xl border border-line-2 bg-paper px-5 py-3">
+            <span className="text-[10.5px] tracking-[0.2em] uppercase text-faint font-semibold">
+              Suma asegurada de tu vehículo
+            </span>
+            <span className="font-display text-[22px] text-ink leading-tight">{sumInsured}</span>
+            <span className="text-[11px] text-faint">Es el valor por el que se asegura tu vehículo.</span>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-4 gap-[14px] items-stretch max-[980px]:grid-cols-2 max-[560px]:grid-cols-1">
@@ -86,21 +96,14 @@ export function CotizacionResultados({ result, onSelect, onReset }: Readonly<Cot
               {card.tagline && <div className="text-[12px] text-ink-3 mt-1 leading-snug">{card.tagline}</div>}
             </div>
 
-            <div>
-              <div className="font-display text-[24px] text-ink leading-none">{formatARS(card.displayPrice)}</div>
-              <div className="text-[11px] text-faint mt-[6px] tracking-[0.02em]">Premio desde</div>
-            </div>
-
-            {card.paymentOptions.length > 1 && (
-              <ul className="flex flex-col gap-[5px] m-0 p-0 list-none border-t border-line pt-3">
-                {card.paymentOptions.map(p => (
-                  <li key={p.code} className="flex items-baseline justify-between gap-2 text-[11.5px]">
-                    <span className="text-faint">{p.name}</span>
-                    <span className="text-ink-3 font-semibold whitespace-nowrap">{formatARS(p.premium)}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
+            <ul className="flex flex-col gap-[10px] m-0 p-0 list-none">
+              {card.paymentOptions.map(p => (
+                <li key={p.code}>
+                  <div className="text-[11px] text-faint tracking-[0.02em]">{p.name}</div>
+                  <div className="font-display text-[22px] text-ink leading-tight">{formatARS(p.premium)}</div>
+                </li>
+              ))}
+            </ul>
 
             {card.benefits.length > 0 && (
               <ul className="flex flex-col gap-[7px] m-0 p-0 list-none border-t border-line pt-3">
