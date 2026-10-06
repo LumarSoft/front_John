@@ -1,6 +1,6 @@
 'use client'
 
-import { MessageCircle } from 'lucide-react'
+import { MessageCircle, Trash2 } from 'lucide-react'
 import { Badge } from '@/src/components/ui/badge'
 import { cn } from '@/src/lib/utils'
 import type { InboxConversation } from '@/src/types/api/inbox'
@@ -10,6 +10,7 @@ interface Props {
   conversations: InboxConversation[]
   selectedId: number | null
   onSelect: (id: number) => void
+  onDelete: (conversation: InboxConversation) => void
 }
 
 function timeAgo(iso: string | null): string {
@@ -29,7 +30,7 @@ function initialsOf(name: string): string {
   return (parts[0][0] + (parts[1]?.[0] ?? '')).toUpperCase()
 }
 
-export function InboxList({ conversations, selectedId, onSelect }: Props) {
+export function InboxList({ conversations, selectedId, onSelect, onDelete }: Props) {
   if (conversations.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center gap-2 px-6 py-16 text-center">
@@ -51,7 +52,7 @@ export function InboxList({ conversations, selectedId, onSelect }: Props) {
         const isUnread = conv.unreadCount > 0
 
         return (
-          <li key={conv.id}>
+          <li key={conv.id} className="relative pr-9">
             <button
               type="button"
               onClick={() => onSelect(conv.id)}
@@ -143,6 +144,15 @@ export function InboxList({ conversations, selectedId, onSelect }: Props) {
                   </div>
                 )}
               </div>
+            </button>
+            <button
+              type="button"
+              title="Borrar chat"
+              aria-label={`Borrar chat de ${name}`}
+              onClick={() => onDelete(conv)}
+              className="absolute right-1 top-3 rounded-md p-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive focus-visible:outline-2"
+            >
+              <Trash2 className="size-3.5" />
             </button>
           </li>
         )
