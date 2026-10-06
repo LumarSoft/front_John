@@ -1,12 +1,13 @@
 'use client'
 
-import { formatARS, type CoverageCard } from '../lib/coverages'
+import { formatARS, formatSumInsured, type CoverageCard } from '../lib/coverages'
 import { formatDisplayDate } from '../lib/dates'
 
 interface CotizacionResumenProps {
   card: CoverageCard
   vehicleLabel: string | null
   quoteNumber: string | null
+  vehicleValue: string | null
   startDate: string
   endDate: string | null
 }
@@ -15,9 +16,11 @@ export function CotizacionResumen({
   card,
   vehicleLabel,
   quoteNumber,
+  vehicleValue,
   startDate,
   endDate,
 }: Readonly<CotizacionResumenProps>) {
+  const sumInsured = formatSumInsured(vehicleValue)
   return (
     <aside className="flex flex-col gap-4 rounded-2xl border border-ember/40 bg-paper p-5 shadow-[0_12px_32px_-16px_rgba(232,168,32,0.35)] md:sticky md:top-[96px]">
       <div>
@@ -26,13 +29,17 @@ export function CotizacionResumen({
         {vehicleLabel && <div className="text-[12px] text-ink-3 mt-1 leading-snug">{vehicleLabel}</div>}
       </div>
 
-      <div className="border-t border-line pt-4">
-        <div className="flex items-baseline gap-1">
-          <span className="font-display text-[28px] text-ink leading-none">{formatARS(card.displayPrice)}</span>
-          <span className="text-[12px] text-faint">/mes</span>
-        </div>
-        <div className="text-[11px] text-faint mt-[6px] tracking-[0.02em]">Premio desde</div>
-      </div>
+      <ul className="flex flex-col gap-[10px] m-0 p-0 list-none border-t border-line pt-4">
+        {card.paymentOptions.map(p => (
+          <li key={p.code}>
+            <div className="text-[11px] text-faint tracking-[0.02em]">{p.name}</div>
+            <div className="flex items-baseline gap-1">
+              <span className="font-display text-[24px] text-ink leading-none">{formatARS(p.premium)}</span>
+              <span className="text-[12px] text-faint">/mes</span>
+            </div>
+          </li>
+        ))}
+      </ul>
 
       <dl className="flex flex-col gap-[10px] m-0 border-t border-line pt-4 text-[12.5px]">
         <div className="flex items-baseline justify-between gap-2">
@@ -43,6 +50,12 @@ export function CotizacionResumen({
           <dt className="text-faint m-0">Fin de la cobertura</dt>
           <dd className="text-ink font-semibold m-0">{endDate ? formatDisplayDate(endDate) : '—'}</dd>
         </div>
+        {sumInsured && (
+          <div className="flex items-baseline justify-between gap-2">
+            <dt className="text-faint m-0">Suma asegurada</dt>
+            <dd className="text-ink font-semibold m-0">{sumInsured}</dd>
+          </div>
+        )}
         {quoteNumber && (
           <div className="flex items-baseline justify-between gap-2">
             <dt className="text-faint m-0">Presupuesto Nro.</dt>

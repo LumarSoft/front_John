@@ -14,17 +14,14 @@ export interface CoverageCard {
   tagline: string | null
   benefits: string[]
   highlighted: boolean
-  displayPrice: number
   paymentOptions: CotizacionPaymentOption[]
 }
 
-// Cheapest of the payment methods the API exposes (Débito Automático and Plan
-// de Pago). Contado is quoted by Triunfo but the API filters it out, so it never
-// reaches this point.
-const displayPrice = (coverage: CotizacionCoverage): number => {
-  const premiums = coverage.paymentOptions.map(p => p.premium).filter(p => p > 0)
-  return premiums.length > 0 ? Math.min(...premiums) : 0
-}
+// Card (code 1) first, then cash (code 9): the API names them "Con tarjeta" and
+// "En efectivo". Contado is quoted by Triunfo but the API filters it out.
+const PAYMENT_ORDER = ['1', '9']
+const byPaymentOrder = (a: CotizacionPaymentOption, b: CotizacionPaymentOption): number =>
+  (PAYMENT_ORDER.indexOf(a.code) + 1 || 99) - (PAYMENT_ORDER.indexOf(b.code) + 1 || 99)
 
 /** One card per coverage, in the order the API already sorted them. */
 export function buildCoverageCards(coverages: CotizacionCoverage[]): CoverageCard[] {
@@ -34,8 +31,7 @@ export function buildCoverageCards(coverages: CotizacionCoverage[]): CoverageCar
     tagline: coverage.tagline,
     benefits: coverage.benefits,
     highlighted: coverage.highlighted,
-    displayPrice: displayPrice(coverage),
-    paymentOptions: coverage.paymentOptions,
+    paymentOptions: coverage.paymentOptions.filter(p => p.premium > 0).sort(byPaymentOrder),
   }))
 }
 
@@ -46,3 +42,12 @@ const arsFormatter = new Intl.NumberFormat('es-AR', {
 })
 
 export const formatARS = (value: number): string => arsFormatter.format(value)
+
+/**
+ * The value the vehicle is insured for, as Triunfo resolved it. Null when it
+ * could not value the vehicle (it returns 0), so a $0 sum is never shown.
+ */
+export function formatSumInsured(vehicleValue: string | null | undefined): string | null {
+  const value = Number.parseFloat(vehicleValue ?? '')
+  return value > 0 ? formatARS(value) : null
+}

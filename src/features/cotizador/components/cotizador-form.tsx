@@ -40,6 +40,7 @@ export function CotizadorForm({ vehicleType }: Readonly<CotizadorFormProps>) {
               card={selectedCard}
               vehicleLabel={vehicleForm.vehicleLabel}
               quoteNumber={result?.quoteNumber ?? null}
+              vehicleValue={result?.vehicleValue ?? null}
               startDate={flow.startDate}
               endDate={flow.endDate}
             />

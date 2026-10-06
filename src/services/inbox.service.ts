@@ -1,5 +1,5 @@
 import { apiRequest } from '@/src/lib/api-client'
-import type { InboxConversation, InboxMessage } from '@/src/types/api/inbox'
+import type { InboxConversation, InboxMessage, UpdateInboxContactRequest } from '@/src/types/api/inbox'
 
 export const inboxService = {
   listConversations(
@@ -19,6 +19,14 @@ export const inboxService = {
 
   getMessages(conversationId: number, token: string): Promise<InboxMessage[]> {
     return apiRequest<InboxMessage[]>(`/admin/inbox/${conversationId}/messages`, { token })
+  },
+
+  updateContact(conversationId: number, data: UpdateInboxContactRequest, token: string): Promise<InboxConversation> {
+    return apiRequest<InboxConversation>(`/admin/inbox/${conversationId}/contact`, {
+      method: 'PATCH',
+      token,
+      body: data,
+    })
   },
 
   takeover(conversationId: number, token: string): Promise<InboxConversation> {

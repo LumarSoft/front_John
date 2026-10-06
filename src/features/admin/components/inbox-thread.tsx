@@ -1,7 +1,18 @@
 'use client'
 
 import { Fragment, useEffect, useRef, useState } from 'react'
-import { AlertTriangle, IdCard, Info, Loader2, MessageCircle, SendHorizonal, UserCheck, UserX } from 'lucide-react'
+import {
+  AlertTriangle,
+  IdCard,
+  Info,
+  Loader2,
+  MessageCircle,
+  Pencil,
+  SendHorizonal,
+  UserCheck,
+  UserX,
+} from 'lucide-react'
+import { toast } from 'sonner'
 import { Button } from '@/src/components/ui/button'
 import { cn } from '@/src/lib/utils'
 import { useInboxMessages } from '../hooks/use-inbox-messages'
@@ -10,6 +21,8 @@ import type { InboxConversation } from '@/src/types/api/inbox'
 import { adjuntoUrl } from '@/src/services/siniestros.service'
 import { consultedClientLabel, contactDisplayName } from '../lib/inbox-contact'
 import { InboxAudio } from './inbox-audio'
+import { InboxContactDialog } from './inbox-contact-dialog'
+import type { UpdateInboxContactRequest } from '@/src/types/api/inbox'
 
 const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000
 
@@ -57,8 +70,9 @@ function initialsOf(name: string) {
 
 export function InboxThread({ conversation, onOpenClient }: Props) {
   const { data: messages = [], isLoading } = useInboxMessages(conversation.id)
-  const { takeover, release, sendMessage } = useInboxActions(conversation.id)
+  const { takeover, release, sendMessage, updateContact } = useInboxActions(conversation.id)
   const [text, setText] = useState('')
+  const [editingContact, setEditingContact] = useState(false)
   const [windowExpired, setWindowExpired] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
 
@@ -94,6 +108,16 @@ export function InboxThread({ conversation, onOpenClient }: Props) {
     const trimmed = text.trim()
     if (!trimmed || isSending) return
     sendMessage.mutate(trimmed, { onSuccess: () => setText('') })
+  }
+
+  function handleSaveContact(data: UpdateInboxContactRequest) {
+    updateContact.mutate(data, {
+      onSuccess: () => {
+        toast.success('Contacto actualizado')
+        setEditingContact(false)
+      },
+      onError: () => toast.error('No se pudo actualizar el contacto'),
+    })
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
@@ -144,6 +168,10 @@ export function InboxThread({ conversation, onOpenClient }: Props) {
           </div>
         </div>
         <div className="flex shrink-0 gap-2">
+          <Button size="sm" variant="outline" onClick={() => setEditingContact(true)}>
+            <Pencil className="size-3.5" />
+            Editar contacto
+          </Button>
           {client && (
             <Button size="sm" variant="outline" onClick={() => onOpenClient(client.id)}>
               <IdCard className="size-3.5" />
@@ -305,6 +333,15 @@ export function InboxThread({ conversation, onOpenClient }: Props) {
           </div>
         </div>
       </div>
+
+      {editingContact && (
+        <InboxContactDialog
+          conversation={conversation}
+          saving={updateContact.isPending}
+          onClose={() => setEditingContact(false)}
+          onSave={handleSaveContact}
+        />
+      )}
     </div>
   )
 }
