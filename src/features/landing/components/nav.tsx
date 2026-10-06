@@ -186,15 +186,15 @@ export function Nav() {
                 </svg>
                 Área cliente
               </Link>
-              <a
-                href="#contacto"
+              <Link
+                href="/coberturas"
                 className="btn-shimmer inline-flex items-center gap-2 rounded-full bg-ember px-5 py-[11px] text-[13px] font-semibold tracking-[-0.005em] text-paper transition-[background-color,box-shadow] hover:bg-ember-2 hover:shadow-[0_8px_24px_-6px_rgba(232,168,32,0.45)]"
               >
                 Cotizar
                 <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8">
                   <path d="M3 7h8M7.5 3.5L11 7l-3.5 3.5" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
-              </a>
+              </Link>
             </div>
 
             <button
@@ -316,13 +316,13 @@ export function Nav() {
           Área cliente
         </Link>
 
-        <a
-          href="#contacto"
+        <Link
+          href="/coberturas"
           onClick={close}
           className={`flex items-center justify-center h-[58px] bg-ember rounded-full text-paper font-semibold text-[14px] tracking-[-0.005em] mt-3 transition-[background-color,transform] duration-[380ms] ease-[cubic-bezier(0.16,1,0.3,1)] delay-[140ms] ${open ? 'translate-y-0' : 'translate-y-3'}`}
         >
           Cotizar ahora →
-        </a>
+        </Link>
       </div>
     </>
   )
