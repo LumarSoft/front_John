@@ -2,7 +2,21 @@
 
 import { useState } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { MessagesSquare, Search } from 'lucide-react'
+import { MessagesSquare, Search, Trash2, Loader2 } from 'lucide-react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
+import { inboxService } from '@/src/services/inbox.service'
+import { useAuth } from '../context/auth-context'
+import { Button } from '@/src/components/ui/button'
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+} from '@/src/components/ui/alert-dialog'
 import { Input } from '@/src/components/ui/input'
 import { cn } from '@/src/lib/utils'
 import { useDebouncedValue } from '@/src/hooks/use-debounced-value'
@@ -49,11 +63,14 @@ export function inboxConversationHref(conversationId: number): string {
 }
 
 export function InboxView() {
+  const { token } = useAuth()
+  const queryClient = useQueryClient()
+  const [deleteTarget, setDeleteTarget] = useState<InboxConversation | 'all' | null>(null)
   const searchParams = useSearchParams()
   // A Novedad links here with ?conversation=123 to open that chat.
   const linkedId = Number(searchParams.get('conversation')) || null
-  const [pickedId, setPickedId] = useState<number | null>(null)
-  const selectedId = pickedId ?? linkedId
+  const [pickedId, setPickedId] = useState<number | null | undefined>(undefined)
+  const selectedId = pickedId === undefined ? linkedId : pickedId
   // Switching chats is local state, so it is instant and never depends on a
   // Next navigation round-trip. The URL only mirrors it (replaceState, no
   // navigation) so a reload or a shared link reopens the same chat.
@@ -68,6 +85,31 @@ export function InboxView() {
   const search = useDebouncedValue(searchInput, 350)
 
   const { data: conversations = [], isLoading } = useInboxConversations(undefined, search, scope)
+
+  const deletion = useMutation({
+    mutationFn: (target: InboxConversation | 'all') =>
+      inboxService.deleteConversations(token as string, target === 'all' ? undefined : target.id),
+    onSuccess: async (result, target) => {
+      if (target === 'all' || target.id === selectedId) {
+        setPickedId(null)
+        window.history.replaceState(window.history.state, '', '/admin/inbox')
+      }
+      queryClient.removeQueries({
+        predicate: query =>
+          query.queryKey[0] === 'admin' &&
+          query.queryKey[1] === 'inbox' &&
+          query.queryKey[3] === 'messages' &&
+          (target === 'all' || query.queryKey[2] === target.id),
+      })
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['admin', 'inbox'] }),
+        queryClient.invalidateQueries({ queryKey: ['admin', 'novedades'] }),
+      ])
+      setDeleteTarget(null)
+      toast.success(`${result.deletedCount} ${result.deletedCount === 1 ? 'chat borrado' : 'chats borrados'}`)
+    },
+    onError: () => toast.error('No se pudieron borrar los chats. Intentá nuevamente.'),
+  })
 
   const filtered = conversations.filter(c => matchesFilter(c, filter))
   const selected = conversations.find(c => c.id === selectedId) ?? null
@@ -100,6 +142,15 @@ export function InboxView() {
                 className="h-9 bg-card pl-8 text-[12.5px]"
               />
             </div>
+
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full text-destructive"
+              onClick={() => setDeleteTarget('all')}
+            >
+              <Trash2 className="size-3.5" /> Borrar todos los chats
+            </Button>
 
             <ScopeFilter value={scope} onChange={setScope} className="!h-9 w-full" />
 
@@ -134,7 +185,12 @@ export function InboxView() {
             {isLoading ? (
               <InboxListSkeleton />
             ) : (
-              <InboxList conversations={filtered} selectedId={selectedId} onSelect={selectConversation} />
+              <InboxList
+                conversations={filtered}
+                selectedId={selectedId}
+                onSelect={selectConversation}
+                onDelete={setDeleteTarget}
+              />
             )}
           </div>
         </aside>
@@ -167,6 +223,41 @@ export function InboxView() {
           )}
         </main>
       </div>
+
+      <AlertDialog
+        open={deleteTarget !== null}
+        onOpenChange={open => {
+          if (!open && !deletion.isPending) setDeleteTarget(null)
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {deleteTarget === 'all' ? '¿Borrar todos los chats?' : '¿Borrar este chat?'}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {deleteTarget === 'all'
+                ? 'Se borrarán todas las conversaciones a las que tenés acceso, incluidas las cerradas y las que no aparecen con los filtros actuales.'
+                : `Se borrará la conversación de ${deleteTarget ? deleteTarget.waId : ''}.`}{' '}
+              Se eliminarán sus mensajes y se reiniciará el bot para esos chats. Los clientes, pólizas, cotizaciones y
+              siniestros se conservan. Esta acción no se puede deshacer desde el panel.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deletion.isPending}>Cancelar</AlertDialogCancel>
+            <Button
+              variant="destructive"
+              disabled={deletion.isPending || deleteTarget === null}
+              onClick={() => {
+                if (deleteTarget) deletion.mutate(deleteTarget)
+              }}
+            >
+              {deletion.isPending && <Loader2 className="size-4 animate-spin" />}
+              {deleteTarget === 'all' ? 'Sí, borrar todos' : 'Sí, borrar chat'}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AseguradoSheet clientId={selectedClientId} onClose={() => setSelectedClientId(null)} />
     </div>

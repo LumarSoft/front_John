@@ -17,6 +17,16 @@ export const inboxService = {
     return apiRequest<InboxConversation[]>(`/admin/inbox${qs ? `?${qs}` : ''}`, { token })
   },
 
+  deleteConversations(token: string, conversationId?: number): Promise<{ deletedCount: number }> {
+    return apiRequest<{ deletedCount: number }>(
+      `/admin/inbox${conversationId !== undefined ? `/${conversationId}` : ''}`,
+      {
+        method: 'DELETE',
+        token,
+      },
+    )
+  },
+
   getMessages(conversationId: number, token: string): Promise<InboxMessage[]> {
     return apiRequest<InboxMessage[]>(`/admin/inbox/${conversationId}/messages`, { token })
   },
