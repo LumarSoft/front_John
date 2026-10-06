@@ -11,6 +11,11 @@ export function useNovedadesActions() {
     void queryClient.invalidateQueries({ queryKey: ['admin', 'novedades'] })
   }
 
+  const clearAll = useMutation({
+    mutationFn: () => novedadesService.clearAll(token as string),
+    onSuccess: invalidate,
+  })
+
   const markRead = useMutation({
     mutationFn: (id: number) => novedadesService.markRead(id, token as string),
     onSuccess: invalidate,
@@ -29,5 +34,5 @@ export function useNovedadesActions() {
       void queryClient.invalidateQueries({ queryKey: ['admin', 'solicitudes'] })
     },
   })
-  return { markRead, markAllRead, updateMatter }
+  return { markRead, markAllRead, updateMatter, clearAll }
 }

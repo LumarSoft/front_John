@@ -36,6 +36,7 @@ export const novedadesService = {
     apiRequest<{ previousVisitAt: string | null }>('/admin/novedades/visit', { method: 'POST', token }),
   updateMatter: (id: number, changes: { category?: MatterCategory; status?: MatterStatus }, token: string) =>
     apiRequest<NovedadItem>(`/admin/novedades/${id}/matter`, { method: 'PATCH', token, body: changes }),
+  clearAll: (token: string) => apiRequest<{ clearedCount: number }>('/admin/novedades', { method: 'DELETE', token }),
   markRead: (id: number, token: string) =>
     apiRequest<NovedadItem>(`/admin/novedades/${id}/read`, { method: 'PATCH', token }),
   markAllRead: (type: NovedadType | undefined, token: string) =>

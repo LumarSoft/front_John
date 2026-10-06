@@ -2,9 +2,18 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Bell, Search } from 'lucide-react'
+import { Bell, Search, Trash2, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/src/components/ui/button'
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+} from '@/src/components/ui/alert-dialog'
 import { Input } from '@/src/components/ui/input'
 import { cn } from '@/src/lib/utils'
 import { useDebouncedValue } from '@/src/hooks/use-debounced-value'
@@ -30,6 +39,7 @@ const categories = Object.keys(MATTER_LABELS) as MatterCategory[]
 const selectClass = 'h-9 rounded-md border border-line-2 bg-card px-2 text-[12px] text-ink'
 
 export function NovedadesView() {
+  const [confirmClear, setConfirmClear] = useState(false)
   const router = useRouter()
   const { token } = useAuth()
   const visitStarted = useRef(false)
@@ -59,7 +69,7 @@ export function NovedadesView() {
     pageSize: 20,
   })
   const { data: stats } = useNovedadesStats(scope)
-  const { markRead, updateMatter } = useNovedadesActions()
+  const { markRead, updateMatter, clearAll } = useNovedadesActions()
 
   useEffect(() => {
     if (!token || visitStarted.current) return
@@ -94,14 +104,19 @@ export function NovedadesView() {
 
   return (
     <div className="mx-auto w-full max-w-[1600px] px-4 py-6 sm:px-6 lg:px-8">
-      <header className="mb-5">
-        <h1 className="flex items-center gap-2 font-display text-[22px] tracking-tight text-ink">
-          <Bell className="size-5 text-ember-2" />
-          Asuntos pendientes
-        </h1>
-        <p className="mt-1 text-[13px] text-muted-foreground">
-          Lo que necesita atención del equipo. Leer una conversación no resuelve el asunto.
-        </p>
+      <header className="mb-5 flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="flex items-center gap-2 font-display text-[22px] tracking-tight text-ink">
+            <Bell className="size-5 text-ember-2" />
+            Asuntos pendientes
+          </h1>
+          <p className="mt-1 text-[13px] text-muted-foreground">
+            Lo que necesita atención del equipo. Leer una conversación no resuelve el asunto.
+          </p>
+        </div>
+        <Button variant="outline" className="text-destructive" onClick={() => setConfirmClear(true)}>
+          <Trash2 className="size-4" /> Limpiar todas
+        </Button>
       </header>
       <div className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-6">
         {categories.map(key => (
@@ -299,6 +314,43 @@ export function NovedadesView() {
           </div>
         </div>
       </div>
+      <AlertDialog
+        open={confirmClear}
+        onOpenChange={open => {
+          if (!clearAll.isPending) setConfirmClear(open)
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Limpiar todas las novedades?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Se quitarán todas las novedades a las que tenés acceso, incluidas las de otras páginas, estados y filtros.
+              Los chats, clientes, pólizas, siniestros y solicitudes se conservan, con sus estados actuales. Esta acción
+              no se puede deshacer desde el panel. Las nuevas novedades seguirán apareciendo normalmente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={clearAll.isPending}>Cancelar</AlertDialogCancel>
+            <Button
+              variant="destructive"
+              disabled={clearAll.isPending}
+              onClick={() =>
+                clearAll.mutate(undefined, {
+                  onSuccess: result => {
+                    setConfirmClear(false)
+                    setPageNumber(1)
+                    toast.success(`${result.clearedCount} novedades limpiadas`)
+                  },
+                  onError: () => toast.error('No se pudieron limpiar las novedades. Intentá nuevamente.'),
+                })
+              }
+            >
+              {clearAll.isPending && <Loader2 className="size-4 animate-spin" />}
+              Sí, limpiar todas
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       <SiniestroSheet siniestroId={selectedSiniestroId} onClose={() => setSelectedSiniestroId(null)} />
       <AseguradoSheet clientId={selectedClientId} onClose={() => setSelectedClientId(null)} />
     </div>
