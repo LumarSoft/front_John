@@ -18,6 +18,9 @@ export interface CoverageSetting {
   /** Vehicle-year window. Null on both ends = every year. */
   yearFrom: number | null
   yearTo: number | null
+  /** Years a highlighted coverage is recommended for. Null on both ends = every year. */
+  highlightYearFrom?: number | null
+  highlightYearTo?: number | null
   firstSeenAt: string
 }
 
@@ -30,6 +33,8 @@ export interface UpdateCoverageSettingRequest {
   sortOrder?: number
   yearFrom?: number | null
   yearTo?: number | null
+  highlightYearFrom?: number | null
+  highlightYearTo?: number | null
 }
 
 export interface ReorderCoverageSettingsRequest {
