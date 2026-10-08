@@ -5,8 +5,6 @@ import { Chevron, inputClass, labelClass } from './form-controls'
 import type { CotizadorVehiculoFormHook } from '../hooks/use-cotizador-vehiculo-form'
 import type { VehicleType } from '@/src/types/api/cotizador'
 
-const YEARS = Array.from({ length: 31 }, (_, i) => new Date().getFullYear() - i)
-
 interface VehiculoStepProps {
   form: CotizadorVehiculoFormHook
   vehicleType: VehicleType
@@ -25,6 +23,9 @@ export function VehiculoStep({ form: hook, vehicleType }: Readonly<VehiculoStepP
     isPending,
     cotizarError,
     isValid,
+    yearOptions,
+    yearHint,
+    cotizarErrorMessage,
     handleBrandChange,
     handleGroupChange,
     handleCodiaChange,
@@ -84,16 +85,18 @@ export function VehiculoStep({ form: hook, vehicleType }: Readonly<VehiculoStepP
               className={inputClass}
               value={form.year ?? ''}
               onChange={e => handleYearChange(e.target.value)}
+              disabled={yearOptions.length === 0}
             >
-              <option value="">Seleccioná el año</option>
-              {YEARS.map(y => (
-                <option key={y} value={y}>
-                  {y}
+              <option value="">{yearOptions.length === 0 ? 'Sin años disponibles' : 'Seleccioná el año'}</option>
+              {yearOptions.map(y => (
+                <option key={y.value} value={y.value}>
+                  {y.label}
                 </option>
               ))}
             </select>
             <Chevron />
           </div>
+          {yearHint && <p className="text-[12px] text-faint leading-[1.45]">{yearHint}</p>}
         </div>
 
         {vehicleType === 'auto' && (
@@ -150,7 +153,7 @@ export function VehiculoStep({ form: hook, vehicleType }: Readonly<VehiculoStepP
 
       {cotizarError && (
         <p className="mt-5 text-[13px] text-red-600 leading-[1.5]">
-          Ocurrió un error al procesar la cotización. Por favor intentá de nuevo.
+          {cotizarErrorMessage ?? 'Ocurrió un error al procesar la cotización. Por favor intentá de nuevo.'}
         </p>
       )}
 
