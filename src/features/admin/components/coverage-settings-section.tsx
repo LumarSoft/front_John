@@ -37,6 +37,12 @@ const recommendedLabel = (coverage: CoverageSetting): string => {
   return range ? `Recomendada ${range}` : 'Recomendada'
 }
 
+const parseLines = (value: string): string[] =>
+  value
+    .split('\n')
+    .map(line => line.trim())
+    .filter(Boolean)
+
 const parseYear = (value: string): number | null => {
   const trimmed = value.trim()
   if (trimmed === '') return null
@@ -55,6 +61,7 @@ function EditCoverageDialog({ coverage, saving, onClose, onSave }: Readonly<Edit
   const [name, setName] = useState(coverage.name)
   const [tagline, setTagline] = useState(coverage.tagline ?? '')
   const [benefits, setBenefits] = useState(coverage.benefits.join('\n'))
+  const [exclusions, setExclusions] = useState(coverage.exclusions.join('\n'))
   const [highlighted, setHighlighted] = useState(coverage.highlighted)
   const [yearFrom, setYearFrom] = useState(coverage.yearFrom?.toString() ?? '')
   const [yearTo, setYearTo] = useState(coverage.yearTo?.toString() ?? '')
@@ -76,10 +83,8 @@ function EditCoverageDialog({ coverage, saving, onClose, onSave }: Readonly<Edit
     onSave({
       name: name.trim(),
       tagline: tagline.trim(),
-      benefits: benefits
-        .split('\n')
-        .map(b => b.trim())
-        .filter(Boolean),
+      benefits: parseLines(benefits),
+      exclusions: parseLines(exclusions),
       highlighted,
       yearFrom: parseYear(yearFrom),
       yearTo: parseYear(yearTo),
@@ -98,6 +103,13 @@ function EditCoverageDialog({ coverage, saving, onClose, onSave }: Readonly<Edit
           </DialogDescription>
         </DialogHeader>
 
+        {coverage.needsReview && (
+          <p className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-200">
+            Todavía no se ofrece a los clientes: nadie confirmó qué cubre este código. Cargá qué incluye y qué no, y al
+            guardar empieza a aparecer en las cotizaciones.
+          </p>
+        )}
+
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="coverage-name">Nombre</Label>
@@ -110,7 +122,7 @@ function EditCoverageDialog({ coverage, saving, onClose, onSave }: Readonly<Edit
               id="coverage-tagline"
               value={tagline}
               maxLength={160}
-              placeholder="La más elegida"
+              placeholder="Ej.: RC + incendio total"
               onChange={e => setTagline(e.target.value)}
             />
           </div>
@@ -125,6 +137,21 @@ function EditCoverageDialog({ coverage, saving, onClose, onSave }: Readonly<Edit
               className="border-input placeholder:text-muted-foreground focus-visible:ring-ring/50 min-h-[96px] w-full rounded-md border bg-transparent px-3 py-2 text-sm shadow-xs outline-none focus-visible:ring-[3px]"
             />
             <p className="text-muted-foreground text-xs">Uno por línea. Máximo 12.</p>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="coverage-exclusions">No incluye</Label>
+            <textarea
+              id="coverage-exclusions"
+              value={exclusions}
+              rows={3}
+              placeholder="Ej.: Destrucción total por accidente"
+              onChange={e => setExclusions(e.target.value)}
+              className="border-input placeholder:text-muted-foreground focus-visible:ring-ring/50 min-h-[72px] w-full rounded-md border bg-transparent px-3 py-2 text-sm shadow-xs outline-none focus-visible:ring-[3px]"
+            />
+            <p className="text-muted-foreground text-xs">
+              Uno por línea. Es lo que distingue coberturas parecidas (por ejemplo, B y B1).
+            </p>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
@@ -261,7 +288,8 @@ export function CoverageSettingsSection() {
         <CardDescription>
           Qué coberturas ve el cliente al cotizar, en qué orden y con qué texto. Las coberturas aparecen solas la
           primera vez que Triunfo las cotiza — no se crean a mano. Qué coberturas ofrece Triunfo para cada vehículo y
-          año lo decide Triunfo; acá se elige cuáles de esas mostrar.
+          año lo decide Triunfo; acá se elige cuáles de esas mostrar. Una cobertura nueva no se ofrece hasta que se
+          carga qué incluye y qué no.
         </CardDescription>
       </CardHeader>
 
@@ -284,7 +312,7 @@ export function CoverageSettingsSection() {
           <div
             key={coverage.id}
             className={`flex items-center gap-3 rounded-xl border px-3.5 py-3 ${
-              coverage.isActive ? 'bg-card' : 'bg-muted/40 opacity-70'
+              coverage.isActive && !coverage.needsReview ? 'bg-card' : 'bg-muted/40 opacity-70'
             }`}
           >
             <div className="flex flex-col gap-0.5">
@@ -323,7 +351,16 @@ export function CoverageSettingsSection() {
                     {recommendedLabel(coverage)}
                   </Badge>
                 )}
-                {!coverage.isConfigured && <Badge variant="outline">Sin configurar</Badge>}
+                {coverage.needsReview ? (
+                  <Badge
+                    variant="outline"
+                    className="border-amber-300 text-amber-800 dark:border-amber-800 dark:text-amber-300"
+                  >
+                    Falta cargar qué cubre · no se ofrece
+                  </Badge>
+                ) : (
+                  !coverage.isConfigured && <Badge variant="outline">Sin configurar</Badge>
+                )}
                 {yearLabel(coverage) && <Badge variant="outline">{yearLabel(coverage)}</Badge>}
                 {!coverage.isActive && <Badge variant="outline">Oculta</Badge>}
               </div>

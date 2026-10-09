@@ -17,6 +17,20 @@ const Check = () => (
   </svg>
 )
 
+const Cross = () => (
+  <svg
+    className="shrink-0 mt-[3px]"
+    width="13"
+    height="13"
+    viewBox="0 0 14 14"
+    fill="none"
+    stroke="var(--color-faint)"
+    strokeWidth="2"
+  >
+    <path d="M3.5 3.5l7 7M10.5 3.5l-7 7" strokeLinecap="round" />
+  </svg>
+)
+
 interface CotizacionResultadosProps {
   result: CotizarVehiculoResponse
   onSelect: (card: CoverageCard) => void
@@ -114,6 +128,20 @@ export function CotizacionResultados({ result, onSelect, onReset }: Readonly<Cot
                   </li>
                 ))}
               </ul>
+            )}
+
+            {card.exclusions.length > 0 && (
+              <div className="flex flex-col gap-[7px]">
+                <div className="text-[10.5px] tracking-[0.2em] uppercase text-faint font-semibold">No incluye</div>
+                <ul className="flex flex-col gap-[7px] m-0 p-0 list-none">
+                  {card.exclusions.map(exclusion => (
+                    <li key={exclusion} className="flex items-start gap-2 text-[12px] text-faint leading-snug">
+                      <Cross />
+                      {exclusion}
+                    </li>
+                  ))}
+                </ul>
+              </div>
             )}
 
             <button
