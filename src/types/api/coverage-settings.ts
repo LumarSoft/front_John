@@ -11,6 +11,13 @@ export interface CoverageSetting {
   name: string
   tagline: string | null
   benefits: string[]
+  /** What the coverage does not include. */
+  exclusions: string[]
+  /**
+   * Nobody confirmed what this code covers yet, so quotes hide it until someone
+   * writes its wording here.
+   */
+  needsReview: boolean
   isActive: boolean
   isConfigured: boolean
   highlighted: boolean
@@ -28,6 +35,7 @@ export interface UpdateCoverageSettingRequest {
   name?: string
   tagline?: string
   benefits?: string[]
+  exclusions?: string[]
   isActive?: boolean
   highlighted?: boolean
   sortOrder?: number

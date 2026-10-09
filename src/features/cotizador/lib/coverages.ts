@@ -3,7 +3,7 @@ import type { CotizacionCoverage, CotizacionPaymentOption } from '@/src/types/ap
 /**
  * A coverage as shown in the results grid.
  *
- * The wording (name, tagline, benefits) and the order come from the API, which
+ * The wording (name, tagline, benefits, exclusions) and the order come from the API, which
  * resolves them from the admin "Coberturas" settings. There is deliberately no
  * hardcoded catalog here: which coverages exist, which are shown and how they
  * read is a business decision the broker owns, not a constant in the front.
@@ -13,6 +13,7 @@ export interface CoverageCard {
   name: string
   tagline: string | null
   benefits: string[]
+  exclusions: string[]
   highlighted: boolean
   paymentOptions: CotizacionPaymentOption[]
 }
@@ -30,6 +31,8 @@ export function buildCoverageCards(coverages: CotizacionCoverage[]): CoverageCar
     name: coverage.name,
     tagline: coverage.tagline,
     benefits: coverage.benefits,
+    // An API that predates exclusions does not send them.
+    exclusions: coverage.exclusions ?? [],
     highlighted: coverage.highlighted,
     paymentOptions: coverage.paymentOptions.filter(p => p.premium > 0).sort(byPaymentOrder),
   }))

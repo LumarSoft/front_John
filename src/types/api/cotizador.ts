@@ -22,6 +22,8 @@ export interface CotizacionCoverage {
   name: string
   tagline: string | null
   benefits: string[]
+  /** What it does not include. Absent from an API that predates it. */
+  exclusions?: string[]
   highlighted: boolean
   paymentOptions: CotizacionPaymentOption[]
 }
