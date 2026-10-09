@@ -38,7 +38,7 @@ export default function CotizadorAutoPage() {
                 Seguro de auto
               </h2>
               <p className="text-[14px] text-faint leading-[1.55] m-0">
-                Todo riesgo · Terceros completo · Atención de siniestros sin franquicia variable
+                Responsabilidad civil · Todo total · Terceros completo · Todo riesgo
               </p>
             </div>
 
