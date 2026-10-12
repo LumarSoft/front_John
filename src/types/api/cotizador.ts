@@ -52,22 +52,13 @@ export interface SolicitarCoberturaRequest {
   docType: DocType
   docNumber: string
   address: string
+  /** Preferred method only: card data is never collected, an agent finalizes the payment. */
   paymentMethod: PaymentMethod
-  cardCompany?: string
-  cardNumber?: string
-  cardExpiry?: string
-  cardHolder?: string
 }
 
-export type SolicitudPersonalData = Omit<
-  SolicitarCoberturaRequest,
-  'coverage' | 'startDate' | 'paymentMethod' | 'cardCompany' | 'cardNumber' | 'cardExpiry' | 'cardHolder'
->
+export type SolicitudPersonalData = Omit<SolicitarCoberturaRequest, 'coverage' | 'startDate' | 'paymentMethod'>
 
-export type SolicitudPagoData = Pick<
-  SolicitarCoberturaRequest,
-  'paymentMethod' | 'cardCompany' | 'cardNumber' | 'cardExpiry' | 'cardHolder'
->
+export type SolicitudPagoData = Pick<SolicitarCoberturaRequest, 'paymentMethod'>
 
 export interface SolicitarCoberturaResponse {
   quoteNumber: string
