@@ -131,9 +131,9 @@ export function PolizaDetailView({ id }: { id: number }) {
             <div>
               <div className="flex flex-wrap items-center gap-2">
                 <h1 className="font-display text-[20px] font-semibold tracking-[-0.025em] text-ink">
-                  {v ? [v.marca, v.modelo].filter(Boolean).join(' ') || 'Automotor' : RISK_LABELS[poliza.riskType]}
+                  {v ? [v.brand, v.model].filter(Boolean).join(' ') || 'Automotor' : RISK_LABELS[poliza.riskType]}
                 </h1>
-                {v?.anio && <span className="font-display text-[16px] font-normal text-faint">{v.anio}</span>}
+                {v?.year && <span className="font-display text-[16px] font-normal text-faint">{v.year}</span>}
                 <span
                   className={[
                     'inline-flex items-center rounded-full px-2 py-[2px] text-[10.5px] font-semibold uppercase tracking-wide border',
@@ -145,16 +145,16 @@ export function PolizaDetailView({ id }: { id: number }) {
                   {badge.label}
                 </span>
               </div>
-              {v?.dominio && (
+              {v?.licensePlate && (
                 <span className="mt-1.5 inline-flex items-center rounded-md border border-line-2 bg-canvas px-2.5 py-0.5 font-display text-[12.5px] font-semibold tracking-[0.12em] text-ink">
-                  {v.dominio}
+                  {v.licensePlate}
                 </span>
               )}
             </div>
           </div>
           <div className="text-right text-[12px] text-muted-foreground">
             <p className="uppercase tracking-wider">Certificado</p>
-            <p className="font-display text-[14px] font-medium text-ink-3">{poliza.certificado}</p>
+            <p className="font-display text-[14px] font-medium text-ink-3">{poliza.certificateNumber}</p>
           </div>
         </div>
       </div>
@@ -164,9 +164,9 @@ export function PolizaDetailView({ id }: { id: number }) {
         <div className="rounded-2xl border border-line-2 bg-paper p-5">
           <h2 className="mb-1 font-display text-[13.5px] font-semibold tracking-[-0.01em] text-ink">Cobertura</h2>
           <div className="divide-y divide-line">
-            <InfoRow icon={CalendarDays} label="Vigencia desde" value={formatDate(poliza.vigenciaDesde)} />
-            <InfoRow icon={CalendarDays} label="Vigencia hasta" value={formatDate(poliza.vigenciaHasta)} />
-            <InfoRow icon={CreditCard} label="Premio mensual" value={formatCurrency(poliza.premio)} />
+            <InfoRow icon={CalendarDays} label="Vigencia desde" value={formatDate(poliza.validFrom)} />
+            <InfoRow icon={CalendarDays} label="Vigencia hasta" value={formatDate(poliza.validTo)} />
+            <InfoRow icon={CreditCard} label="Premio mensual" value={formatCurrency(poliza.premium)} />
             {poliza.paymentMethod && <InfoRow icon={CreditCard} label="Forma de pago" value={poliza.paymentMethod} />}
             <InfoRow
               icon={Shield}
@@ -181,14 +181,12 @@ export function PolizaDetailView({ id }: { id: number }) {
           <div className="rounded-2xl border border-line-2 bg-paper p-5">
             <h2 className="mb-1 font-display text-[13.5px] font-semibold tracking-[-0.01em] text-ink">Vehículo</h2>
             <div className="divide-y divide-line">
-              {v.tipo && <InfoRow icon={Car} label="Tipo" value={v.tipo} />}
-              {v.uso && <InfoRow icon={MapPin} label="Uso" value={v.uso} />}
-              {v.cobertura && <InfoRow icon={Shield} label="Cobertura" value={v.cobertura} />}
-              {v.sumaAsegurada && (
-                <InfoRow icon={Hash} label="Suma asegurada" value={formatCurrency(v.sumaAsegurada)} />
-              )}
-              {v.chasis && <InfoRow icon={Hash} label="Chasis" value={v.chasis as string} />}
-              {v.ceroKm && <InfoRow icon={Car} label="Cero km" value="Sí" />}
+              {v.type && <InfoRow icon={Car} label="Tipo" value={v.type} />}
+              {v.usage && <InfoRow icon={MapPin} label="Uso" value={v.usage} />}
+              {v.coverage && <InfoRow icon={Shield} label="Cobertura" value={v.coverage} />}
+              {v.sumInsured && <InfoRow icon={Hash} label="Suma asegurada" value={formatCurrency(v.sumInsured)} />}
+              {v.chassisNumber && <InfoRow icon={Hash} label="Chasis" value={v.chassisNumber as string} />}
+              {v.isZeroKm && <InfoRow icon={Car} label="Cero km" value="Sí" />}
             </div>
           </div>
         )}
@@ -221,7 +219,7 @@ export function PolizaDetailView({ id }: { id: number }) {
                   const st = CUOTA_STATUS_LABELS[c.status] ?? CUOTA_STATUS_LABELS.pending
                   return (
                     <tr key={c.id}>
-                      <td className="py-2.5 text-ink-3">{c.numeroCuota}</td>
+                      <td className="py-2.5 text-ink-3">{c.number}</td>
                       <td className="py-2.5 text-ink-3">{formatDate(c.dueDate)}</td>
                       <td className="py-2.5 text-right font-medium text-ink">{formatCurrency(c.amount)}</td>
                       <td className="py-2.5 text-right">

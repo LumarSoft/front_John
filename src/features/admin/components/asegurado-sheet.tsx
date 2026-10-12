@@ -137,7 +137,7 @@ function PolizaCard({ poliza }: { poliza: AdminPolizaDetail }) {
           <div>
             <div className="flex items-center gap-2">
               <span className="text-[13px] font-semibold text-ink">{RISK_LABELS[poliza.riskType]}</span>
-              <span className="text-[11px] text-muted-foreground">#{poliza.certificado}</span>
+              <span className="text-[11px] text-muted-foreground">#{poliza.certificateNumber}</span>
             </div>
             <div className="text-[11px] capitalize text-muted-foreground">{poliza.company}</div>
           </div>
@@ -149,19 +149,17 @@ function PolizaCard({ poliza }: { poliza: AdminPolizaDetail }) {
         <div className="mx-4 mb-3 flex items-start justify-between gap-3 rounded-lg bg-secondary/50 px-3.5 py-3">
           <div className="min-w-0">
             <div className="text-[13.5px] font-medium text-ink">
-              {[poliza.vehiculo.marca, poliza.vehiculo.modelo].filter(Boolean).join(' ') || 'Vehículo'}
-              {poliza.vehiculo.anio ? ` (${poliza.vehiculo.anio})` : ''}
+              {[poliza.vehiculo.brand, poliza.vehiculo.model].filter(Boolean).join(' ') || 'Vehículo'}
+              {poliza.vehiculo.year ? ` (${poliza.vehiculo.year})` : ''}
             </div>
             <div className="mt-1 flex flex-wrap gap-x-4 gap-y-0.5 text-[11.5px] text-muted-foreground">
-              {poliza.vehiculo.cobertura && <span>Cobertura {poliza.vehiculo.cobertura}</span>}
-              {poliza.vehiculo.sumaAsegurada && (
-                <span>Suma asegurada {formatCurrency(poliza.vehiculo.sumaAsegurada)}</span>
-              )}
+              {poliza.vehiculo.coverage && <span>Cobertura {poliza.vehiculo.coverage}</span>}
+              {poliza.vehiculo.sumInsured && <span>Suma asegurada {formatCurrency(poliza.vehiculo.sumInsured)}</span>}
             </div>
           </div>
-          {poliza.vehiculo.dominio && (
+          {poliza.vehiculo.licensePlate && (
             <span className="shrink-0 rounded-md border border-line-strong/40 bg-ink px-2.5 py-1 font-mono text-[12px] font-bold tracking-widest text-on-dark">
-              {poliza.vehiculo.dominio}
+              {poliza.vehiculo.licensePlate}
             </span>
           )}
         </div>
@@ -171,15 +169,15 @@ function PolizaCard({ poliza }: { poliza: AdminPolizaDetail }) {
         <div className="col-span-2 min-w-0">
           <dt className="text-[10.5px] uppercase tracking-[0.1em] text-muted-foreground">Vigencia</dt>
           <dd className="mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[12.5px] text-ink-3">
-            <span>{formatDate(poliza.vigenciaDesde)}</span>
+            <span>{formatDate(poliza.validFrom)}</span>
             <ArrowRight className="size-3 shrink-0 text-muted-foreground" />
-            <span>{formatDate(poliza.vigenciaHasta)}</span>
+            <span>{formatDate(poliza.validTo)}</span>
           </dd>
         </div>
-        {poliza.premio && (
+        {poliza.premium && (
           <div className="min-w-0">
             <dt className="text-[10.5px] uppercase tracking-[0.1em] text-muted-foreground">Premio</dt>
-            <dd className="mt-0.5 text-[12.5px] font-medium text-ink">{formatCurrency(poliza.premio)}</dd>
+            <dd className="mt-0.5 text-[12.5px] font-medium text-ink">{formatCurrency(poliza.premium)}</dd>
           </div>
         )}
         {poliza.paymentMethod && (
@@ -208,7 +206,7 @@ function PolizaCard({ poliza }: { poliza: AdminPolizaDetail }) {
                 {c.status === 'overdue' && <XCircle className="size-3.5 text-destructive" />}
                 {c.status === 'rejected' && <Ban className="size-3.5 text-destructive" />}
                 {c.status === 'pending' && <Calendar className="size-3.5 text-muted-foreground" />}
-                <span className="text-[11px] text-ink-3">#{c.numeroCuota}</span>
+                <span className="text-[11px] text-ink-3">#{c.number}</span>
                 {c.dueDate && <span className="text-[10.5px] text-muted-foreground">{formatDate(c.dueDate)}</span>}
               </div>
             ))}
@@ -273,10 +271,10 @@ function PolizaPagosCard({ poliza }: { poliza: AdminPolizaDetail }) {
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
             <span className="text-[13px] font-semibold text-ink">{RISK_LABELS[poliza.riskType]}</span>
-            <span className="text-[11px] text-muted-foreground">#{poliza.certificado}</span>
+            <span className="text-[11px] text-muted-foreground">#{poliza.certificateNumber}</span>
           </div>
-          {poliza.vehiculo?.dominio && (
-            <span className="font-mono text-[11px] text-muted-foreground">{poliza.vehiculo.dominio}</span>
+          {poliza.vehiculo?.licensePlate && (
+            <span className="font-mono text-[11px] text-muted-foreground">{poliza.vehiculo.licensePlate}</span>
           )}
         </div>
         <div className="text-right">
@@ -298,7 +296,7 @@ function PolizaPagosCard({ poliza }: { poliza: AdminPolizaDetail }) {
             {cuotaStatusIcon(cuota.status)}
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
-                <span className="text-[12.5px] font-medium text-ink">Cuota #{cuota.numeroCuota}</span>
+                <span className="text-[12.5px] font-medium text-ink">Cuota #{cuota.number}</span>
                 <span className="text-[11px] text-muted-foreground">{cuotaStatusLabel(cuota.status)}</span>
               </div>
               {cuota.dueDate && (
@@ -455,7 +453,7 @@ function InfoCell({ icon: Icon, label, value }: { icon: LucideIcon; label: strin
 export function AseguradoSheet({ clientId, onClose, defaultTab = 'polizas' }: AseguradoSheetProps) {
   const { data: client, isLoading } = useAdminClient(clientId)
   const [tab, setTab] = useState<SheetTab>(defaultTab)
-  const vigentesCount = client?.polizas.filter(p => p.vigenciaHasta && new Date(p.vigenciaHasta) >= new Date()).length
+  const vigentesCount = client?.polizas.filter(p => p.validTo && new Date(p.validTo) >= new Date()).length
   const debt = client ? computeDebt(client.polizas) : null
 
   return (

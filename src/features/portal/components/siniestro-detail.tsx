@@ -121,7 +121,7 @@ export function SiniestroDetailView({ id }: { id: number }) {
             <Shield className="h-3.5 w-3.5" />
             Póliza
           </p>
-          <p className="mt-1 text-[14px] font-semibold text-ink">{siniestro.policy.certificado}</p>
+          <p className="mt-1 text-[14px] font-semibold text-ink">{siniestro.policy.certificateNumber}</p>
         </div>
         <div className="rounded-xl border border-line-2 bg-paper px-4 py-3">
           <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">

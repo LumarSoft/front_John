@@ -29,8 +29,8 @@ export type PolizaEstado = 'vigente' | 'expiring' | 'vencida' | 'anulada' | 'pro
 
 type PolizaVigencia = {
   estadoVigencia: EstadoVigencia
-  vigenciaDesde: string | null
-  vigenciaHasta: string | null
+  validFrom: string | null
+  validTo: string | null
 }
 
 export interface PolizaStatus {
@@ -45,10 +45,10 @@ const EXPIRING_WINDOW_DAYS = 30
 export function polizaStatus(poliza: PolizaVigencia): PolizaStatus {
   if (poliza.estadoVigencia === 'anulada') return { label: 'Anulada', estado: 'anulada', daysLeft: null }
   if (poliza.estadoVigencia === 'proxima') {
-    return { label: `Desde ${formatDate(poliza.vigenciaDesde)}`, estado: 'proxima', daysLeft: null }
+    return { label: `Desde ${formatDate(poliza.validFrom)}`, estado: 'proxima', daysLeft: null }
   }
   const now = new Date()
-  const expiry = poliza.vigenciaHasta ? new Date(poliza.vigenciaHasta) : null
+  const expiry = poliza.validTo ? new Date(poliza.validTo) : null
   if (poliza.estadoVigencia === 'vencida' || !expiry || expiry < now) {
     return { label: 'Vencida', estado: 'vencida', daysLeft: null }
   }
@@ -106,7 +106,7 @@ export function ramoSummary(polizas: AdminPolizaSummary[]): {
   for (const p of polizas) {
     if (!ramos.includes(p.riskType)) ramos.push(p.riskType)
   }
-  const dominio = polizas.find(p => p.vehiculo?.dominio)?.vehiculo?.dominio ?? null
+  const dominio = polizas.find(p => p.vehiculo?.licensePlate)?.vehiculo?.licensePlate ?? null
   const vigentes = polizas.filter(p => p.estadoVigencia === 'vigente').length
   return { ramos, dominio, vigentes }
 }

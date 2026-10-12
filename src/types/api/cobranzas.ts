@@ -10,7 +10,7 @@ export interface CobranzaCliente {
   email: string | null
   phone: string | null
   ramos: RiskType[]
-  dominio: string | null
+  licensePlate: string | null
   pendingCount: number
   overdueCount: number
   rejectedCount: number

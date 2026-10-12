@@ -192,7 +192,7 @@ export function PortalDashboard() {
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-[13.5px] font-medium text-ink">{polizaSubject(poliza)}</p>
                     <p className="text-[11.5px] text-faint">
-                      Cuota {cuota.numeroCuota} · vence {formatDateLong(cuota.dueDate)}
+                      Cuota {cuota.number} · vence {formatDateLong(cuota.dueDate)}
                     </p>
                   </div>
                   <span className="shrink-0 font-display text-[14px] font-semibold text-ink">
