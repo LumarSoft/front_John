@@ -47,6 +47,7 @@ import { useInboxConversations } from '../hooks/use-inbox-conversations'
 import { useInboxMessageSound } from '../hooks/use-inbox-message-sound'
 import { useNewSolicitudesCount } from '../hooks/use-solicitudes'
 import { useImprovementsUnseenCount } from '../hooks/use-improvements'
+import { useNewProposalsCount } from '../hooks/use-proposals'
 
 interface NavItem {
   label: string
@@ -95,15 +96,16 @@ export function AppSidebar() {
   const inboxPending = inboxConversations?.filter(c => c.status === 'pending').length ?? 0
   const { data: solicitudesNuevas = 0 } = useNewSolicitudesCount()
   const isOwner = profile?.role === 'OWNER'
-  // The OWNER writes the improvements; the "new" count is for the people reading them.
+  // "Mejoras" badge: unseen improvements for the office, new proposals for the OWNER.
   const { data: improvementsUnseen } = useImprovementsUnseenCount(!!profile && !isOwner)
+  const { data: newProposals } = useNewProposalsCount(isOwner)
 
   // Count of items needing the advisor's attention, per sidebar section.
   const alertCount = (href: string): number => {
     if (href === '/admin/novedades') return novedadesStats?.actionableTotal ?? 0
     if (href === '/admin/solicitudes') return solicitudesNuevas
     if (href === '/admin/inbox') return inboxPending
-    if (href === '/admin/mejoras') return improvementsUnseen?.count ?? 0
+    if (href === '/admin/mejoras') return (isOwner ? newProposals?.count : improvementsUnseen?.count) ?? 0
     return 0
   }
 

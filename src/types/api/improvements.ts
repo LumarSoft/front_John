@@ -44,3 +44,43 @@ export interface ImprovementRequest {
   producerId: number | null
   published?: boolean
 }
+
+export type ProposalStatus = 'NEW' | 'REVIEWING' | 'PLANNED' | 'DONE' | 'DISCARDED'
+
+export const PROPOSAL_STATUSES: ProposalStatus[] = ['NEW', 'REVIEWING', 'PLANNED', 'DONE', 'DISCARDED']
+
+export const PROPOSAL_STATUS_LABEL: Record<ProposalStatus, string> = {
+  NEW: 'Nueva',
+  REVIEWING: 'En análisis',
+  PLANNED: 'Planificada',
+  DONE: 'Hecha',
+  DISCARDED: 'Descartada',
+}
+
+export interface Proposal {
+  id: number
+  title: string
+  description: string
+  status: ProposalStatus
+  /** Lumar's answer, visible to the whole organization. */
+  response: string | null
+  respondedAt: string | null
+  createdAt: string
+  author: { email: string } | null
+  /** True when the current user proposed it. */
+  mine: boolean
+}
+
+export interface OwnerProposal extends Omit<Proposal, 'mine'> {
+  producer: { id: number; name: string }
+}
+
+export interface ProposalRequest {
+  title: string
+  description: string
+}
+
+export interface ProposalUpdate {
+  status?: ProposalStatus
+  response?: string
+}

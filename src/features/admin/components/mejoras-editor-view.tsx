@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Eye, EyeOff, Loader2, Pencil, Plus, Sparkles, Trash2 } from 'lucide-react'
+import { Eye, EyeOff, Loader2, Pencil, Plus, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import {
   AlertDialog,
@@ -73,22 +73,16 @@ export function MejorasEditorView() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-4xl px-4 py-6 sm:px-6 lg:px-8">
-      <header className="mb-5 flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="flex items-center gap-2 font-display text-[22px] tracking-tight text-ink">
-            <Sparkles className="size-5 text-ember-2" />
-            Mejoras
-          </h1>
-          <p className="mt-1 text-[13px] text-muted-foreground">
-            Lo que publiques acá lo ven los usuarios de la organización en su panel, con un aviso de nuevas.
-            {drafts > 0 && ` Tenés ${drafts === 1 ? '1 borrador' : `${drafts} borradores`} sin publicar.`}
-          </p>
-        </div>
+    <div>
+      <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
+        <p className="max-w-xl text-[13px] text-muted-foreground">
+          Lo que publiques acá lo ven los usuarios de la organización en su panel, con un aviso de nuevas.
+          {drafts > 0 && ` Tenés ${drafts === 1 ? '1 borrador' : `${drafts} borradores`} sin publicar.`}
+        </p>
         <Button onClick={() => openForm(null)}>
           <Plus className="size-4" /> Nueva mejora
         </Button>
-      </header>
+      </div>
 
       <div className="mb-5 flex flex-wrap gap-2">
         {FILTERS.map(f => (

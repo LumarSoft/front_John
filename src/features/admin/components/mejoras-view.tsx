@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { Sparkles } from 'lucide-react'
 import { Skeleton } from '@/src/components/ui/skeleton'
 import { cn } from '@/src/lib/utils'
 import {
@@ -50,17 +49,11 @@ export function MejorasView() {
   const newCount = all.filter(i => isNewSince(i, previousVisitAt)).length
 
   return (
-    <div className="mx-auto w-full max-w-4xl px-4 py-6 sm:px-6 lg:px-8">
-      <header className="mb-5">
-        <h1 className="flex items-center gap-2 font-display text-[22px] tracking-tight text-ink">
-          <Sparkles className="size-5 text-ember-2" />
-          Mejoras
-        </h1>
-        <p className="mt-1 text-[13px] text-muted-foreground">
-          Lo que fuimos cambiando en el bot y en el panel.
-          {newCount > 0 && ` ${newCount === 1 ? 'Hay 1 nueva' : `Hay ${newCount} nuevas`} desde tu última visita.`}
-        </p>
-      </header>
+    <div>
+      <p className="mb-5 text-[13px] text-muted-foreground">
+        Lo que fuimos cambiando en el bot y en el panel.
+        {newCount > 0 && ` ${newCount === 1 ? 'Hay 1 nueva' : `Hay ${newCount} nuevas`} desde tu última visita.`}
+      </p>
 
       {areas.length > 1 && (
         <div className="mb-5 flex flex-wrap gap-2">
