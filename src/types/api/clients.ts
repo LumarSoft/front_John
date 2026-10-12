@@ -39,7 +39,7 @@ export interface AdminPolizaSummary {
   certificateNumber: string
   riskType: RiskType
   lastMovement: string
-  estadoVigencia: EstadoVigencia
+  validityStatus: EstadoVigencia
   validFrom: string | null
   validTo: string | null
   premium: string | null
@@ -53,7 +53,7 @@ export interface AdminPolizaDetail {
   company: string
   riskType: RiskType
   lastMovement: string
-  estadoVigencia: EstadoVigencia
+  validityStatus: EstadoVigencia
   validFrom: string | null
   validTo: string | null
   premium: string | null
@@ -79,7 +79,7 @@ export interface AdminClientSummary {
   dni: string
   createdAt: string
   policies: AdminPolizaSummary[]
-  cuotaStats: AdminCuotaStats
+  installmentStats: AdminCuotaStats
 }
 
 export interface AdminClientDetail {
@@ -101,7 +101,7 @@ export type ClientSort = 'nombre_asc' | 'nombre_desc' | 'reciente'
 export interface AdminClientsQuery {
   search?: string
   riskType?: RiskType
-  estado?: ClientEstadoFilter
+  status?: ClientEstadoFilter
   sort?: ClientSort
   // SuperAdmin section filter: by producer code OR by phone number/sucursal.
   producerCodeId?: number
@@ -120,8 +120,8 @@ export interface AdminClientsPage {
 
 export interface AdminClientsStats {
   totalClients: number
-  vigentes: number
-  porVencer: number
-  vencidas: number
-  cuotasVencidas: number
+  inForce: number
+  expiringSoon: number
+  expired: number
+  overdueInstallments: number
 }

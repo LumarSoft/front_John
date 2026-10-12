@@ -166,10 +166,10 @@ export function CodesTable({
   const totals = codes.reduce(
     (a, c) => ({
       clients: a.clients + c.clients,
-      polizas: a.polizas + c.polizas,
-      siniestros: a.siniestros + c.siniestros,
+      policies: a.policies + c.policies,
+      claims: a.claims + c.claims,
     }),
-    { clients: 0, polizas: 0, siniestros: 0 },
+    { clients: 0, policies: 0, claims: 0 },
   )
 
   return (
@@ -205,8 +205,8 @@ export function CodesTable({
                 {c.holderName && <span className="text-[11px] text-muted-foreground">{c.holderName}</span>}
               </TableCell>
               <TableCell className="text-right text-[12px] text-muted-foreground">{int(c.clients)}</TableCell>
-              <TableCell className="text-right text-[12px] text-muted-foreground">{int(c.polizas)}</TableCell>
-              <TableCell className="text-right text-[12px] text-muted-foreground">{int(c.siniestros)}</TableCell>
+              <TableCell className="text-right text-[12px] text-muted-foreground">{int(c.policies)}</TableCell>
+              <TableCell className="text-right text-[12px] text-muted-foreground">{int(c.claims)}</TableCell>
               <TableCell className="text-[12px] text-muted-foreground">
                 {c.lastCarteraSyncAt ? fecha(c.lastCarteraSyncAt) : <span className="text-amber-600">nunca</span>}
               </TableCell>
@@ -234,8 +234,8 @@ export function CodesTable({
             <TableRow className="bg-muted/40">
               <TableCell className="text-[12px] font-medium text-ink">Total</TableCell>
               <TableCell className="text-right text-[12px] font-medium text-ink">{int(totals.clients)}</TableCell>
-              <TableCell className="text-right text-[12px] font-medium text-ink">{int(totals.polizas)}</TableCell>
-              <TableCell className="text-right text-[12px] font-medium text-ink">{int(totals.siniestros)}</TableCell>
+              <TableCell className="text-right text-[12px] font-medium text-ink">{int(totals.policies)}</TableCell>
+              <TableCell className="text-right text-[12px] font-medium text-ink">{int(totals.claims)}</TableCell>
               <TableCell colSpan={2} />
             </TableRow>
           )}

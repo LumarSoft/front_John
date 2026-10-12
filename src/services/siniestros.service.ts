@@ -154,10 +154,10 @@ export interface AdminSiniestrosPage {
 }
 
 export interface AdminSiniestrosStats {
-  pendientes: number
-  enProceso: number
-  resueltos: number
-  sinNroCompania: number
+  pending: number
+  inProgress: number
+  resolved: number
+  withoutInsurerNumber: number
 }
 
 function buildSiniestrosQuery(params: AdminSiniestrosQuery): string {

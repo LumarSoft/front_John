@@ -24,7 +24,7 @@ const TIPO_LABELS: Record<SiniestroTipo, string> = {
 function polizaLabel(p: PolizaListItem): string {
   const subject = p.vehicle
     ? [p.vehicle.brand, p.vehicle.model, p.vehicle.licensePlate].filter(Boolean).join(' ')
-    : (p.bien?.descripcion?.split(' - DNI:')[0].trim() ?? '')
+    : (p.insuredItem?.description?.split(' - DNI:')[0].trim() ?? '')
   return `${p.certificateNumber}${subject ? ` · ${subject}` : ''}`
 }
 

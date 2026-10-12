@@ -35,7 +35,7 @@ function polizaSubject(p: PolizaListItem): string {
   if (p.vehicle) {
     return [p.vehicle.brand, p.vehicle.model].filter(Boolean).join(' ') || `Póliza ${p.certificateNumber}`
   }
-  if (p.bien?.descripcion) return p.bien.descripcion.split(' - DNI:')[0].trim()
+  if (p.insuredItem?.description) return p.insuredItem.description.split(' - DNI:')[0].trim()
   return `Póliza ${p.certificateNumber}`
 }
 
@@ -55,7 +55,7 @@ const DOC_ICONS: Record<string, React.ElementType> = {
 }
 
 function DocumentoRow({ doc }: { doc: Documento }) {
-  const Icon = DOC_ICONS[doc.codigo] ?? FileText
+  const Icon = DOC_ICONS[doc.code] ?? FileText
   return (
     <a
       href={doc.url}
@@ -67,8 +67,8 @@ function DocumentoRow({ doc }: { doc: Documento }) {
         <Icon className="h-4 w-4 text-ink-3" />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="truncate text-[13.5px] font-medium text-ink">{doc.nombre}</p>
-        {doc.codigo ? <p className="text-[11.5px] text-muted-foreground">Código {doc.codigo}</p> : null}
+        <p className="truncate text-[13.5px] font-medium text-ink">{doc.name}</p>
+        {doc.code ? <p className="text-[11.5px] text-muted-foreground">Código {doc.code}</p> : null}
       </div>
       <Download className="h-4 w-4 shrink-0 text-muted-foreground transition-colors group-hover:text-ember" />
     </a>
@@ -152,7 +152,7 @@ function PolizaAccordion({ poliza }: { poliza: PolizaListItem }) {
             ) : (
               <div className="flex flex-col gap-2">
                 {state.docs.map(doc => (
-                  <DocumentoRow key={doc.codigo} doc={doc} />
+                  <DocumentoRow key={doc.code} doc={doc} />
                 ))}
               </div>
             ))}

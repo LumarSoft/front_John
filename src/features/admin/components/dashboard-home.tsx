@@ -41,7 +41,7 @@ function buildKpis(data: DashboardData): Kpi[] {
     {
       key: 'asegurados',
       label: 'Asegurados',
-      value: String(kpis.asegurados),
+      value: String(kpis.insuredClients),
       hint: 'Clientes activos',
       icon: Users,
       tone: 'ember',
@@ -49,7 +49,7 @@ function buildKpis(data: DashboardData): Kpi[] {
     {
       key: 'solicitudes',
       label: 'Solicitudes nuevas',
-      value: String(kpis.solicitudesNuevas),
+      value: String(kpis.newRequests),
       hint: 'Sin contactar todavía',
       icon: FileText,
       tone: 'emerald',
@@ -57,15 +57,15 @@ function buildKpis(data: DashboardData): Kpi[] {
     {
       key: 'deuda',
       label: 'Deuda por cobrar',
-      value: formatCurrency(kpis.montoDeudaTotal),
-      hint: `${kpis.cuotasVencidas} cuotas vencidas`,
+      value: formatCurrency(kpis.totalDebt),
+      hint: `${kpis.overdueInstallments} cuotas vencidas`,
       icon: Wallet,
       tone: 'red',
     },
     {
       key: 'siniestros',
       label: 'Siniestros abiertos',
-      value: String(kpis.siniestrosAbiertos),
+      value: String(kpis.openClaims),
       hint: 'Pendientes o en proceso',
       icon: ShieldAlert,
       tone: 'amber',

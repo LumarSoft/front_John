@@ -3,7 +3,7 @@
 import { Bar, BarChart, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { Card, CardContent, CardHeader, CardTitle } from '@/src/components/ui/card'
 import { formatCurrency } from '@/src/features/admin/lib/asegurados-ui'
-import type { DashboardData, RenovacionPoint } from '@/src/types/api/dashboard'
+import type { DashboardData, RenewalPoint } from '@/src/types/api/dashboard'
 
 // Brand-aligned, semantically intuitive palette: green = healthy, amber = warning, red = problem.
 const COLORS = {
@@ -57,7 +57,7 @@ function ChartTooltip({ active, payload, label, suffix }: ChartTooltipProps) {
   )
 }
 
-function RenovacionesTooltip({ active, payload }: { active?: boolean; payload?: { payload: RenovacionPoint }[] }) {
+function RenovacionesTooltip({ active, payload }: { active?: boolean; payload?: { payload: RenewalPoint }[] }) {
   if (!active || !payload?.length) return null
   const point = payload[0].payload
   return (
@@ -69,7 +69,7 @@ function RenovacionesTooltip({ active, payload }: { active?: boolean; payload?: 
       </div>
       <div className="flex items-center gap-3">
         <span className="text-muted-foreground">Prima</span>
-        <span className="ml-auto font-medium text-ink">{formatCurrency(point.prima)}</span>
+        <span className="ml-auto font-medium text-ink">{formatCurrency(point.premium)}</span>
       </div>
     </div>
   )
@@ -170,34 +170,34 @@ function Bars({ data, empty }: { data: Slice[]; empty: string }) {
 
 export function DashboardCharts({ data }: { data: DashboardData }) {
   const cartera: Slice[] = [
-    { name: 'Vigentes', value: data.cartera.vigentes, color: COLORS.emerald },
-    { name: 'Por vencer', value: data.cartera.porVencer, color: COLORS.amber },
-    { name: 'Vencidas', value: data.cartera.vencidas, color: COLORS.red },
+    { name: 'Vigentes', value: data.portfolio.inForce, color: COLORS.emerald },
+    { name: 'Por vencer', value: data.portfolio.expiringSoon, color: COLORS.amber },
+    { name: 'Vencidas', value: data.portfolio.expired, color: COLORS.red },
   ]
   const estado: Slice[] = [
-    { name: 'Nuevas', value: data.solicitudesPorEstado.nuevas, color: COLORS.ember },
-    { name: 'Contactadas', value: data.solicitudesPorEstado.contactadas, color: COLORS.sky },
-    { name: 'Cerradas', value: data.solicitudesPorEstado.cerradas, color: COLORS.slate },
+    { name: 'Nuevas', value: data.requestsByStatus.new, color: COLORS.ember },
+    { name: 'Contactadas', value: data.requestsByStatus.contacted, color: COLORS.sky },
+    { name: 'Cerradas', value: data.requestsByStatus.closed, color: COLORS.slate },
   ]
   const cobranzas: Slice[] = [
-    { name: 'Pendientes', value: data.cobranzas.pendientes, color: COLORS.amber },
-    { name: 'Vencidas', value: data.cobranzas.vencidas, color: COLORS.red },
-    { name: 'Rechazadas', value: data.cobranzas.rechazadas, color: COLORS.slate },
+    { name: 'Pendientes', value: data.collections.pending, color: COLORS.amber },
+    { name: 'Vencidas', value: data.collections.overdue, color: COLORS.red },
+    { name: 'Rechazadas', value: data.collections.rejected, color: COLORS.slate },
   ]
   const siniestros: Slice[] = [
-    { name: 'Pendiente', value: data.siniestrosPorEstado.pendiente, color: COLORS.red },
-    { name: 'En proceso', value: data.siniestrosPorEstado.enProceso, color: COLORS.sky },
-    { name: 'Resuelto', value: data.siniestrosPorEstado.resuelto, color: COLORS.emerald },
+    { name: 'Pendiente', value: data.claimsByStatus.pending, color: COLORS.red },
+    { name: 'En proceso', value: data.claimsByStatus.inProgress, color: COLORS.sky },
+    { name: 'Resuelto', value: data.claimsByStatus.resolved, color: COLORS.emerald },
   ]
 
-  const { primaEnRiesgo, timeline } = data.renovaciones
+  const { premiumAtRisk, timeline } = data.renewals
   const renovacionesEmpty = timeline.every(p => p.total === 0)
 
   return (
     <div className="mt-5 grid gap-4">
       <ChartCard
         title="Próximas renovaciones"
-        subtitle={`Pólizas que vencen · próximos 6 meses · prima en riesgo ${formatCurrency(primaEnRiesgo)}`}
+        subtitle={`Pólizas que vencen · próximos 6 meses · prima en riesgo ${formatCurrency(premiumAtRisk)}`}
       >
         {renovacionesEmpty ? (
           <EmptyChart message="No hay pólizas por vencer en los próximos 6 meses." />

@@ -88,7 +88,7 @@ function NextExpiryCell({ polizas }: { polizas: AdminClientSummary['policies'] }
 
 function ClientRow({ client, onSelect }: { client: AdminClientSummary; onSelect: () => void }) {
   const status = clientStatus(client.policies)
-  const pagoStatus = cuotaPaymentStatus(client.cuotaStats)
+  const pagoStatus = cuotaPaymentStatus(client.installmentStats)
 
   return (
     <TableRow className="group cursor-pointer hover:bg-ember-soft/40" onClick={onSelect}>
@@ -183,7 +183,7 @@ export function AseguradosView() {
   const { data, isLoading, isError, isFetching } = useAdminClients({
     search,
     riskType,
-    estado,
+    status: estado,
     sort,
     ...scope,
     page,

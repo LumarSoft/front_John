@@ -8,8 +8,8 @@ export interface OrganizationCode {
   isActive: boolean
   /** Portfolio attributed to this code. */
   clients: number
-  polizas: number
-  siniestros: number
+  policies: number
+  claims: number
   /** Null until the code completes its first cartera sync. */
   lastCarteraSyncAt: string | null
 }

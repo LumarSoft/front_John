@@ -29,14 +29,14 @@ export type RiskType = 'auto' | 'moto' | 'home' | 'life' | 'commercial' | 'other
 
 // Non-vehicle policies expose coverage details extracted from rawData.SDTOtrosRiesgosDatos
 export interface BienCobertura {
-  riesgo: string
-  cobertura: string
-  sumaAsegurada: string
+  risk: string
+  coverage: string
+  sumInsured: string
 }
 
 export interface BienData {
-  descripcion: string | null
-  coberturas: BienCobertura[]
+  description: string | null
+  coverages: BienCobertura[]
 }
 
 export interface PolizaListItem {
@@ -46,7 +46,7 @@ export interface PolizaListItem {
   company: string
   riskType: RiskType
   lastMovement: string
-  estadoVigencia: EstadoVigencia
+  validityStatus: EstadoVigencia
   validFrom: string | null
   validTo: string | null
   premium: string | null
@@ -54,7 +54,7 @@ export interface PolizaListItem {
   createdAt: string
   vehicle: Vehiculo | null
   installments: Cuota[]
-  bien: BienData | null
+  insuredItem: BienData | null
 }
 
 export interface PolizaDetail extends PolizaListItem {

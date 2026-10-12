@@ -77,7 +77,7 @@ function DebtPills({ client }: { client: CobranzaCliente }) {
 function MontoCell({ client }: { client: CobranzaCliente }) {
   const isUrgent = client.overdueCount > 0 || client.rejectedCount > 0
   const overdueText = overdueLabel(client.oldestOverdueDate)
-  const owes = parseFloat(client.totalDeuda) > 0
+  const owes = parseFloat(client.totalDebt) > 0
   const unpaidCount = client.overdueCount + client.rejectedCount + client.pendingCount
 
   const amountCls = isUrgent
@@ -95,7 +95,7 @@ function MontoCell({ client }: { client: CobranzaCliente }) {
   return (
     <>
       <div className={`font-display text-[16px] font-semibold leading-none ${amountCls}`}>
-        {owes ? formatCurrency(client.totalDeuda) : `${unpaidCount} sin pagar`}
+        {owes ? formatCurrency(client.totalDebt) : `${unpaidCount} sin pagar`}
       </div>
       <div
         className={`mt-1 text-[10.5px] tracking-[0.1em] ${
@@ -141,7 +141,7 @@ function CobranzaRow({ client, onSelect }: { client: CobranzaCliente; onSelect: 
       <TableCell className="hidden lg:table-cell">
         <div className="flex items-center gap-2.5">
           <div className="flex items-center gap-1">
-            {client.ramos.slice(0, 3).map(ramo => (
+            {client.riskTypes.slice(0, 3).map(ramo => (
               <span
                 key={ramo}
                 title={RISK_LABELS[ramo]}
@@ -252,28 +252,28 @@ function buildKpis(stats: CobranzasStats): Kpi[] {
     {
       key: 'deuda',
       label: 'Deuda total',
-      value: formatCurrency(stats.montoDeudaTotal),
+      value: formatCurrency(stats.totalDebt),
       icon: Wallet,
       tone: 'destructive',
     },
     {
       key: 'deudores',
       label: 'Clientes con deuda',
-      value: String(stats.clientesConDeuda),
+      value: String(stats.clientsWithDebt),
       icon: Users,
       tone: 'neutral',
     },
     {
       key: 'vencidas',
       label: 'Cuotas vencidas',
-      value: String(stats.cuotasVencidas),
+      value: String(stats.overdueInstallments),
       icon: AlertTriangle,
       tone: 'destructive',
     },
     {
       key: 'rechazadas',
       label: 'Cuotas rechazadas',
-      value: String(stats.cuotasRechazadas),
+      value: String(stats.rejectedInstallments),
       icon: Ban,
       tone: 'amber',
     },
@@ -324,13 +324,13 @@ function filterCount(stats: CobranzasStats | undefined, value: CobranzaEstadoFil
   if (!stats) return 0
   switch (value) {
     case 'vencidas':
-      return stats.clientesVencidas
+      return stats.clientsWithOverdue
     case 'rechazadas':
-      return stats.clientesRechazadas
+      return stats.clientsWithRejected
     case 'pendientes':
-      return stats.clientesPendientes
+      return stats.clientsWithPending
     case 'todas':
-      return stats.clientesConDeuda
+      return stats.clientsWithDebt
   }
 }
 
@@ -359,7 +359,7 @@ export function CobranzasView() {
 
   const { data, isLoading, isError, isFetching } = useCobranzas({
     search,
-    estado: filter,
+    status: filter,
     ...scope,
     page,
     pageSize: PAGE_SIZE,
