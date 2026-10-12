@@ -88,7 +88,7 @@ function SiniestroContent({ siniestro }: { siniestro: AdminSiniestroDetail }) {
     )
   }
 
-  const vehiculo = siniestro.policy.vehiculo
+  const vehiculo = siniestro.policy.vehicle
   const vehiculoLabel = vehiculo
     ? [vehiculo.brand, vehiculo.model].filter(Boolean).join(' ') || vehiculo.licensePlate || '—'
     : '—'

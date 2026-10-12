@@ -130,9 +130,9 @@ function SolicitudEditor({
           <div className="flex flex-col gap-4">
             <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
               <Row label="Cobertura elegida" value={data.selectedCoverage} />
-              <Row label="N° presupuesto" value={data.cotizacion.quoteNumber} />
-              <Row label="Vehículo" value={`${data.cotizacion.vehicleType} ${data.cotizacion.manufactureYear}`} />
-              <Row label="CP" value={data.cotizacion.postalCode} />
+              <Row label="N° presupuesto" value={data.quote.quoteNumber} />
+              <Row label="Vehículo" value={`${data.quote.vehicleType} ${data.quote.manufactureYear}`} />
+              <Row label="CP" value={data.quote.postalCode} />
               <Row label="Documento" value={`${data.applicantDocType} ${data.applicantDocNumber}`} />
               <Row label="Dirección" value={data.applicantAddress} />
               <Row label="Pago" value={data.paymentMethod} />
@@ -247,7 +247,7 @@ function fullName(d: { applicantFirstName: string; applicantLastName: string | n
 }
 
 function detailProductType(d: SolicitudDetail): string {
-  return d.kind === 'lead' ? d.productType : d.cotizacion.vehicleType.toLowerCase()
+  return d.kind === 'lead' ? d.productType : d.quote.vehicleType.toLowerCase()
 }
 
 // Readable labels for the fields the WhatsApp bot stores on a quoted-coverage lead.

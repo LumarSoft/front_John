@@ -33,7 +33,7 @@ const PAGE_SIZE = 25
 
 function SiniestroRow({ siniestro, onSelect }: { siniestro: AdminSiniestroDetail; onSelect: () => void }) {
   const fullName = `${siniestro.client.lastName}, ${siniestro.client.firstName}`
-  const vehiculo = siniestro.policy.vehiculo
+  const vehiculo = siniestro.policy.vehicle
   const vehiculoLabel = vehiculo ? [vehiculo.brand, vehiculo.model].filter(Boolean).join(' ') : ''
 
   return (

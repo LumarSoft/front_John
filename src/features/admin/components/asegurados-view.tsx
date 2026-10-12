@@ -30,7 +30,7 @@ import { AseguradosStats } from './asegurados-stats'
 
 const PAGE_SIZE = 20
 
-function PoliciesCell({ polizas }: { polizas: AdminClientSummary['polizas'] }) {
+function PoliciesCell({ polizas }: { polizas: AdminClientSummary['policies'] }) {
   if (polizas.length === 0) {
     return <span className="text-[12.5px] text-faint-2">Sin pólizas</span>
   }
@@ -68,7 +68,7 @@ function PoliciesCell({ polizas }: { polizas: AdminClientSummary['polizas'] }) {
   )
 }
 
-function NextExpiryCell({ polizas }: { polizas: AdminClientSummary['polizas'] }) {
+function NextExpiryCell({ polizas }: { polizas: AdminClientSummary['policies'] }) {
   const expiry = nearestExpiry(polizas.map(p => p.validTo))
   if (!expiry) return <span className="text-[13px] text-faint-2">—</span>
 
@@ -87,7 +87,7 @@ function NextExpiryCell({ polizas }: { polizas: AdminClientSummary['polizas'] })
 }
 
 function ClientRow({ client, onSelect }: { client: AdminClientSummary; onSelect: () => void }) {
-  const status = clientStatus(client.polizas)
+  const status = clientStatus(client.policies)
   const pagoStatus = cuotaPaymentStatus(client.cuotaStats)
 
   return (
@@ -127,7 +127,7 @@ function ClientRow({ client, onSelect }: { client: AdminClientSummary; onSelect:
       </TableCell>
 
       <TableCell>
-        <PoliciesCell polizas={client.polizas} />
+        <PoliciesCell polizas={client.policies} />
       </TableCell>
 
       <TableCell className="hidden sm:table-cell">
@@ -137,7 +137,7 @@ function ClientRow({ client, onSelect }: { client: AdminClientSummary; onSelect:
       </TableCell>
 
       <TableCell className="hidden md:table-cell">
-        <NextExpiryCell polizas={client.polizas} />
+        <NextExpiryCell polizas={client.policies} />
       </TableCell>
 
       <TableCell className="pr-4 text-right">

@@ -52,13 +52,13 @@ export interface PolizaListItem {
   premium: string | null
   paymentMethod: string | null
   createdAt: string
-  vehiculo: Vehiculo | null
-  cuotas: Cuota[]
+  vehicle: Vehiculo | null
+  installments: Cuota[]
   bien: BienData | null
 }
 
 export interface PolizaDetail extends PolizaListItem {
-  cuotas: Cuota[]
+  installments: Cuota[]
 }
 
 // Returns the next pending/overdue cuota, or the last paid one if all are paid

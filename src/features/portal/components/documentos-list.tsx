@@ -32,8 +32,8 @@ const RISK_ICONS: Record<RiskType, React.ElementType> = {
 }
 
 function polizaSubject(p: PolizaListItem): string {
-  if (p.vehiculo) {
-    return [p.vehiculo.brand, p.vehiculo.model].filter(Boolean).join(' ') || `Póliza ${p.certificateNumber}`
+  if (p.vehicle) {
+    return [p.vehicle.brand, p.vehicle.model].filter(Boolean).join(' ') || `Póliza ${p.certificateNumber}`
   }
   if (p.bien?.descripcion) return p.bien.descripcion.split(' - DNI:')[0].trim()
   return `Póliza ${p.certificateNumber}`

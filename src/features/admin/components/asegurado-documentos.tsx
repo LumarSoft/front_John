@@ -71,9 +71,9 @@ function TarjetaCredencial({ poliza, client }: { poliza: AdminPolizaDetail; clie
             <RiskIcon type={poliza.riskType} className="size-4" />
             <span className="text-[11px] font-bold uppercase tracking-[0.14em]">{RISK_LABELS[poliza.riskType]}</span>
           </div>
-          {poliza.vehiculo?.licensePlate && (
+          {poliza.vehicle?.licensePlate && (
             <div className="rounded-lg border border-ember/30 bg-ember/10 px-3 py-1 font-mono text-[13px] font-bold tracking-widest text-ember">
-              {poliza.vehiculo.licensePlate}
+              {poliza.vehicle.licensePlate}
             </div>
           )}
         </div>
@@ -174,28 +174,28 @@ function CertificadoCard({ poliza, client }: { poliza: AdminPolizaDetail; client
               )}
             </section>
 
-            {poliza.vehiculo && (
+            {poliza.vehicle && (
               <section>
                 <div className="mb-1.5 text-[9.5px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
                   Objeto asegurado
                 </div>
                 <div className="text-[13.5px] font-semibold text-ink">
-                  {[poliza.vehiculo.brand, poliza.vehiculo.model].filter(Boolean).join(' ') || '—'}
-                  {poliza.vehiculo.year ? ` (${poliza.vehiculo.year})` : ''}
+                  {[poliza.vehicle.brand, poliza.vehicle.model].filter(Boolean).join(' ') || '—'}
+                  {poliza.vehicle.year ? ` (${poliza.vehicle.year})` : ''}
                 </div>
                 <div className="mt-0.5 flex flex-wrap gap-x-3 gap-y-0.5 text-[11.5px] text-ink-3">
-                  {poliza.vehiculo.licensePlate && <span>Dominio: {poliza.vehiculo.licensePlate}</span>}
-                  {poliza.vehiculo.coverage && <span>Cobertura {poliza.vehiculo.coverage}</span>}
-                  {poliza.vehiculo.type && <span>{poliza.vehiculo.type}</span>}
+                  {poliza.vehicle.licensePlate && <span>Dominio: {poliza.vehicle.licensePlate}</span>}
+                  {poliza.vehicle.coverage && <span>Cobertura {poliza.vehicle.coverage}</span>}
+                  {poliza.vehicle.type && <span>{poliza.vehicle.type}</span>}
                 </div>
-                {poliza.vehiculo.sumInsured && (
+                {poliza.vehicle.sumInsured && (
                   <div className="mt-0.5 text-[11.5px] text-muted-foreground">
-                    Suma asegurada: {formatCurrency(poliza.vehiculo.sumInsured)}
+                    Suma asegurada: {formatCurrency(poliza.vehicle.sumInsured)}
                   </div>
                 )}
-                {poliza.vehiculo.chassisNumber && (
+                {poliza.vehicle.chassisNumber && (
                   <div className="mt-0.5 text-[11px] text-muted-foreground">
-                    Chasis: <span className="font-mono">{poliza.vehiculo.chassisNumber}</span>
+                    Chasis: <span className="font-mono">{poliza.vehicle.chassisNumber}</span>
                   </div>
                 )}
               </section>
@@ -282,7 +282,7 @@ export function AseguradoDocumentosTab({ client }: { client: AdminClientDetail }
   const [format, setFormat] = useState<DocFormat>('credencial')
   const [printDoc, setPrintDoc] = useState<ReactNode>(null)
 
-  if (client.polizas.length === 0) {
+  if (client.policies.length === 0) {
     return (
       <div className="flex flex-col items-center gap-3 py-12 text-center">
         <div className="flex size-12 items-center justify-center rounded-full bg-secondary text-muted-foreground">
@@ -319,7 +319,7 @@ export function AseguradoDocumentosTab({ client }: { client: AdminClientDetail }
       </div>
 
       <div className={format === 'credencial' ? 'grid grid-cols-1 gap-5 sm:grid-cols-2' : 'space-y-5'}>
-        {client.polizas.map(poliza => (
+        {client.policies.map(poliza => (
           <div key={poliza.id} className="space-y-2">
             {format === 'credencial' ? (
               <TarjetaCredencial poliza={poliza} client={client} />

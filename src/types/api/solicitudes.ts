@@ -80,7 +80,7 @@ export interface CotizacionDetail {
   applicantAddress: string
   paymentMethod: string
   createdAt: string
-  cotizacion: { quoteNumber: number; vehicleType: string; manufactureYear: number; postalCode: number }
+  quote: { quoteNumber: number; vehicleType: string; manufactureYear: number; postalCode: number }
 }
 
 export type SolicitudDetail = LeadDetail | CotizacionDetail
