@@ -34,10 +34,13 @@ export const QUERY_KEYS = {
     pricingPlans: ['admin', 'pricing'] as const,
     businessHours: ['admin', 'business-hours'] as const,
     coverageSettings: ['admin', 'coverage-settings'] as const,
+    improvements: ['admin', 'improvements'] as const,
+    improvementsUnseen: ['admin', 'improvements', 'unseen'] as const,
   },
   owner: {
     organizations: ['owner', 'organizations'] as const,
     organization: (id: number) => ['owner', 'organizations', id] as const,
+    improvements: ['owner', 'improvements'] as const,
   },
   pricing: {
     plans: (productType: string) => ['pricing', productType] as const,
