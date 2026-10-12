@@ -116,7 +116,7 @@ function ClientRow({ client, onSelect }: { client: AdminClientSummary; onSelect:
 
       <TableCell className="hidden lg:table-cell">
         <div className="space-y-0.5">
-          <div className="text-[13px] text-ink-3">{client.email}</div>
+          {client.email && <div className="text-[13px] text-ink-3">{client.email}</div>}
           {client.phone && (
             <div className="flex items-center gap-1 text-[12px] text-muted-foreground">
               <Phone className="size-3" />

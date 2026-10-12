@@ -7,7 +7,7 @@ export interface CobranzaCliente {
   firstName: string
   lastName: string
   dni: string
-  email: string
+  email: string | null
   phone: string | null
   ramos: RiskType[]
   dominio: string | null

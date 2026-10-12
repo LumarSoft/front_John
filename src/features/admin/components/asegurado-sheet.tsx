@@ -542,15 +542,17 @@ export function AseguradoSheet({ clientId, onClose, defaultTab = 'polizas' }: As
                         <Phone className="size-4" />
                       </ContactButton>
                     )}
-                    <ContactButton label="Enviar email" href={`mailto:${client.email}`}>
-                      <Mail className="size-4" />
-                    </ContactButton>
+                    {client.email && (
+                      <ContactButton label="Enviar email" href={`mailto:${client.email}`}>
+                        <Mail className="size-4" />
+                      </ContactButton>
+                    )}
                   </div>
                 </TooltipProvider>
               </div>
 
               <div className="mt-5 grid grid-cols-1 gap-x-8 gap-y-3.5 rounded-xl border border-line-2 bg-secondary/30 px-5 py-4 sm:grid-cols-2">
-                <InfoCell icon={Mail} label="Email" value={client.email} />
+                <InfoCell icon={Mail} label="Email" value={client.email ?? '—'} />
                 <InfoCell icon={Phone} label="Teléfono" value={client.phone ?? '—'} />
                 <InfoCell icon={MapPin} label="Ciudad" value={client.city ?? '—'} />
                 <InfoCell icon={User} label="Cliente desde" value={formatDate(client.createdAt)} />
