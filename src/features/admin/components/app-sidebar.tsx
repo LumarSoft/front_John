@@ -13,6 +13,7 @@ import {
   MessageSquare,
   Phone,
   ShieldCheck,
+  Sparkles,
   UserCog,
   Users,
   Wallet,
@@ -45,6 +46,7 @@ import { useNovedadesStats } from '../hooks/use-novedades-stats'
 import { useInboxConversations } from '../hooks/use-inbox-conversations'
 import { useInboxMessageSound } from '../hooks/use-inbox-message-sound'
 import { useNewSolicitudesCount } from '../hooks/use-solicitudes'
+import { useImprovementsUnseenCount } from '../hooks/use-improvements'
 
 interface NavItem {
   label: string
@@ -54,6 +56,8 @@ interface NavItem {
   superAdminOnly?: boolean
   // Only visible to the platform OWNER (Lumar): provision organizations.
   ownerOnly?: boolean
+  // Visible to everyone, the OWNER included (it edits what the others read).
+  everyone?: boolean
 }
 
 const NAV_ITEMS: NavItem[] = [
@@ -67,6 +71,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Usuarios', href: '/admin/usuarios', icon: Users, superAdminOnly: true },
   { label: 'Números', href: '/admin/numeros', icon: Phone, superAdminOnly: true },
   { label: 'Organizaciones', href: '/admin/organizaciones', icon: Building2, ownerOnly: true },
+  { label: 'Mejoras', href: '/admin/mejoras', icon: Sparkles, everyone: true },
   { label: 'Configuración', href: '/admin/configuracion', icon: UserCog },
 ]
 
@@ -89,23 +94,26 @@ export function AppSidebar() {
   useInboxMessageSound(inboxConversations)
   const inboxPending = inboxConversations?.filter(c => c.status === 'pending').length ?? 0
   const { data: solicitudesNuevas = 0 } = useNewSolicitudesCount()
+  const isOwner = profile?.role === 'OWNER'
+  // The OWNER writes the improvements; the "new" count is for the people reading them.
+  const { data: improvementsUnseen } = useImprovementsUnseenCount(!!profile && !isOwner)
 
   // Count of items needing the advisor's attention, per sidebar section.
   const alertCount = (href: string): number => {
     if (href === '/admin/novedades') return novedadesStats?.actionableTotal ?? 0
     if (href === '/admin/solicitudes') return solicitudesNuevas
     if (href === '/admin/inbox') return inboxPending
+    if (href === '/admin/mejoras') return improvementsUnseen?.count ?? 0
     return 0
   }
 
   const initials = profile?.email.slice(0, 2).toUpperCase() ?? 'JP'
-  const isOwner = profile?.role === 'OWNER'
   const isSuperAdmin = profile?.role === 'SUPERADMIN'
   const roleLabel = isOwner ? 'Owner · Lumar' : isSuperAdmin ? 'SuperAdmin' : 'Administrador'
-  // The OWNER's only interface is "Organizaciones": show owner-only items and
-  // nothing else. Everyone else sees their items (SuperAdmin-only hidden for admins).
+  // The OWNER's interface is "Organizaciones" plus the "Mejoras" editor. Everyone
+  // else sees their items (SuperAdmin-only hidden for admins).
   const navItems = isOwner
-    ? NAV_ITEMS.filter(item => item.ownerOnly)
+    ? NAV_ITEMS.filter(item => item.ownerOnly || item.everyone)
     : NAV_ITEMS.filter(item => !item.ownerOnly && (!item.superAdminOnly || isSuperAdmin))
 
   const handleLogout = () => {
