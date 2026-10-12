@@ -115,7 +115,7 @@ function SiniestroContent({ siniestro }: { siniestro: AdminSiniestroDetail }) {
               <Field label="Cliente" value={`${siniestro.client.firstName} ${siniestro.client.lastName}`} />
               <Field label="DNI" value={siniestro.client.dni} />
               <Field label="Teléfono" value={siniestro.client.phone} />
-              <Field label="Email" value={siniestro.client.email} />
+              <Field label="Email" value={siniestro.client.email ?? '—'} />
               <Field label="Póliza" value={`#${siniestro.poliza.certificado} · ${siniestro.poliza.company}`} />
               <Field label="Vehículo" value={vehiculoLabel} />
               <Field label="Fecha del hecho" value={formatDate(siniestro.fecha)} />

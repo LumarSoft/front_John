@@ -18,6 +18,7 @@ import {
 import { Skeleton } from '@/src/components/ui/skeleton'
 import { type RiskType } from '@/src/services/polizas.service'
 import { usePoliza } from '../hooks/use-portal-data'
+import { vigenciaBadge } from '../lib/portal-ui'
 
 // ─── Helpers ────────────────────────────────────────────
 
@@ -105,7 +106,9 @@ export function PolizaDetailView({ id }: { id: number }) {
 
   const Icon = RISK_ICONS[poliza.riskType]
   const v = poliza.vehiculo
-  const vigente = poliza.status.toUpperCase().includes('VIGENTE')
+  // Validity from the dates and the movement, as in the list: `movimiento` is
+  // Triunfo's last movement ("REFACTURACION"), not something to show a client.
+  const badge = vigenciaBadge(poliza)
 
   return (
     <div className="p-6 md:p-8">
@@ -134,10 +137,12 @@ export function PolizaDetailView({ id }: { id: number }) {
                 <span
                   className={[
                     'inline-flex items-center rounded-full px-2 py-[2px] text-[10.5px] font-semibold uppercase tracking-wide border',
-                    vigente ? 'bg-ember-soft text-ember-2 border-ember-ring' : 'bg-canvas-2 text-faint border-line-2',
+                    badge.vigente
+                      ? 'bg-ember-soft text-ember-2 border-ember-ring'
+                      : 'bg-canvas-2 text-faint border-line-2',
                   ].join(' ')}
                 >
-                  {poliza.status}
+                  {badge.label}
                 </span>
               </div>
               {v?.dominio && (

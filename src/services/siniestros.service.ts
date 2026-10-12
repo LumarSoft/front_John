@@ -114,7 +114,7 @@ export interface AdminSiniestroDetail {
     firstName: string
     lastName: string
     dni: string
-    email: string
+    email: string | null
     phone: string | null
   }
   poliza: {

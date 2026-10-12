@@ -29,7 +29,7 @@ export interface AdminCuota {
 
 /**
  * Validity computed by the API from the dates and the Triunfo movement:
- * `status` is the last movement ("REFACTURACION", "ANULA POR VENTA"…), not a
+ * `movimiento` is the last movement ("REFACTURACION", "ANULA POR VENTA"…), not a
  * validity flag, and a cancelled policy keeps its original end date.
  */
 export type EstadoVigencia = 'vigente' | 'proxima' | 'vencida' | 'anulada'
@@ -38,7 +38,7 @@ export interface AdminPolizaSummary {
   id: number
   certificado: string
   riskType: RiskType
-  status: string
+  movimiento: string
   estadoVigencia: EstadoVigencia
   vigenciaDesde: string | null
   vigenciaHasta: string | null
@@ -52,7 +52,7 @@ export interface AdminPolizaDetail {
   suplemento: number
   company: string
   riskType: RiskType
-  status: string
+  movimiento: string
   estadoVigencia: EstadoVigencia
   vigenciaDesde: string | null
   vigenciaHasta: string | null
@@ -73,7 +73,7 @@ export interface AdminClientSummary {
   id: number
   firstName: string
   lastName: string
-  email: string
+  email: string | null
   phone: string | null
   city: string | null
   dni: string
@@ -86,7 +86,7 @@ export interface AdminClientDetail {
   id: number
   firstName: string
   lastName: string
-  email: string
+  email: string | null
   phone: string | null
   city: string | null
   dni: string

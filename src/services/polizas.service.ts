@@ -45,7 +45,7 @@ export interface PolizaListItem {
   suplemento: number
   company: string
   riskType: RiskType
-  status: string
+  movimiento: string
   estadoVigencia: EstadoVigencia
   vigenciaDesde: string | null
   vigenciaHasta: string | null
