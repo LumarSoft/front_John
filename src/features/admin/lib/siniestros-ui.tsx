@@ -11,7 +11,7 @@ export function tipoLabel(tipo: string): string {
   return TIPO_LABELS[tipo] ?? tipo
 }
 
-export const ESTADO_ORDER: SiniestroEstado[] = ['pendiente', 'en_proceso', 'resuelto']
+export const ESTADO_ORDER: SiniestroEstado[] = ['pending', 'in_progress', 'resolved']
 
 interface EstadoMeta {
   label: string
@@ -22,17 +22,17 @@ interface EstadoMeta {
 }
 
 export const ESTADO_META: Record<SiniestroEstado, EstadoMeta> = {
-  pendiente: {
+  pending: {
     label: 'Pendiente',
     badge: 'bg-amber/15 text-amber-700 border-amber/30 dark:text-amber',
     dot: 'bg-amber-500',
   },
-  en_proceso: {
+  in_progress: {
     label: 'En proceso',
     badge: 'bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950/40 dark:text-sky-300 dark:border-sky-900',
     dot: 'bg-sky-500',
   },
-  resuelto: {
+  resolved: {
     label: 'Resuelto',
     badge:
       'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-900',

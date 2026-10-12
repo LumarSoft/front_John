@@ -9,7 +9,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'
 export const SINIESTRO_TIPOS = ['auto', 'hogar', 'robo', 'otro'] as const
 export type SiniestroTipo = (typeof SINIESTRO_TIPOS)[number]
 
-export const SINIESTRO_ESTADOS = ['pendiente', 'en_proceso', 'resuelto'] as const
+export const SINIESTRO_ESTADOS = ['pending', 'in_progress', 'resolved'] as const
 export type SiniestroEstado = (typeof SINIESTRO_ESTADOS)[number]
 
 export interface Adjunto {
@@ -29,22 +29,23 @@ export interface SiniestroPoliza {
 
 export interface Siniestro {
   id: number
-  tipo: SiniestroTipo
-  descripcion: string
-  fecha: string
-  estado: SiniestroEstado
-  adjuntos: Adjunto[] | null
+  type: SiniestroTipo
+  description: string
+  /** When the incident happened (ISO). */
+  occurredAt: string
+  status: SiniestroEstado
+  attachments: Adjunto[] | null
   createdAt: string
   updatedAt: string
-  poliza: SiniestroPoliza
+  policy: SiniestroPoliza
 }
 
 export interface CreateSiniestroInput {
-  polizaId: number
-  tipo: SiniestroTipo
-  descripcion: string
-  fecha: string
-  adjuntos: File[]
+  policyId: number
+  type: SiniestroTipo
+  description: string
+  occurredAt: string
+  attachments: File[]
 }
 
 // Resolves a stored attachment URL (which is API-relative) to an absolute URL.
@@ -66,11 +67,12 @@ export async function fetchSiniestro(id: number): Promise<Siniestro> {
 
 export async function createSiniestro(input: CreateSiniestroInput): Promise<Siniestro> {
   const form = new FormData()
-  form.append('polizaId', String(input.polizaId))
-  form.append('tipo', input.tipo)
-  form.append('descripcion', input.descripcion)
-  form.append('fecha', input.fecha)
-  for (const file of input.adjuntos) {
+  form.append('policyId', String(input.policyId))
+  form.append('type', input.type)
+  form.append('description', input.description)
+  form.append('occurredAt', input.occurredAt)
+  // The upload field keeps its name: it is how the API receives the files.
+  for (const file of input.attachments) {
     form.append('adjuntos', file)
   }
 
@@ -101,12 +103,12 @@ export interface AdminSiniestroVehiculo {
 
 export interface AdminSiniestroDetail {
   id: number
-  tipo: SiniestroTipo
-  descripcion: string
-  fecha: string
-  estado: SiniestroEstado
-  nroSiniestroCompania: string | null
-  adjuntos: Adjunto[] | null
+  type: SiniestroTipo
+  description: string
+  occurredAt: string
+  status: SiniestroEstado
+  insurerClaimNumber: string | null
+  attachments: Adjunto[] | null
   createdAt: string
   updatedAt: string
   client: {
@@ -117,7 +119,7 @@ export interface AdminSiniestroDetail {
     email: string | null
     phone: string | null
   }
-  poliza: {
+  policy: {
     id: number
     certificado: string
     company: string
@@ -127,14 +129,14 @@ export interface AdminSiniestroDetail {
 }
 
 export interface UpdateSiniestroInput {
-  estado?: SiniestroEstado
-  nroSiniestroCompania?: string
+  status?: SiniestroEstado
+  insurerClaimNumber?: string
 }
 
 export type SiniestroEstadoFilter = SiniestroEstado | 'todos'
 
 export interface AdminSiniestrosQuery {
-  estado?: SiniestroEstado
+  status?: SiniestroEstado
   search?: string
   // SuperAdmin section filter: by producer code OR by phone number/sucursal.
   producerCodeId?: number
@@ -160,7 +162,7 @@ export interface AdminSiniestrosStats {
 
 function buildSiniestrosQuery(params: AdminSiniestrosQuery): string {
   const sp = new URLSearchParams()
-  if (params.estado) sp.set('estado', params.estado)
+  if (params.status) sp.set('status', params.status)
   if (params.search?.trim()) sp.set('search', params.search.trim())
   if (params.producerCodeId) sp.set('producerCodeId', String(params.producerCodeId))
   if (params.phoneNumberId) sp.set('phoneNumberId', String(params.phoneNumberId))
