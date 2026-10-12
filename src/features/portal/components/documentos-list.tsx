@@ -33,10 +33,10 @@ const RISK_ICONS: Record<RiskType, React.ElementType> = {
 
 function polizaSubject(p: PolizaListItem): string {
   if (p.vehiculo) {
-    return [p.vehiculo.marca, p.vehiculo.modelo].filter(Boolean).join(' ') || `Póliza ${p.certificado}`
+    return [p.vehiculo.brand, p.vehiculo.model].filter(Boolean).join(' ') || `Póliza ${p.certificateNumber}`
   }
   if (p.bien?.descripcion) return p.bien.descripcion.split(' - DNI:')[0].trim()
-  return `Póliza ${p.certificado}`
+  return `Póliza ${p.certificateNumber}`
 }
 
 // Per-policy lazy-loading state. Documents are fetched only when a policy is first
@@ -110,8 +110,8 @@ function PolizaAccordion({ poliza }: { poliza: PolizaListItem }) {
         <div className="min-w-0 flex-1">
           <p className="font-display text-[15px] font-semibold tracking-[-0.02em] text-ink">{polizaSubject(poliza)}</p>
           <p className="mt-0.5 text-[12px] text-muted-foreground">
-            Póliza {poliza.certificado}
-            {poliza.suplemento > 0 ? ` · Sup. ${poliza.suplemento}` : ''}
+            Póliza {poliza.certificateNumber}
+            {poliza.endorsementNumber > 0 ? ` · Sup. ${poliza.endorsementNumber}` : ''}
           </p>
         </div>
         <ChevronDown

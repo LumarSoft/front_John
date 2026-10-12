@@ -71,9 +71,9 @@ function TarjetaCredencial({ poliza, client }: { poliza: AdminPolizaDetail; clie
             <RiskIcon type={poliza.riskType} className="size-4" />
             <span className="text-[11px] font-bold uppercase tracking-[0.14em]">{RISK_LABELS[poliza.riskType]}</span>
           </div>
-          {poliza.vehiculo?.dominio && (
+          {poliza.vehiculo?.licensePlate && (
             <div className="rounded-lg border border-ember/30 bg-ember/10 px-3 py-1 font-mono text-[13px] font-bold tracking-widest text-ember">
-              {poliza.vehiculo.dominio}
+              {poliza.vehiculo.licensePlate}
             </div>
           )}
         </div>
@@ -86,9 +86,9 @@ function TarjetaCredencial({ poliza, client }: { poliza: AdminPolizaDetail; clie
                 Certificado
               </div>
               <div className="mt-1 font-mono text-[13px] font-semibold text-on-dark">
-                {poliza.certificado}
-                {poliza.suplemento > 0 && (
-                  <span className="ml-1.5 text-on-dark-muted">· Supl. {poliza.suplemento}</span>
+                {poliza.certificateNumber}
+                {poliza.endorsementNumber > 0 && (
+                  <span className="ml-1.5 text-on-dark-muted">· Supl. {poliza.endorsementNumber}</span>
                 )}
               </div>
             </div>
@@ -101,7 +101,7 @@ function TarjetaCredencial({ poliza, client }: { poliza: AdminPolizaDetail; clie
           <div>
             <div className="text-[9px] font-semibold uppercase tracking-[0.16em] text-on-dark-muted/70">Vigencia</div>
             <div className="mt-1 text-[12px] text-on-dark">
-              {formatDate(poliza.vigenciaDesde)} — {formatDate(poliza.vigenciaHasta)}
+              {formatDate(poliza.validFrom)} — {formatDate(poliza.validTo)}
             </div>
           </div>
         </div>
@@ -136,9 +136,9 @@ function CertificadoCard({ poliza, client }: { poliza: AdminPolizaDetail; client
               </div>
             </div>
             <div className="shrink-0 text-right">
-              <div className="font-mono text-[13px] font-bold text-ink">{poliza.certificado}</div>
-              {poliza.suplemento > 0 && (
-                <div className="text-[10.5px] text-muted-foreground">Suplemento {poliza.suplemento}</div>
+              <div className="font-mono text-[13px] font-bold text-ink">{poliza.certificateNumber}</div>
+              {poliza.endorsementNumber > 0 && (
+                <div className="text-[10.5px] text-muted-foreground">Suplemento {poliza.endorsementNumber}</div>
               )}
               <div className="mt-1.5">
                 <PolizaStatusBadge status={status} />
@@ -180,22 +180,22 @@ function CertificadoCard({ poliza, client }: { poliza: AdminPolizaDetail; client
                   Objeto asegurado
                 </div>
                 <div className="text-[13.5px] font-semibold text-ink">
-                  {[poliza.vehiculo.marca, poliza.vehiculo.modelo].filter(Boolean).join(' ') || '—'}
-                  {poliza.vehiculo.anio ? ` (${poliza.vehiculo.anio})` : ''}
+                  {[poliza.vehiculo.brand, poliza.vehiculo.model].filter(Boolean).join(' ') || '—'}
+                  {poliza.vehiculo.year ? ` (${poliza.vehiculo.year})` : ''}
                 </div>
                 <div className="mt-0.5 flex flex-wrap gap-x-3 gap-y-0.5 text-[11.5px] text-ink-3">
-                  {poliza.vehiculo.dominio && <span>Dominio: {poliza.vehiculo.dominio}</span>}
-                  {poliza.vehiculo.cobertura && <span>Cobertura {poliza.vehiculo.cobertura}</span>}
-                  {poliza.vehiculo.tipo && <span>{poliza.vehiculo.tipo}</span>}
+                  {poliza.vehiculo.licensePlate && <span>Dominio: {poliza.vehiculo.licensePlate}</span>}
+                  {poliza.vehiculo.coverage && <span>Cobertura {poliza.vehiculo.coverage}</span>}
+                  {poliza.vehiculo.type && <span>{poliza.vehiculo.type}</span>}
                 </div>
-                {poliza.vehiculo.sumaAsegurada && (
+                {poliza.vehiculo.sumInsured && (
                   <div className="mt-0.5 text-[11.5px] text-muted-foreground">
-                    Suma asegurada: {formatCurrency(poliza.vehiculo.sumaAsegurada)}
+                    Suma asegurada: {formatCurrency(poliza.vehiculo.sumInsured)}
                   </div>
                 )}
-                {poliza.vehiculo.chasis && (
+                {poliza.vehiculo.chassisNumber && (
                   <div className="mt-0.5 text-[11px] text-muted-foreground">
-                    Chasis: <span className="font-mono">{poliza.vehiculo.chasis}</span>
+                    Chasis: <span className="font-mono">{poliza.vehiculo.chassisNumber}</span>
                   </div>
                 )}
               </section>
@@ -208,18 +208,18 @@ function CertificadoCard({ poliza, client }: { poliza: AdminPolizaDetail; client
               <div className="space-y-0.5">
                 <div className="flex items-center gap-1.5 text-[12px] text-ink-3">
                   <span className="text-[10px] uppercase tracking-wide text-muted-foreground">Desde</span>
-                  <span className="font-medium text-ink">{formatDate(poliza.vigenciaDesde)}</span>
+                  <span className="font-medium text-ink">{formatDate(poliza.validFrom)}</span>
                 </div>
                 <div className="flex items-center gap-1.5 text-[12px] text-ink-3">
                   <span className="text-[10px] uppercase tracking-wide text-muted-foreground">Hasta</span>
-                  <span className="font-medium text-ink">{formatDate(poliza.vigenciaHasta)}</span>
+                  <span className="font-medium text-ink">{formatDate(poliza.validTo)}</span>
                 </div>
               </div>
-              {poliza.premio && (
+              {poliza.premium && (
                 <div className="mt-2 inline-flex items-baseline gap-1">
                   <span className="text-[10.5px] text-muted-foreground">Premio</span>
                   <span className="font-display text-[16px] font-semibold text-ink">
-                    {formatCurrency(poliza.premio)}
+                    {formatCurrency(poliza.premium)}
                   </span>
                 </div>
               )}

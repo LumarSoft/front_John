@@ -51,19 +51,19 @@ export function isMotoTipo(tipo: string | null | undefined): boolean {
 }
 
 export function effectiveRiskType(poliza: PolizaListItem): RiskType {
-  return poliza.vehiculo && isMotoTipo(poliza.vehiculo.tipo) ? 'moto' : poliza.riskType
+  return poliza.vehiculo && isMotoTipo(poliza.vehiculo.type) ? 'moto' : poliza.riskType
 }
 
 export function polizaSubject(p: PolizaListItem): string {
   if (p.vehiculo) {
-    return [p.vehiculo.marca, p.vehiculo.modelo].filter(Boolean).join(' ') || `Póliza ${p.certificado}`
+    return [p.vehiculo.brand, p.vehiculo.model].filter(Boolean).join(' ') || `Póliza ${p.certificateNumber}`
   }
   if (p.bien?.descripcion) return p.bien.descripcion.split(' - DNI:')[0].trim()
-  return `Póliza ${p.certificado}`
+  return `Póliza ${p.certificateNumber}`
 }
 
 /** Badge text for a policy and whether it covers today (see EstadoVigencia). */
-export function vigenciaBadge(p: Pick<PolizaListItem, 'estadoVigencia' | 'vigenciaDesde'>): {
+export function vigenciaBadge(p: Pick<PolizaListItem, 'estadoVigencia' | 'validFrom'>): {
   label: string
   vigente: boolean
 } {
@@ -71,7 +71,7 @@ export function vigenciaBadge(p: Pick<PolizaListItem, 'estadoVigencia' | 'vigenc
     case 'vigente':
       return { label: 'Vigente', vigente: true }
     case 'proxima':
-      return { label: p.vigenciaDesde ? `Desde ${formatDate(p.vigenciaDesde)}` : 'Próxima', vigente: false }
+      return { label: p.validFrom ? `Desde ${formatDate(p.validFrom)}` : 'Próxima', vigente: false }
     case 'anulada':
       return { label: 'Anulada', vigente: false }
     default:

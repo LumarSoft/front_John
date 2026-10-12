@@ -3,23 +3,23 @@ import type { EstadoVigencia } from '@/src/types/api/clients'
 
 export interface Vehiculo {
   id: number
-  dominio: string | null
-  marca: string | null
-  modelo: string | null
-  subModelo: string | null
-  anio: number | null
-  tipo: string | null
-  uso: string | null
-  cobertura: string | null
-  sumaAsegurada: string | null
-  ceroKm: boolean
-  chasis: string | null
-  motor: string | null
+  licensePlate: string | null
+  brand: string | null
+  model: string | null
+  version: string | null
+  year: number | null
+  type: string | null
+  usage: string | null
+  coverage: string | null
+  sumInsured: string | null
+  isZeroKm: boolean
+  chassisNumber: string | null
+  engineNumber: string | null
 }
 
 export interface Cuota {
   id: number
-  numeroCuota: number
+  number: number
   amount: string
   dueDate: string | null
   status: 'pending' | 'paid' | 'overdue'
@@ -41,15 +41,15 @@ export interface BienData {
 
 export interface PolizaListItem {
   id: number
-  certificado: string
-  suplemento: number
+  certificateNumber: string
+  endorsementNumber: number
   company: string
   riskType: RiskType
-  movimiento: string
+  lastMovement: string
   estadoVigencia: EstadoVigencia
-  vigenciaDesde: string | null
-  vigenciaHasta: string | null
-  premio: string | null
+  validFrom: string | null
+  validTo: string | null
+  premium: string | null
   paymentMethod: string | null
   createdAt: string
   vehiculo: Vehiculo | null

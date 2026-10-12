@@ -90,7 +90,7 @@ function SiniestroContent({ siniestro }: { siniestro: AdminSiniestroDetail }) {
 
   const vehiculo = siniestro.policy.vehiculo
   const vehiculoLabel = vehiculo
-    ? [vehiculo.marca, vehiculo.modelo].filter(Boolean).join(' ') || vehiculo.dominio || '—'
+    ? [vehiculo.brand, vehiculo.model].filter(Boolean).join(' ') || vehiculo.licensePlate || '—'
     : '—'
 
   return (
@@ -116,7 +116,7 @@ function SiniestroContent({ siniestro }: { siniestro: AdminSiniestroDetail }) {
               <Field label="DNI" value={siniestro.client.dni} />
               <Field label="Teléfono" value={siniestro.client.phone} />
               <Field label="Email" value={siniestro.client.email ?? '—'} />
-              <Field label="Póliza" value={`#${siniestro.policy.certificado} · ${siniestro.policy.company}`} />
+              <Field label="Póliza" value={`#${siniestro.policy.certificateNumber} · ${siniestro.policy.company}`} />
               <Field label="Vehículo" value={vehiculoLabel} />
               <Field label="Fecha del hecho" value={formatDate(siniestro.occurredAt)} />
             </div>

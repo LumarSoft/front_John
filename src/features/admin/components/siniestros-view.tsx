@@ -34,7 +34,7 @@ const PAGE_SIZE = 25
 function SiniestroRow({ siniestro, onSelect }: { siniestro: AdminSiniestroDetail; onSelect: () => void }) {
   const fullName = `${siniestro.client.lastName}, ${siniestro.client.firstName}`
   const vehiculo = siniestro.policy.vehiculo
-  const vehiculoLabel = vehiculo ? [vehiculo.marca, vehiculo.modelo].filter(Boolean).join(' ') : ''
+  const vehiculoLabel = vehiculo ? [vehiculo.brand, vehiculo.model].filter(Boolean).join(' ') : ''
 
   return (
     <TableRow
@@ -75,8 +75,8 @@ function SiniestroRow({ siniestro, onSelect }: { siniestro: AdminSiniestroDetail
           <div className="min-w-0">
             {vehiculoLabel && <div className="truncate text-[13px] text-ink-3">{vehiculoLabel}</div>}
             <div className="text-[11.5px] text-muted-foreground">
-              #{siniestro.policy.certificado}
-              {vehiculo?.dominio ? ` · ${vehiculo.dominio}` : ''}
+              #{siniestro.policy.certificateNumber}
+              {vehiculo?.licensePlate ? ` · ${vehiculo.licensePlate}` : ''}
             </div>
           </div>
         </div>

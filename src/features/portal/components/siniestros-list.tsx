@@ -29,7 +29,7 @@ function SiniestroCard({ siniestro }: { siniestro: Siniestro }) {
             <h3 className="font-display text-[15px] font-semibold tracking-[-0.02em] text-ink">
               {TIPO_LABELS[siniestro.type]} · #{siniestro.id}
             </h3>
-            <p className="mt-0.5 text-[12px] text-muted-foreground">Póliza {siniestro.policy.certificado}</p>
+            <p className="mt-0.5 text-[12px] text-muted-foreground">Póliza {siniestro.policy.certificateNumber}</p>
           </div>
         </div>
         <span

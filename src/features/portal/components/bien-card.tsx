@@ -36,30 +36,30 @@ export function BienCard({ poliza }: { poliza: PolizaListItem }) {
       {v ? (
         <>
           <div className="px-5">
-            {v.subModelo ? (
-              <p className="text-[10.5px] font-semibold uppercase tracking-[0.12em] text-faint">{v.subModelo}</p>
+            {v.version ? (
+              <p className="text-[10.5px] font-semibold uppercase tracking-[0.12em] text-faint">{v.version}</p>
             ) : null}
             <h3 className="mt-0.5 font-display text-[18px] font-bold leading-tight tracking-[-0.025em] text-ink">
-              {[v.marca, v.modelo].filter(Boolean).join(' ') || `Póliza ${poliza.certificado}`}
+              {[v.brand, v.model].filter(Boolean).join(' ') || `Póliza ${poliza.certificateNumber}`}
             </h3>
-            {v.anio ? <p className="mt-0.5 text-[13px] text-faint">{v.anio}</p> : null}
+            {v.year ? <p className="mt-0.5 text-[13px] text-faint">{v.year}</p> : null}
           </div>
-          {v.dominio ? (
+          {v.licensePlate ? (
             <div className="mx-5 mt-4 flex items-center justify-center rounded-xl border-2 border-line-2 bg-canvas py-3">
-              <span className="font-display text-[22px] font-black tracking-[0.25em] text-ink">{v.dominio}</span>
+              <span className="font-display text-[22px] font-black tracking-[0.25em] text-ink">{v.licensePlate}</span>
             </div>
           ) : null}
           <div className="mx-5 mt-4 grid grid-cols-2 gap-3">
-            {v.cobertura ? (
+            {v.coverage ? (
               <div className="rounded-lg bg-canvas-2 px-3 py-2">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-faint">Cobertura</p>
-                <p className="mt-0.5 font-display text-[15px] font-bold text-ink">{v.cobertura}</p>
+                <p className="mt-0.5 font-display text-[15px] font-bold text-ink">{v.coverage}</p>
               </div>
             ) : null}
-            {v.sumaAsegurada ? (
+            {v.sumInsured ? (
               <div className="rounded-lg bg-canvas-2 px-3 py-2">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-faint">Suma asegurada</p>
-                <p className="mt-0.5 font-display text-[13px] font-bold text-ink">{formatCurrency(v.sumaAsegurada)}</p>
+                <p className="mt-0.5 font-display text-[13px] font-bold text-ink">{formatCurrency(v.sumInsured)}</p>
               </div>
             ) : null}
           </div>
@@ -68,7 +68,7 @@ export function BienCard({ poliza }: { poliza: PolizaListItem }) {
         <div className="px-5">
           <p className="text-[10.5px] font-semibold uppercase tracking-[0.12em] text-faint">{RISK_LABELS[ramo]}</p>
           <h3 className="mt-0.5 font-display text-[17px] font-bold leading-tight tracking-[-0.02em] text-ink">
-            {b?.descripcion?.split(' - DNI:')[0].trim() ?? `Póliza ${poliza.certificado}`}
+            {b?.descripcion?.split(' - DNI:')[0].trim() ?? `Póliza ${poliza.certificateNumber}`}
           </h3>
           {b?.descripcion ? (
             <div className="mt-3 flex items-start gap-2">
@@ -87,7 +87,7 @@ export function BienCard({ poliza }: { poliza: PolizaListItem }) {
         <div className="flex items-center justify-between">
           <div>
             <p className="text-[10.5px] font-medium uppercase tracking-[0.09em] text-faint">Vigente hasta</p>
-            <p className="mt-0.5 text-[13px] font-semibold text-ink">{formatDate(poliza.vigenciaHasta)}</p>
+            <p className="mt-0.5 text-[13px] font-semibold text-ink">{formatDate(poliza.validTo)}</p>
           </div>
           <span className="text-[12px] font-medium text-ember-2 group-hover:underline">Ver cobertura →</span>
         </div>

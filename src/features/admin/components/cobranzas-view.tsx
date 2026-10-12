@@ -151,8 +151,8 @@ function CobranzaRow({ client, onSelect }: { client: CobranzaCliente; onSelect: 
               </span>
             ))}
           </div>
-          {client.dominio && (
-            <span className="font-mono text-[12px] font-medium tracking-wider text-ink-3">{client.dominio}</span>
+          {client.licensePlate && (
+            <span className="font-mono text-[12px] font-medium tracking-wider text-ink-3">{client.licensePlate}</span>
           )}
         </div>
       </TableCell>

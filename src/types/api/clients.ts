@@ -2,26 +2,26 @@ export type RiskType = 'auto' | 'home' | 'life' | 'commercial' | 'other'
 
 export interface AdminVehiculo {
   id: number
-  dominio: string | null
-  marca: string | null
-  modelo: string | null
-  subModelo: string | null
-  anio: number | null
-  cobertura: string | null
-  sumaAsegurada: string | null
+  licensePlate: string | null
+  brand: string | null
+  model: string | null
+  version: string | null
+  year: number | null
+  coverage: string | null
+  sumInsured: string | null
 }
 
 export interface AdminVehiculoDetail extends AdminVehiculo {
-  tipo: string | null
-  uso: string | null
-  ceroKm: boolean
-  chasis: string | null
-  motor: string | null
+  type: string | null
+  usage: string | null
+  isZeroKm: boolean
+  chassisNumber: string | null
+  engineNumber: string | null
 }
 
 export interface AdminCuota {
   id: number
-  numeroCuota: number
+  number: number
   amount: string
   dueDate: string | null
   status: 'pending' | 'paid' | 'overdue' | 'rejected'
@@ -36,27 +36,27 @@ export type EstadoVigencia = 'vigente' | 'proxima' | 'vencida' | 'anulada'
 
 export interface AdminPolizaSummary {
   id: number
-  certificado: string
+  certificateNumber: string
   riskType: RiskType
-  movimiento: string
+  lastMovement: string
   estadoVigencia: EstadoVigencia
-  vigenciaDesde: string | null
-  vigenciaHasta: string | null
-  premio: string | null
+  validFrom: string | null
+  validTo: string | null
+  premium: string | null
   vehiculo: AdminVehiculo | null
 }
 
 export interface AdminPolizaDetail {
   id: number
-  certificado: string
-  suplemento: number
+  certificateNumber: string
+  endorsementNumber: number
   company: string
   riskType: RiskType
-  movimiento: string
+  lastMovement: string
   estadoVigencia: EstadoVigencia
-  vigenciaDesde: string | null
-  vigenciaHasta: string | null
-  premio: string | null
+  validFrom: string | null
+  validTo: string | null
+  premium: string | null
   paymentMethod: string | null
   vehiculo: AdminVehiculoDetail | null
   cuotas: AdminCuota[]

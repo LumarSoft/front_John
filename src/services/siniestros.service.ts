@@ -22,7 +22,7 @@ export interface Adjunto {
 
 export interface SiniestroPoliza {
   id: number
-  certificado: string
+  certificateNumber: string
   company: string
   riskType: RiskType
 }
@@ -96,9 +96,9 @@ export async function createSiniestro(input: CreateSiniestroInput): Promise<Sini
 // which rely on the portal token.
 
 export interface AdminSiniestroVehiculo {
-  dominio: string | null
-  marca: string | null
-  modelo: string | null
+  licensePlate: string | null
+  brand: string | null
+  model: string | null
 }
 
 export interface AdminSiniestroDetail {
@@ -121,7 +121,7 @@ export interface AdminSiniestroDetail {
   }
   policy: {
     id: number
-    certificado: string
+    certificateNumber: string
     company: string
     riskType: AdminRiskType
     vehiculo: AdminSiniestroVehiculo | null

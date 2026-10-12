@@ -61,18 +61,18 @@ function matchesEstado(p: PolizaListItem, estado: EstadoFilter): boolean {
   // An upcoming renewal is listed with the current ones.
   if (estado === 'vigente') return p.estadoVigencia === 'vigente' || p.estadoVigencia === 'proxima'
   // por_vencer
-  if (p.estadoVigencia !== 'vigente' || !p.vigenciaHasta) return false
-  return new Date(p.vigenciaHasta) <= new Date(Date.now() + EXPIRING_DAYS * DAY_MS)
+  if (p.estadoVigencia !== 'vigente' || !p.validTo) return false
+  return new Date(p.validTo) <= new Date(Date.now() + EXPIRING_DAYS * DAY_MS)
 }
 
 function matchesSearch(p: PolizaListItem, q: string): boolean {
   const haystack = [
-    p.certificado,
+    p.certificateNumber,
     polizaSubject(p),
-    p.vehiculo?.dominio,
-    p.vehiculo?.marca,
-    p.vehiculo?.modelo,
-    p.vehiculo?.subModelo,
+    p.vehiculo?.licensePlate,
+    p.vehiculo?.brand,
+    p.vehiculo?.model,
+    p.vehiculo?.version,
     RISK_LABELS[effectiveRiskType(p)],
   ]
     .filter(Boolean)
@@ -118,7 +118,7 @@ function CuotasStrip({ cuotas }: { cuotas: Cuota[] }) {
           ) : (
             <Calendar className="h-3.5 w-3.5" />
           )}
-          Próxima: cuota {s.next.numeroCuota} · {formatDate(s.next.dueDate)} · {formatCurrency(s.next.amount)}
+          Próxima: cuota {s.next.number} · {formatDate(s.next.dueDate)} · {formatCurrency(s.next.amount)}
         </div>
       ) : null}
     </div>
@@ -145,9 +145,9 @@ function PolizaRow({ poliza }: { poliza: PolizaListItem }) {
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
           <span className="font-display text-[14.5px] font-semibold text-ink">{polizaSubject(poliza)}</span>
-          {v?.dominio ? (
+          {v?.licensePlate ? (
             <span className="rounded border border-line-2 bg-canvas px-1.5 py-0.5 font-display text-[11px] font-bold tracking-widest text-ink">
-              {v.dominio}
+              {v.licensePlate}
             </span>
           ) : null}
           <span
@@ -166,17 +166,17 @@ function PolizaRow({ poliza }: { poliza: PolizaListItem }) {
           <span className="font-medium uppercase tracking-wide">{RISK_LABELS[ramo]}</span>
           <span className="text-line-2">·</span>
           <span>
-            Póliza {poliza.certificado}
-            {poliza.suplemento > 0 ? ` · Sup. ${poliza.suplemento}` : ''}
+            Póliza {poliza.certificateNumber}
+            {poliza.endorsementNumber > 0 ? ` · Sup. ${poliza.endorsementNumber}` : ''}
           </span>
           <span className="text-line-2">·</span>
-          <span>Vence {formatDate(poliza.vigenciaHasta)}</span>
-          {poliza.premio ? (
+          <span>Vence {formatDate(poliza.validTo)}</span>
+          {poliza.premium ? (
             <>
               <span className="text-line-2">·</span>
               <span className="inline-flex items-center gap-1">
                 <CreditCard className="h-3.5 w-3.5" />
-                {formatCurrency(poliza.premio)}/mes
+                {formatCurrency(poliza.premium)}/mes
               </span>
             </>
           ) : null}

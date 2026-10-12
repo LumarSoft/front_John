@@ -69,7 +69,7 @@ function PoliciesCell({ polizas }: { polizas: AdminClientSummary['polizas'] }) {
 }
 
 function NextExpiryCell({ polizas }: { polizas: AdminClientSummary['polizas'] }) {
-  const expiry = nearestExpiry(polizas.map(p => p.vigenciaHasta))
+  const expiry = nearestExpiry(polizas.map(p => p.validTo))
   if (!expiry) return <span className="text-[13px] text-faint-2">—</span>
 
   const soon = expiry.daysLeft <= 30
