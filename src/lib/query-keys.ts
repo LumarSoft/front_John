@@ -36,11 +36,14 @@ export const QUERY_KEYS = {
     coverageSettings: ['admin', 'coverage-settings'] as const,
     improvements: ['admin', 'improvements'] as const,
     improvementsUnseen: ['admin', 'improvements', 'unseen'] as const,
+    proposals: ['admin', 'improvement-proposals'] as const,
   },
   owner: {
     organizations: ['owner', 'organizations'] as const,
     organization: (id: number) => ['owner', 'organizations', id] as const,
     improvements: ['owner', 'improvements'] as const,
+    proposals: ['owner', 'improvement-proposals'] as const,
+    proposalsNew: ['owner', 'improvement-proposals', 'new'] as const,
   },
   pricing: {
     plans: (productType: string) => ['pricing', productType] as const,
