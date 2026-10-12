@@ -1,23 +1,23 @@
-export interface RenovacionPoint {
+export interface RenewalPoint {
   month: string
   label: string
   total: number
-  prima: string
+  premium: string
 }
 
 export interface DashboardKpis {
-  asegurados: number
-  solicitudesNuevas: number
-  cuotasVencidas: number
-  montoDeudaTotal: string
-  siniestrosAbiertos: number
+  insuredClients: number
+  newRequests: number
+  overdueInstallments: number
+  totalDebt: string
+  openClaims: number
 }
 
 export interface DashboardData {
   kpis: DashboardKpis
-  renovaciones: { primaEnRiesgo: string; timeline: RenovacionPoint[] }
-  cartera: { vigentes: number; porVencer: number; vencidas: number }
-  solicitudesPorEstado: { nuevas: number; contactadas: number; cerradas: number }
-  cobranzas: { pendientes: number; vencidas: number; rechazadas: number }
-  siniestrosPorEstado: { pendiente: number; enProceso: number; resuelto: number }
+  renewals: { premiumAtRisk: string; timeline: RenewalPoint[] }
+  portfolio: { inForce: number; expiringSoon: number; expired: number }
+  requestsByStatus: { new: number; contacted: number; closed: number }
+  collections: { pending: number; overdue: number; rejected: number }
+  claimsByStatus: { pending: number; inProgress: number; resolved: number }
 }

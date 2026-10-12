@@ -9,7 +9,7 @@ export function BienCard({ poliza }: { poliza: PolizaListItem }) {
   const ramo = effectiveRiskType(poliza)
   const Icon = RISK_ICONS[ramo]
   const v = poliza.vehicle
-  const b = poliza.bien
+  const b = poliza.insuredItem
   const { label: estadoLabel, vigente } = vigenciaBadge(poliza)
 
   return (
@@ -68,16 +68,16 @@ export function BienCard({ poliza }: { poliza: PolizaListItem }) {
         <div className="px-5">
           <p className="text-[10.5px] font-semibold uppercase tracking-[0.12em] text-faint">{RISK_LABELS[ramo]}</p>
           <h3 className="mt-0.5 font-display text-[17px] font-bold leading-tight tracking-[-0.02em] text-ink">
-            {b?.descripcion?.split(' - DNI:')[0].trim() ?? `Póliza ${poliza.certificateNumber}`}
+            {b?.description?.split(' - DNI:')[0].trim() ?? `Póliza ${poliza.certificateNumber}`}
           </h3>
-          {b?.descripcion ? (
+          {b?.description ? (
             <div className="mt-3 flex items-start gap-2">
               {ramo === 'home' || ramo === 'commercial' ? (
                 <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-faint" />
               ) : (
                 <User className="mt-0.5 h-3.5 w-3.5 shrink-0 text-faint" />
               )}
-              <p className="text-[12px] leading-snug text-faint">{b.descripcion}</p>
+              <p className="text-[12px] leading-snug text-faint">{b.description}</p>
             </div>
           ) : null}
         </div>

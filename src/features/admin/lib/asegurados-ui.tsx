@@ -28,7 +28,7 @@ export function RiskIcon({ type, className }: { type: RiskType; className?: stri
 export type PolizaEstado = 'vigente' | 'expiring' | 'vencida' | 'anulada' | 'proxima'
 
 type PolizaVigencia = {
-  estadoVigencia: EstadoVigencia
+  validityStatus: EstadoVigencia
   validFrom: string | null
   validTo: string | null
 }
@@ -41,15 +41,15 @@ export interface PolizaStatus {
 
 const EXPIRING_WINDOW_DAYS = 30
 
-/** Badge for a policy, from the API's estadoVigencia plus the days left when in force. */
+/** Badge for a policy, from the API's validityStatus plus the days left when in force. */
 export function polizaStatus(poliza: PolizaVigencia): PolizaStatus {
-  if (poliza.estadoVigencia === 'anulada') return { label: 'Anulada', estado: 'anulada', daysLeft: null }
-  if (poliza.estadoVigencia === 'proxima') {
+  if (poliza.validityStatus === 'anulada') return { label: 'Anulada', estado: 'anulada', daysLeft: null }
+  if (poliza.validityStatus === 'proxima') {
     return { label: `Desde ${formatDate(poliza.validFrom)}`, estado: 'proxima', daysLeft: null }
   }
   const now = new Date()
   const expiry = poliza.validTo ? new Date(poliza.validTo) : null
-  if (poliza.estadoVigencia === 'vencida' || !expiry || expiry < now) {
+  if (poliza.validityStatus === 'vencida' || !expiry || expiry < now) {
     return { label: 'Vencida', estado: 'vencida', daysLeft: null }
   }
   const daysLeft = Math.ceil((expiry.getTime() - now.getTime()) / 86_400_000)
@@ -107,7 +107,7 @@ export function ramoSummary(polizas: AdminPolizaSummary[]): {
     if (!ramos.includes(p.riskType)) ramos.push(p.riskType)
   }
   const dominio = polizas.find(p => p.vehicle?.licensePlate)?.vehicle?.licensePlate ?? null
-  const vigentes = polizas.filter(p => p.estadoVigencia === 'vigente').length
+  const vigentes = polizas.filter(p => p.validityStatus === 'vigente').length
   return { ramos, dominio, vigentes }
 }
 
@@ -155,7 +155,7 @@ export function overdueLabel(dueDate: string | null | undefined): string | null 
 
 interface CobranzaReminderInput {
   firstName: string
-  totalDeuda: string
+  totalDebt: string
   overdueCount: number
   rejectedCount: number
   pendingCount: number
@@ -174,7 +174,7 @@ export function buildCobranzaWhatsappUrl(phone: string, input: CobranzaReminderI
   const detalle = parts.length ? ` (${parts.join(', ')})` : ''
   const message =
     `Hola ${input.firstName}, te escribimos de John Pellegrini Seguros. ` +
-    `Queríamos recordarte que figura un saldo pendiente de ${formatCurrency(input.totalDeuda)}${detalle}. ` +
+    `Queríamos recordarte que figura un saldo pendiente de ${formatCurrency(input.totalDebt)}${detalle}. ` +
     `¿Coordinamos el pago? ¡Gracias!`
   return `https://wa.me/${digits}?text=${encodeURIComponent(message)}`
 }

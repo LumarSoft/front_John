@@ -48,9 +48,9 @@ export interface NovedadesStats {
   actionableTotal: number
   actionableByCategory: Record<MatterCategory, number>
   unreadTotal: number
-  unreadSiniestros: number
+  unreadClaims: number
   unreadHandoff: number
-  unreadBajas: number
+  unreadCancellations: number
 }
 
 export interface NovedadesQuery {

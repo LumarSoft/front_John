@@ -59,10 +59,10 @@ export function computePortalStats(polizas: PolizaListItem[]): PortalStats {
 
   for (const poliza of polizas) {
     // Policy validity (computed by the API: dates + cancellation)
-    if (poliza.estadoVigencia === 'vigente') {
+    if (poliza.validityStatus === 'vigente') {
       vigentes++
       if (poliza.validTo && new Date(poliza.validTo) <= expiringLimit) porVencer++
-    } else if (poliza.estadoVigencia === 'vencida' || poliza.estadoVigencia === 'anulada') {
+    } else if (poliza.validityStatus === 'vencida' || poliza.validityStatus === 'anulada') {
       vencidas++
     }
 

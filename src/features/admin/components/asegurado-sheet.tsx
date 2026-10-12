@@ -81,7 +81,7 @@ function debtorWhatsappUrl(client: AdminClientDetail): string {
   if (debt.totalDeuda <= 0) return whatsappLink(client.phone)
   return buildCobranzaWhatsappUrl(client.phone, {
     firstName: client.firstName,
-    totalDeuda: debt.totalDeuda.toFixed(2),
+    totalDebt: debt.totalDeuda.toFixed(2),
     overdueCount: debt.overdueCount,
     rejectedCount: debt.rejectedCount,
     pendingCount: debt.pendingCount,

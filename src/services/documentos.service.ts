@@ -1,8 +1,8 @@
 import { portalFetch } from './portal-client'
 
 export interface Documento {
-  codigo: string
-  nombre: string
+  code: string
+  name: string
   url: string
 }
 

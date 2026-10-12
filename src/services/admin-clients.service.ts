@@ -5,7 +5,7 @@ function buildListQuery(params: AdminClientsQuery): string {
   const search = new URLSearchParams()
   if (params.search?.trim()) search.set('search', params.search.trim())
   if (params.riskType) search.set('riskType', params.riskType)
-  if (params.estado) search.set('estado', params.estado)
+  if (params.status) search.set('status', params.status)
   if (params.sort) search.set('sort', params.sort)
   if (params.producerCodeId) search.set('producerCodeId', String(params.producerCodeId))
   if (params.phoneNumberId) search.set('phoneNumberId', String(params.phoneNumberId))

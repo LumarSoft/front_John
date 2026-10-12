@@ -32,7 +32,7 @@ function buildStats(data: AdminClientsStats): StatDef[] {
     {
       key: 'vigentes',
       label: 'Pólizas vigentes',
-      value: data.vigentes,
+      value: data.inForce,
       icon: ShieldCheck,
       tone: 'emerald',
       estado: 'vigente',
@@ -40,7 +40,7 @@ function buildStats(data: AdminClientsStats): StatDef[] {
     {
       key: 'porVencer',
       label: 'Por vencer (30d)',
-      value: data.porVencer,
+      value: data.expiringSoon,
       icon: AlertTriangle,
       tone: 'amber',
       estado: 'por_vencer',
@@ -48,12 +48,12 @@ function buildStats(data: AdminClientsStats): StatDef[] {
     {
       key: 'vencidas',
       label: 'Pólizas vencidas',
-      value: data.vencidas,
+      value: data.expired,
       icon: ShieldAlert,
       tone: 'destructive',
       estado: 'vencida',
     },
-    { key: 'cuotas', label: 'Cuotas vencidas', value: data.cuotasVencidas, icon: Wallet, tone: 'destructive' },
+    { key: 'cuotas', label: 'Cuotas vencidas', value: data.overdueInstallments, icon: Wallet, tone: 'destructive' },
   ]
 }
 

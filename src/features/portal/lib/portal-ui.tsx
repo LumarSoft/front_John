@@ -36,11 +36,11 @@ const PERSON_POLICY_RE = /SEPELIO|VIDA|ACCIDENTE|SALUD/i
 export function isBien(poliza: PolizaListItem): boolean {
   if (poliza.riskType === 'life') return false
   if (poliza.vehicle) return true
-  const descripcion = poliza.bien?.descripcion ?? ''
+  const descripcion = poliza.insuredItem?.description ?? ''
   if (/\bDNI:/i.test(descripcion)) return false
   if (PERSON_POLICY_RE.test(descripcion)) return false
-  const coberturas = poliza.bien?.coberturas ?? []
-  if (coberturas.some(c => PERSON_POLICY_RE.test(c.riesgo))) return false
+  const coberturas = poliza.insuredItem?.coverages ?? []
+  if (coberturas.some(c => PERSON_POLICY_RE.test(c.risk))) return false
   return true
 }
 
@@ -58,16 +58,16 @@ export function polizaSubject(p: PolizaListItem): string {
   if (p.vehicle) {
     return [p.vehicle.brand, p.vehicle.model].filter(Boolean).join(' ') || `Póliza ${p.certificateNumber}`
   }
-  if (p.bien?.descripcion) return p.bien.descripcion.split(' - DNI:')[0].trim()
+  if (p.insuredItem?.description) return p.insuredItem.description.split(' - DNI:')[0].trim()
   return `Póliza ${p.certificateNumber}`
 }
 
 /** Badge text for a policy and whether it covers today (see EstadoVigencia). */
-export function vigenciaBadge(p: Pick<PolizaListItem, 'estadoVigencia' | 'validFrom'>): {
+export function vigenciaBadge(p: Pick<PolizaListItem, 'validityStatus' | 'validFrom'>): {
   label: string
   vigente: boolean
 } {
-  switch (p.estadoVigencia) {
+  switch (p.validityStatus) {
     case 'vigente':
       return { label: 'Vigente', vigente: true }
     case 'proxima':

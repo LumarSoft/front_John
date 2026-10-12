@@ -128,7 +128,7 @@ const KPI_TONES: Record<Kpi['tone'], string> = {
 function KpiRow({
   stats,
 }: {
-  stats?: { pendientes: number; enProceso: number; resueltos: number; sinNroCompania: number }
+  stats?: { pending: number; inProgress: number; resolved: number; withoutInsurerNumber: number }
 }) {
   if (!stats) {
     return (
@@ -141,10 +141,16 @@ function KpiRow({
   }
 
   const kpis: Kpi[] = [
-    { key: 'pend', label: 'Pendientes', value: stats.pendientes, icon: Clock, tone: 'amber' },
-    { key: 'proc', label: 'En proceso', value: stats.enProceso, icon: RefreshCw, tone: 'sky' },
-    { key: 'resu', label: 'Resueltos', value: stats.resueltos, icon: CheckCircle2, tone: 'emerald' },
-    { key: 'sinnro', label: 'Sin N° compañía', value: stats.sinNroCompania, icon: FileWarning, tone: 'destructive' },
+    { key: 'pend', label: 'Pendientes', value: stats.pending, icon: Clock, tone: 'amber' },
+    { key: 'proc', label: 'En proceso', value: stats.inProgress, icon: RefreshCw, tone: 'sky' },
+    { key: 'resu', label: 'Resueltos', value: stats.resolved, icon: CheckCircle2, tone: 'emerald' },
+    {
+      key: 'sinnro',
+      label: 'Sin N° compañía',
+      value: stats.withoutInsurerNumber,
+      icon: FileWarning,
+      tone: 'destructive',
+    },
   ]
 
   return (
@@ -177,19 +183,19 @@ const FILTERS: { value: SiniestroEstadoFilter; label: string }[] = [
 ]
 
 function filterCount(
-  stats: { pendientes: number; enProceso: number; resueltos: number } | undefined,
+  stats: { pending: number; inProgress: number; resolved: number } | undefined,
   value: SiniestroEstadoFilter,
 ): number {
   if (!stats) return 0
   switch (value) {
     case 'pending':
-      return stats.pendientes
+      return stats.pending
     case 'in_progress':
-      return stats.enProceso
+      return stats.inProgress
     case 'resolved':
-      return stats.resueltos
+      return stats.resolved
     case 'todos':
-      return stats.pendientes + stats.enProceso + stats.resueltos
+      return stats.pending + stats.inProgress + stats.resolved
   }
 }
 

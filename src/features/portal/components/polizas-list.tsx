@@ -57,11 +57,11 @@ function summarizeCuotas(cuotas: Cuota[]): CuotaSummary {
 }
 
 function matchesEstado(p: PolizaListItem, estado: EstadoFilter): boolean {
-  if (estado === 'vencida') return p.estadoVigencia === 'vencida' || p.estadoVigencia === 'anulada'
+  if (estado === 'vencida') return p.validityStatus === 'vencida' || p.validityStatus === 'anulada'
   // An upcoming renewal is listed with the current ones.
-  if (estado === 'vigente') return p.estadoVigencia === 'vigente' || p.estadoVigencia === 'proxima'
+  if (estado === 'vigente') return p.validityStatus === 'vigente' || p.validityStatus === 'proxima'
   // por_vencer
-  if (p.estadoVigencia !== 'vigente' || !p.validTo) return false
+  if (p.validityStatus !== 'vigente' || !p.validTo) return false
   return new Date(p.validTo) <= new Date(Date.now() + EXPIRING_DAYS * DAY_MS)
 }
 

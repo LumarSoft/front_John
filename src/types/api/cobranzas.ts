@@ -9,13 +9,13 @@ export interface CobranzaCliente {
   dni: string
   email: string | null
   phone: string | null
-  ramos: RiskType[]
+  riskTypes: RiskType[]
   licensePlate: string | null
   pendingCount: number
   overdueCount: number
   rejectedCount: number
   paidCount: number
-  totalDeuda: string
+  totalDebt: string
   oldestOverdueDate: string | null
 }
 
@@ -28,19 +28,19 @@ export interface CobranzasPage {
 }
 
 export interface CobranzasStats {
-  clientesConDeuda: number
-  clientesVencidas: number
-  clientesRechazadas: number
-  clientesPendientes: number
-  cuotasVencidas: number
-  cuotasRechazadas: number
-  cuotasPendientes: number
-  montoDeudaTotal: string
+  clientsWithDebt: number
+  clientsWithOverdue: number
+  clientsWithRejected: number
+  clientsWithPending: number
+  overdueInstallments: number
+  rejectedInstallments: number
+  pendingInstallments: number
+  totalDebt: string
 }
 
 export interface CobranzasQuery {
   search?: string
-  estado?: CobranzaEstadoFilter
+  status?: CobranzaEstadoFilter
   // SuperAdmin section filter: by producer code OR by phone number/sucursal.
   producerCodeId?: number
   phoneNumberId?: number
