@@ -69,10 +69,10 @@ export function SiniestroDetailView({ id }: { id: number }) {
     )
   }
 
-  const TipoIcon = TIPO_ICONS[siniestro.tipo]
-  const meta = ESTADO_META[siniestro.estado]
+  const TipoIcon = TIPO_ICONS[siniestro.type]
+  const meta = ESTADO_META[siniestro.status]
   const EstadoIcon = meta.icon
-  const adjuntos = siniestro.adjuntos ?? []
+  const adjuntos = siniestro.attachments ?? []
 
   return (
     <div className="mx-auto max-w-3xl p-6 md:p-8">
@@ -92,7 +92,7 @@ export function SiniestroDetailView({ id }: { id: number }) {
           </div>
           <div>
             <h1 className="font-display text-[22px] font-semibold tracking-[-0.025em] text-ink">
-              {TIPO_LABELS[siniestro.tipo]} · #{siniestro.id}
+              {TIPO_LABELS[siniestro.type]} · #{siniestro.id}
             </h1>
             <p className="mt-0.5 text-[13px] text-muted-foreground">Denuncia de siniestro</p>
           </div>
@@ -111,7 +111,7 @@ export function SiniestroDetailView({ id }: { id: number }) {
       {/* Progress */}
       <div className="rounded-2xl border border-line-2 bg-paper p-5">
         <p className="text-[12px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">Seguimiento</p>
-        <ProgressBar estado={siniestro.estado} />
+        <ProgressBar estado={siniestro.status} />
       </div>
 
       {/* Meta */}
@@ -121,14 +121,14 @@ export function SiniestroDetailView({ id }: { id: number }) {
             <Shield className="h-3.5 w-3.5" />
             Póliza
           </p>
-          <p className="mt-1 text-[14px] font-semibold text-ink">{siniestro.poliza.certificado}</p>
+          <p className="mt-1 text-[14px] font-semibold text-ink">{siniestro.policy.certificado}</p>
         </div>
         <div className="rounded-xl border border-line-2 bg-paper px-4 py-3">
           <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
             <Calendar className="h-3.5 w-3.5" />
             Fecha del hecho
           </p>
-          <p className="mt-1 text-[14px] font-semibold text-ink">{formatDate(siniestro.fecha)}</p>
+          <p className="mt-1 text-[14px] font-semibold text-ink">{formatDate(siniestro.occurredAt)}</p>
         </div>
         <div className="rounded-xl border border-line-2 bg-paper px-4 py-3">
           <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
@@ -142,7 +142,7 @@ export function SiniestroDetailView({ id }: { id: number }) {
       {/* Descripción */}
       <div className="mt-5 rounded-2xl border border-line-2 bg-paper p-5">
         <p className="text-[12px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">Descripción</p>
-        <p className="mt-2 whitespace-pre-wrap text-[14px] leading-relaxed text-ink">{siniestro.descripcion}</p>
+        <p className="mt-2 whitespace-pre-wrap text-[14px] leading-relaxed text-ink">{siniestro.description}</p>
       </div>
 
       {/* Adjuntos */}

@@ -73,14 +73,14 @@ function AdjuntoCard({ adjunto }: { adjunto: Adjunto }) {
 // there's no state-syncing effect.
 function SiniestroContent({ siniestro }: { siniestro: AdminSiniestroDetail }) {
   const update = useUpdateAdminSiniestro(siniestro.id)
-  const [estado, setEstado] = useState<SiniestroEstado>(siniestro.estado)
-  const [nro, setNro] = useState(siniestro.nroSiniestroCompania ?? '')
+  const [estado, setEstado] = useState<SiniestroEstado>(siniestro.status)
+  const [nro, setNro] = useState(siniestro.insurerClaimNumber ?? '')
 
-  const dirty = estado !== siniestro.estado || nro.trim() !== (siniestro.nroSiniestroCompania ?? '')
+  const dirty = estado !== siniestro.status || nro.trim() !== (siniestro.insurerClaimNumber ?? '')
 
   const handleSave = () => {
     update.mutate(
-      { estado, nroSiniestroCompania: nro.trim() },
+      { status: estado, insurerClaimNumber: nro.trim() },
       {
         onSuccess: () => toast.success('Siniestro actualizado'),
         onError: () => toast.error('No se pudo actualizar el siniestro'),
@@ -88,7 +88,7 @@ function SiniestroContent({ siniestro }: { siniestro: AdminSiniestroDetail }) {
     )
   }
 
-  const vehiculo = siniestro.poliza.vehiculo
+  const vehiculo = siniestro.policy.vehiculo
   const vehiculoLabel = vehiculo
     ? [vehiculo.marca, vehiculo.modelo].filter(Boolean).join(' ') || vehiculo.dominio || '—'
     : '—'
@@ -99,7 +99,7 @@ function SiniestroContent({ siniestro }: { siniestro: AdminSiniestroDetail }) {
       <header className="flex items-start justify-between gap-3 border-b border-line-2 px-6 pb-5 pt-6 pr-12">
         <div className="min-w-0">
           <DialogTitle className="font-display text-[19px] leading-tight tracking-tight text-ink">
-            Siniestro #{siniestro.id} · {tipoLabel(siniestro.tipo)}
+            Siniestro #{siniestro.id} · {tipoLabel(siniestro.type)}
           </DialogTitle>
           <div className="mt-1 text-[12.5px] text-muted-foreground">Recibido el {formatDate(siniestro.createdAt)}</div>
         </div>
@@ -116,27 +116,27 @@ function SiniestroContent({ siniestro }: { siniestro: AdminSiniestroDetail }) {
               <Field label="DNI" value={siniestro.client.dni} />
               <Field label="Teléfono" value={siniestro.client.phone} />
               <Field label="Email" value={siniestro.client.email ?? '—'} />
-              <Field label="Póliza" value={`#${siniestro.poliza.certificado} · ${siniestro.poliza.company}`} />
+              <Field label="Póliza" value={`#${siniestro.policy.certificado} · ${siniestro.policy.company}`} />
               <Field label="Vehículo" value={vehiculoLabel} />
-              <Field label="Fecha del hecho" value={formatDate(siniestro.fecha)} />
+              <Field label="Fecha del hecho" value={formatDate(siniestro.occurredAt)} />
             </div>
           </section>
 
           <section>
             <SectionTitle>Descripción</SectionTitle>
             <p className="whitespace-pre-wrap rounded-xl border border-line-2 bg-paper px-3.5 py-3 text-[13.5px] leading-relaxed text-ink-3">
-              {siniestro.descripcion}
+              {siniestro.description}
             </p>
           </section>
 
-          {siniestro.adjuntos && siniestro.adjuntos.length > 0 && (
+          {siniestro.attachments && siniestro.attachments.length > 0 && (
             <section>
               <SectionTitle>
                 <Paperclip className="size-3" />
-                Adjuntos ({siniestro.adjuntos.length})
+                Adjuntos ({siniestro.attachments.length})
               </SectionTitle>
               <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-                {siniestro.adjuntos.map(a => (
+                {siniestro.attachments.map(a => (
                   <AdjuntoCard key={a.filename} adjunto={a} />
                 ))}
               </div>

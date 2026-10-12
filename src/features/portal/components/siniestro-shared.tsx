@@ -24,21 +24,21 @@ export interface EstadoMeta {
 }
 
 export const ESTADO_META: Record<SiniestroEstado, EstadoMeta> = {
-  pendiente: {
+  pending: {
     label: 'Pendiente',
     progress: 1 / 3,
     icon: Clock,
     chipClass: 'bg-amber-50 text-amber-700 border-amber-200',
     barClass: 'bg-amber-400',
   },
-  en_proceso: {
+  in_progress: {
     label: 'En proceso',
     progress: 2 / 3,
     icon: Loader,
     chipClass: 'bg-blue-50 text-blue-700 border-blue-200',
     barClass: 'bg-blue-400',
   },
-  resuelto: {
+  resolved: {
     label: 'Resuelto',
     progress: 1,
     icon: CheckCircle2,
@@ -48,9 +48,9 @@ export const ESTADO_META: Record<SiniestroEstado, EstadoMeta> = {
 }
 
 export const ESTADO_STEPS: { key: SiniestroEstado; label: string }[] = [
-  { key: 'pendiente', label: 'Recibida' },
-  { key: 'en_proceso', label: 'En proceso' },
-  { key: 'resuelto', label: 'Resuelta' },
+  { key: 'pending', label: 'Recibida' },
+  { key: 'in_progress', label: 'En proceso' },
+  { key: 'resolved', label: 'Resuelta' },
 ]
 
 export function formatDate(iso: string | null): string {

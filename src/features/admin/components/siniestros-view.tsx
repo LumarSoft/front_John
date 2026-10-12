@@ -33,7 +33,7 @@ const PAGE_SIZE = 25
 
 function SiniestroRow({ siniestro, onSelect }: { siniestro: AdminSiniestroDetail; onSelect: () => void }) {
   const fullName = `${siniestro.client.lastName}, ${siniestro.client.firstName}`
-  const vehiculo = siniestro.poliza.vehiculo
+  const vehiculo = siniestro.policy.vehiculo
   const vehiculoLabel = vehiculo ? [vehiculo.marca, vehiculo.modelo].filter(Boolean).join(' ') : ''
 
   return (
@@ -67,15 +67,15 @@ function SiniestroRow({ siniestro, onSelect }: { siniestro: AdminSiniestroDetail
       <TableCell className="hidden md:table-cell">
         <div className="flex items-center gap-2">
           <span
-            title={RISK_LABELS[siniestro.poliza.riskType]}
+            title={RISK_LABELS[siniestro.policy.riskType]}
             className="flex size-6 items-center justify-center rounded-md border border-line-2 bg-secondary/60 text-ink-3"
           >
-            <RiskIcon type={siniestro.poliza.riskType} className="size-3.5" />
+            <RiskIcon type={siniestro.policy.riskType} className="size-3.5" />
           </span>
           <div className="min-w-0">
             {vehiculoLabel && <div className="truncate text-[13px] text-ink-3">{vehiculoLabel}</div>}
             <div className="text-[11.5px] text-muted-foreground">
-              #{siniestro.poliza.certificado}
+              #{siniestro.policy.certificado}
               {vehiculo?.dominio ? ` · ${vehiculo.dominio}` : ''}
             </div>
           </div>
@@ -83,18 +83,18 @@ function SiniestroRow({ siniestro, onSelect }: { siniestro: AdminSiniestroDetail
       </TableCell>
 
       <TableCell>
-        <div className="text-[13px] text-ink-3">{tipoLabel(siniestro.tipo)}</div>
-        <div className="text-[11.5px] text-muted-foreground">{formatDate(siniestro.fecha)}</div>
+        <div className="text-[13px] text-ink-3">{tipoLabel(siniestro.type)}</div>
+        <div className="text-[11.5px] text-muted-foreground">{formatDate(siniestro.occurredAt)}</div>
       </TableCell>
 
       <TableCell>
-        <EstadoBadge estado={siniestro.estado} />
+        <EstadoBadge estado={siniestro.status} />
       </TableCell>
 
       <TableCell className="pr-5 text-right">
         <div className="flex items-center justify-end gap-2">
-          {siniestro.nroSiniestroCompania ? (
-            <span className="font-mono text-[12.5px] text-ink-3">{siniestro.nroSiniestroCompania}</span>
+          {siniestro.insurerClaimNumber ? (
+            <span className="font-mono text-[12.5px] text-ink-3">{siniestro.insurerClaimNumber}</span>
           ) : (
             <span className="inline-flex items-center gap-1 text-[11.5px] text-amber-700 dark:text-amber">
               <FileWarning className="size-3.5" />
@@ -170,9 +170,9 @@ function KpiRow({
 // ─── Segmented filter ───────────────────────────────────────────────────────────
 
 const FILTERS: { value: SiniestroEstadoFilter; label: string }[] = [
-  { value: 'pendiente', label: 'Pendientes' },
-  { value: 'en_proceso', label: 'En proceso' },
-  { value: 'resuelto', label: 'Resueltos' },
+  { value: 'pending', label: 'Pendientes' },
+  { value: 'in_progress', label: 'En proceso' },
+  { value: 'resolved', label: 'Resueltos' },
   { value: 'todos', label: 'Todos' },
 ]
 
@@ -182,11 +182,11 @@ function filterCount(
 ): number {
   if (!stats) return 0
   switch (value) {
-    case 'pendiente':
+    case 'pending':
       return stats.pendientes
-    case 'en_proceso':
+    case 'in_progress':
       return stats.enProceso
-    case 'resuelto':
+    case 'resolved':
       return stats.resueltos
     case 'todos':
       return stats.pendientes + stats.enProceso + stats.resueltos
@@ -198,7 +198,7 @@ function filterCount(
 export function SiniestrosView() {
   const [searchInput, setSearchInput] = useState('')
   const search = useDebouncedValue(searchInput, 350)
-  const [filter, setFilter] = useState<SiniestroEstadoFilter>('pendiente')
+  const [filter, setFilter] = useState<SiniestroEstadoFilter>('pending')
   const [scope, setScope] = useState<ScopeFilterValue>({})
   const [page, setPage] = useState(1)
   const [selectedId, setSelectedId] = useState<number | null>(null)
@@ -218,7 +218,7 @@ export function SiniestrosView() {
 
   const { data, isLoading, isError, isFetching } = useAdminSiniestros({
     search,
-    estado: filter === 'todos' ? undefined : filter,
+    status: filter === 'todos' ? undefined : filter,
     ...scope,
     page,
     pageSize: PAGE_SIZE,

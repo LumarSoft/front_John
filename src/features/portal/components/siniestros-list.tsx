@@ -10,10 +10,10 @@ import { TIPO_ICONS, TIPO_LABELS, ESTADO_META, ProgressBar, formatDate } from '.
 // ─── Siniestro card ──────────────────────────────────────
 
 function SiniestroCard({ siniestro }: { siniestro: Siniestro }) {
-  const TipoIcon = TIPO_ICONS[siniestro.tipo]
-  const meta = ESTADO_META[siniestro.estado]
+  const TipoIcon = TIPO_ICONS[siniestro.type]
+  const meta = ESTADO_META[siniestro.status]
   const EstadoIcon = meta.icon
-  const adjuntosCount = siniestro.adjuntos?.length ?? 0
+  const adjuntosCount = siniestro.attachments?.length ?? 0
 
   return (
     <Link
@@ -27,9 +27,9 @@ function SiniestroCard({ siniestro }: { siniestro: Siniestro }) {
           </div>
           <div>
             <h3 className="font-display text-[15px] font-semibold tracking-[-0.02em] text-ink">
-              {TIPO_LABELS[siniestro.tipo]} · #{siniestro.id}
+              {TIPO_LABELS[siniestro.type]} · #{siniestro.id}
             </h3>
-            <p className="mt-0.5 text-[12px] text-muted-foreground">Póliza {siniestro.poliza.certificado}</p>
+            <p className="mt-0.5 text-[12px] text-muted-foreground">Póliza {siniestro.policy.certificado}</p>
           </div>
         </div>
         <span
@@ -43,12 +43,12 @@ function SiniestroCard({ siniestro }: { siniestro: Siniestro }) {
         </span>
       </div>
 
-      <p className="mt-3 line-clamp-2 text-[13px] text-ink-3 leading-snug">{siniestro.descripcion}</p>
+      <p className="mt-3 line-clamp-2 text-[13px] text-ink-3 leading-snug">{siniestro.description}</p>
 
       <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] text-faint">
         <span className="inline-flex items-center gap-1">
           <Calendar className="h-3.5 w-3.5" />
-          Hecho del {formatDate(siniestro.fecha)}
+          Hecho del {formatDate(siniestro.occurredAt)}
         </span>
         {adjuntosCount > 0 && (
           <span className="inline-flex items-center gap-1">
@@ -58,7 +58,7 @@ function SiniestroCard({ siniestro }: { siniestro: Siniestro }) {
         )}
       </div>
 
-      <ProgressBar estado={siniestro.estado} />
+      <ProgressBar estado={siniestro.status} />
     </Link>
   )
 }

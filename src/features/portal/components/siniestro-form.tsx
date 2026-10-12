@@ -104,11 +104,11 @@ export function SiniestroForm() {
     setSubmitting(true)
     try {
       await createSiniestro({
-        polizaId: Number(polizaId),
-        tipo,
-        descripcion: descripcion.trim(),
-        fecha,
-        adjuntos: files,
+        policyId: Number(polizaId),
+        type: tipo,
+        description: descripcion.trim(),
+        occurredAt: fecha,
+        attachments: files,
       })
       await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.portal.siniestros })
       router.push('/portal/siniestros')
