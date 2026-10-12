@@ -106,7 +106,7 @@ export function ramoSummary(polizas: AdminPolizaSummary[]): {
   for (const p of polizas) {
     if (!ramos.includes(p.riskType)) ramos.push(p.riskType)
   }
-  const dominio = polizas.find(p => p.vehiculo?.licensePlate)?.vehiculo?.licensePlate ?? null
+  const dominio = polizas.find(p => p.vehicle?.licensePlate)?.vehicle?.licensePlate ?? null
   const vigentes = polizas.filter(p => p.estadoVigencia === 'vigente').length
   return { ramos, dominio, vigentes }
 }

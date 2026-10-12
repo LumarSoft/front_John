@@ -124,7 +124,7 @@ export interface AdminSiniestroDetail {
     certificateNumber: string
     company: string
     riskType: AdminRiskType
-    vehiculo: AdminSiniestroVehiculo | null
+    vehicle: AdminSiniestroVehiculo | null
   }
 }
 

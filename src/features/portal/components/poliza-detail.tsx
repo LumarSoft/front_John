@@ -105,7 +105,7 @@ export function PolizaDetailView({ id }: { id: number }) {
   }
 
   const Icon = RISK_ICONS[poliza.riskType]
-  const v = poliza.vehiculo
+  const v = poliza.vehicle
   // Validity from the dates and the movement, as in the list: `movimiento` is
   // Triunfo's last movement ("REFACTURACION"), not something to show a client.
   const badge = vigenciaBadge(poliza)
@@ -193,7 +193,7 @@ export function PolizaDetailView({ id }: { id: number }) {
       </div>
 
       {/* Cuotas */}
-      {poliza.cuotas.length > 0 && (
+      {poliza.installments.length > 0 && (
         <div className="mt-5 rounded-2xl border border-line-2 bg-paper p-5">
           <h2 className="mb-4 font-display text-[13.5px] font-semibold tracking-[-0.01em] text-ink">Cuotas</h2>
           <div className="overflow-x-auto">
@@ -215,7 +215,7 @@ export function PolizaDetailView({ id }: { id: number }) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-line">
-                {poliza.cuotas.map(c => {
+                {poliza.installments.map(c => {
                   const st = CUOTA_STATUS_LABELS[c.status] ?? CUOTA_STATUS_LABELS.pending
                   return (
                     <tr key={c.id}>

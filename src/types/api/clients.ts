@@ -43,7 +43,7 @@ export interface AdminPolizaSummary {
   validFrom: string | null
   validTo: string | null
   premium: string | null
-  vehiculo: AdminVehiculo | null
+  vehicle: AdminVehiculo | null
 }
 
 export interface AdminPolizaDetail {
@@ -58,8 +58,8 @@ export interface AdminPolizaDetail {
   validTo: string | null
   premium: string | null
   paymentMethod: string | null
-  vehiculo: AdminVehiculoDetail | null
-  cuotas: AdminCuota[]
+  vehicle: AdminVehiculoDetail | null
+  installments: AdminCuota[]
 }
 
 export interface AdminCuotaStats {
@@ -78,7 +78,7 @@ export interface AdminClientSummary {
   city: string | null
   dni: string
   createdAt: string
-  polizas: AdminPolizaSummary[]
+  policies: AdminPolizaSummary[]
   cuotaStats: AdminCuotaStats
 }
 
@@ -91,7 +91,7 @@ export interface AdminClientDetail {
   city: string | null
   dni: string
   createdAt: string
-  polizas: AdminPolizaDetail[]
+  policies: AdminPolizaDetail[]
 }
 
 export type ClientEstadoFilter = 'vigente' | 'por_vencer' | 'vencida' | 'sin_polizas'

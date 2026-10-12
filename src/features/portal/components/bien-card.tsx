@@ -8,7 +8,7 @@ import { effectiveRiskType, formatCurrency, formatDate, RISK_ICONS, RISK_LABELS,
 export function BienCard({ poliza }: { poliza: PolizaListItem }) {
   const ramo = effectiveRiskType(poliza)
   const Icon = RISK_ICONS[ramo]
-  const v = poliza.vehiculo
+  const v = poliza.vehicle
   const b = poliza.bien
   const { label: estadoLabel, vigente } = vigenciaBadge(poliza)
 

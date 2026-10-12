@@ -72,7 +72,7 @@ export function computePortalStats(polizas: PolizaListItem[]): PortalStats {
 
     // Cuotas
     let nextPending: Cuota | null = null
-    for (const cuota of poliza.cuotas) {
+    for (const cuota of poliza.installments) {
       if (cuota.status === 'paid') {
         cuotasPagadas++
       } else if (cuota.status === 'overdue') {

@@ -61,7 +61,7 @@ function debtAmount(amount: string): number {
 }
 
 function computeDebt(polizas: AdminPolizaDetail[]): DebtSummary {
-  const cuotas = polizas.flatMap(p => p.cuotas)
+  const cuotas = polizas.flatMap(p => p.installments)
   return {
     totalDeuda: cuotas.filter(c => c.status !== 'paid').reduce((s, c) => s + debtAmount(c.amount), 0),
     overdueCount: cuotas.filter(c => c.status === 'overdue').length,
@@ -76,7 +76,7 @@ function whatsappLink(phone: string): string {
 }
 
 function debtorWhatsappUrl(client: AdminClientDetail): string {
-  const debt = computeDebt(client.polizas)
+  const debt = computeDebt(client.policies)
   if (!client.phone) return ''
   if (debt.totalDeuda <= 0) return whatsappLink(client.phone)
   return buildCobranzaWhatsappUrl(client.phone, {
@@ -123,9 +123,9 @@ function ContactButton({ label, href, accent, external, children }: ContactButto
 
 function PolizaCard({ poliza }: { poliza: AdminPolizaDetail }) {
   const status = polizaStatus(poliza)
-  const paidCount = poliza.cuotas.filter(c => c.status === 'paid').length
-  const overdueCount = poliza.cuotas.filter(c => c.status === 'overdue').length
-  const nextCuota = poliza.cuotas.find(c => c.status === 'pending' || c.status === 'overdue')
+  const paidCount = poliza.installments.filter(c => c.status === 'paid').length
+  const overdueCount = poliza.installments.filter(c => c.status === 'overdue').length
+  const nextCuota = poliza.installments.find(c => c.status === 'pending' || c.status === 'overdue')
 
   return (
     <div className="overflow-hidden rounded-xl border border-line-2 bg-card">
@@ -145,21 +145,21 @@ function PolizaCard({ poliza }: { poliza: AdminPolizaDetail }) {
         <PolizaStatusBadge status={status} />
       </div>
 
-      {poliza.vehiculo && (
+      {poliza.vehicle && (
         <div className="mx-4 mb-3 flex items-start justify-between gap-3 rounded-lg bg-secondary/50 px-3.5 py-3">
           <div className="min-w-0">
             <div className="text-[13.5px] font-medium text-ink">
-              {[poliza.vehiculo.brand, poliza.vehiculo.model].filter(Boolean).join(' ') || 'Vehículo'}
-              {poliza.vehiculo.year ? ` (${poliza.vehiculo.year})` : ''}
+              {[poliza.vehicle.brand, poliza.vehicle.model].filter(Boolean).join(' ') || 'Vehículo'}
+              {poliza.vehicle.year ? ` (${poliza.vehicle.year})` : ''}
             </div>
             <div className="mt-1 flex flex-wrap gap-x-4 gap-y-0.5 text-[11.5px] text-muted-foreground">
-              {poliza.vehiculo.coverage && <span>Cobertura {poliza.vehiculo.coverage}</span>}
-              {poliza.vehiculo.sumInsured && <span>Suma asegurada {formatCurrency(poliza.vehiculo.sumInsured)}</span>}
+              {poliza.vehicle.coverage && <span>Cobertura {poliza.vehicle.coverage}</span>}
+              {poliza.vehicle.sumInsured && <span>Suma asegurada {formatCurrency(poliza.vehicle.sumInsured)}</span>}
             </div>
           </div>
-          {poliza.vehiculo.licensePlate && (
+          {poliza.vehicle.licensePlate && (
             <span className="shrink-0 rounded-md border border-line-strong/40 bg-ink px-2.5 py-1 font-mono text-[12px] font-bold tracking-widest text-on-dark">
-              {poliza.vehiculo.licensePlate}
+              {poliza.vehicle.licensePlate}
             </span>
           )}
         </div>
@@ -188,16 +188,16 @@ function PolizaCard({ poliza }: { poliza: AdminPolizaDetail }) {
         )}
       </dl>
 
-      {poliza.cuotas.length > 0 && (
+      {poliza.installments.length > 0 && (
         <div className="mt-3 border-t border-line-2 bg-secondary/30 px-4 py-3">
           <div className="mb-2 flex items-center justify-between">
             <div className="text-[10.5px] uppercase tracking-[0.1em] text-muted-foreground">Cuotas</div>
             <span className="text-[11.5px] font-medium text-ink-3">
-              {paidCount}/{poliza.cuotas.length} pagas
+              {paidCount}/{poliza.installments.length} pagas
             </span>
           </div>
           <div className="flex flex-wrap gap-1.5">
-            {poliza.cuotas.map(c => (
+            {poliza.installments.map(c => (
               <div
                 key={c.id}
                 className="flex items-center gap-1 rounded-md border border-line-2 bg-background px-2 py-1"
@@ -254,7 +254,7 @@ function cuotaRowClass(status: AdminCuota['status']): string {
 }
 
 function PolizaPagosCard({ poliza }: { poliza: AdminPolizaDetail }) {
-  const allCuotas = poliza.cuotas
+  const allCuotas = poliza.installments
   const overdueCount = allCuotas.filter(c => c.status === 'overdue').length
   const rejectedCount = allCuotas.filter(c => c.status === 'rejected').length
   const paidCount = allCuotas.filter(c => c.status === 'paid').length
@@ -273,8 +273,8 @@ function PolizaPagosCard({ poliza }: { poliza: AdminPolizaDetail }) {
             <span className="text-[13px] font-semibold text-ink">{RISK_LABELS[poliza.riskType]}</span>
             <span className="text-[11px] text-muted-foreground">#{poliza.certificateNumber}</span>
           </div>
-          {poliza.vehiculo?.licensePlate && (
-            <span className="font-mono text-[11px] text-muted-foreground">{poliza.vehiculo.licensePlate}</span>
+          {poliza.vehicle?.licensePlate && (
+            <span className="font-mono text-[11px] text-muted-foreground">{poliza.vehicle.licensePlate}</span>
           )}
         </div>
         <div className="text-right">
@@ -334,14 +334,14 @@ function PolizaPagosCard({ poliza }: { poliza: AdminPolizaDetail }) {
 }
 
 function PagosTab({ client }: { client: AdminClientDetail }) {
-  const polizas = client.polizas
-  const allCuotas = polizas.flatMap(p => p.cuotas)
+  const polizas = client.policies
+  const allCuotas = polizas.flatMap(p => p.installments)
   const totalDeuda = allCuotas.filter(c => c.status !== 'paid').reduce((s, c) => s + debtAmount(c.amount), 0)
   const overdueCount = allCuotas.filter(c => c.status === 'overdue').length
   const rejectedCount = allCuotas.filter(c => c.status === 'rejected').length
   const pendingCount = allCuotas.filter(c => c.status === 'pending').length
   const paidCount = allCuotas.filter(c => c.status === 'paid').length
-  const polizasConCuotas = polizas.filter(p => p.cuotas.length > 0)
+  const polizasConCuotas = polizas.filter(p => p.installments.length > 0)
   const hasUnpaid = overdueCount + rejectedCount + pendingCount > 0
 
   return (
@@ -453,8 +453,8 @@ function InfoCell({ icon: Icon, label, value }: { icon: LucideIcon; label: strin
 export function AseguradoSheet({ clientId, onClose, defaultTab = 'polizas' }: AseguradoSheetProps) {
   const { data: client, isLoading } = useAdminClient(clientId)
   const [tab, setTab] = useState<SheetTab>(defaultTab)
-  const vigentesCount = client?.polizas.filter(p => p.validTo && new Date(p.validTo) >= new Date()).length
-  const debt = client ? computeDebt(client.polizas) : null
+  const vigentesCount = client?.policies.filter(p => p.validTo && new Date(p.validTo) >= new Date()).length
+  const debt = client ? computeDebt(client.policies) : null
 
   return (
     <Dialog
@@ -585,7 +585,7 @@ export function AseguradoSheet({ clientId, onClose, defaultTab = 'polizas' }: As
 
               <div className="min-h-0 flex-1 overflow-y-auto">
                 <TabsContent value="polizas" className="mt-0 px-6 pt-5">
-                  {client.polizas.length === 0 ? (
+                  {client.policies.length === 0 ? (
                     <div className="flex flex-col items-center gap-3 py-10 text-center">
                       <div className="flex size-12 items-center justify-center rounded-full bg-secondary text-muted-foreground">
                         <Shield className="size-5" />
@@ -594,7 +594,7 @@ export function AseguradoSheet({ clientId, onClose, defaultTab = 'polizas' }: As
                     </div>
                   ) : (
                     <div className="space-y-3 pb-6">
-                      {client.polizas.map(p => (
+                      {client.policies.map(p => (
                         <PolizaCard key={p.id} poliza={p} />
                       ))}
                     </div>

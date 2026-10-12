@@ -35,7 +35,7 @@ const PERSON_POLICY_RE = /SEPELIO|VIDA|ACCIDENTE|SALUD/i
 // A "bien" is a physical insured object. Life/sepelio policies insure a person.
 export function isBien(poliza: PolizaListItem): boolean {
   if (poliza.riskType === 'life') return false
-  if (poliza.vehiculo) return true
+  if (poliza.vehicle) return true
   const descripcion = poliza.bien?.descripcion ?? ''
   if (/\bDNI:/i.test(descripcion)) return false
   if (PERSON_POLICY_RE.test(descripcion)) return false
@@ -51,12 +51,12 @@ export function isMotoTipo(tipo: string | null | undefined): boolean {
 }
 
 export function effectiveRiskType(poliza: PolizaListItem): RiskType {
-  return poliza.vehiculo && isMotoTipo(poliza.vehiculo.type) ? 'moto' : poliza.riskType
+  return poliza.vehicle && isMotoTipo(poliza.vehicle.type) ? 'moto' : poliza.riskType
 }
 
 export function polizaSubject(p: PolizaListItem): string {
-  if (p.vehiculo) {
-    return [p.vehiculo.brand, p.vehiculo.model].filter(Boolean).join(' ') || `Póliza ${p.certificateNumber}`
+  if (p.vehicle) {
+    return [p.vehicle.brand, p.vehicle.model].filter(Boolean).join(' ') || `Póliza ${p.certificateNumber}`
   }
   if (p.bien?.descripcion) return p.bien.descripcion.split(' - DNI:')[0].trim()
   return `Póliza ${p.certificateNumber}`

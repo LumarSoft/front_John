@@ -69,10 +69,10 @@ function matchesSearch(p: PolizaListItem, q: string): boolean {
   const haystack = [
     p.certificateNumber,
     polizaSubject(p),
-    p.vehiculo?.licensePlate,
-    p.vehiculo?.brand,
-    p.vehiculo?.model,
-    p.vehiculo?.version,
+    p.vehicle?.licensePlate,
+    p.vehicle?.brand,
+    p.vehicle?.model,
+    p.vehicle?.version,
     RISK_LABELS[effectiveRiskType(p)],
   ]
     .filter(Boolean)
@@ -130,7 +130,7 @@ function CuotasStrip({ cuotas }: { cuotas: Cuota[] }) {
 function PolizaRow({ poliza }: { poliza: PolizaListItem }) {
   const ramo = effectiveRiskType(poliza)
   const Icon = RISK_ICONS[ramo]
-  const v = poliza.vehiculo
+  const v = poliza.vehicle
   const { label: estadoLabel, vigente } = vigenciaBadge(poliza)
 
   return (
@@ -183,7 +183,7 @@ function PolizaRow({ poliza }: { poliza: PolizaListItem }) {
         </div>
 
         <div className="mt-3 max-w-md">
-          <CuotasStrip cuotas={poliza.cuotas} />
+          <CuotasStrip cuotas={poliza.installments} />
         </div>
       </div>
 
