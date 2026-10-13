@@ -89,6 +89,15 @@ export function useChatScroll(messageCount: number) {
     return () => observer.disconnect()
   }, [])
 
+  /** Brings a message to the middle of the view (a search result). */
+  const scrollToMessage = (messageId: number) => {
+    const target = contentRef.current?.querySelector(`[data-message-id="${messageId}"]`)
+    if (!target) return
+    anchoredRef.current = false
+    atBottomRef.current = false
+    target.scrollIntoView({ block: 'center', behavior: 'smooth' })
+  }
+
   const containerProps = {
     ref: containerRef,
     onScroll,
@@ -98,5 +107,5 @@ export function useChatScroll(messageCount: number) {
     onKeyDown: releaseAnchor,
   }
 
-  return { containerProps, contentRef, anchorRef, atBottom, unseen, scrollToBottom }
+  return { containerProps, contentRef, anchorRef, atBottom, unseen, scrollToBottom, scrollToMessage }
 }
