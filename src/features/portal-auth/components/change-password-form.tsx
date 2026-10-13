@@ -1,5 +1,6 @@
 'use client'
 
+import { useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -10,6 +11,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'
 
 export function ChangePasswordForm() {
   const router = useRouter()
+  const queryClient = useQueryClient()
   const [newPassword, setNewPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -55,6 +57,8 @@ export function ChangePasswordForm() {
 
   function handleLogout() {
     clearToken()
+    // The next person to log in on this browser must not see this client's data.
+    queryClient.clear()
     router.push('/portal/login')
   }
 
