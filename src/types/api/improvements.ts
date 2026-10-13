@@ -4,7 +4,7 @@ export const IMPROVEMENT_AREAS: ImprovementArea[] = ['BOT', 'BANDEJA', 'COTIZADO
 
 export const IMPROVEMENT_AREA_LABEL: Record<ImprovementArea, string> = {
   BOT: 'Bot de WhatsApp',
-  BANDEJA: 'Bandeja',
+  BANDEJA: 'Whatsapp',
   COTIZADOR: 'Cotizador',
   PANEL: 'Panel',
   PORTAL: 'Portal de clientes',

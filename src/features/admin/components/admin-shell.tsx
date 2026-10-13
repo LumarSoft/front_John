@@ -14,7 +14,7 @@ const TITLES: Record<string, string> = {
   '/admin': 'Inicio',
   '/admin/novedades': 'Asuntos pendientes',
   '/admin/solicitudes': 'Solicitudes de cotización',
-  '/admin/inbox': 'Bandeja de entrada',
+  '/admin/inbox': 'Whatsapp',
   '/admin/usuarios': 'Usuarios',
   '/admin/organizaciones': 'Organizaciones',
   '/admin/configuracion': 'Configuración',

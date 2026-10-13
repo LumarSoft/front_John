@@ -65,7 +65,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Inicio', href: '/admin', icon: LayoutDashboard },
   { label: 'Asuntos pendientes', href: '/admin/novedades', icon: Bell },
   { label: 'Solicitudes', href: '/admin/solicitudes', icon: ClipboardList },
-  { label: 'Bandeja', href: '/admin/inbox', icon: MessageSquare },
+  { label: 'Whatsapp', href: '/admin/inbox', icon: MessageSquare },
   { label: 'Siniestros', href: '/admin/siniestros', icon: FileWarning },
   { label: 'Asegurados', href: '/admin/asegurados', icon: ShieldCheck },
   { label: 'Cobranzas', href: '/admin/cobranzas', icon: Wallet },
