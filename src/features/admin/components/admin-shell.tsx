@@ -49,17 +49,22 @@ export function AdminShell({ children }: { children: ReactNode }) {
   }
 
   const title = TITLES[pathname] ?? 'Panel'
+  // The Whatsapp section fills the whole screen, like WhatsApp Web, and carries
+  // the menu button in its own header.
+  const fullScreen = pathname === '/admin/inbox'
 
   return (
     <TooltipProvider delayDuration={200}>
       <SidebarProvider>
         <AppSidebar />
         <SidebarInset>
-          <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center gap-2 rounded-t-xl border-b border-line bg-background/85 px-4 backdrop-blur-md">
-            <SidebarTrigger className="-ml-1 text-muted-foreground" />
-            <Separator orientation="vertical" className="mr-1 !h-4" />
-            <span className="font-display text-[14.5px] tracking-[-0.01em] text-ink">{title}</span>
-          </header>
+          {!fullScreen && (
+            <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center gap-2 rounded-t-xl border-b border-line bg-background/85 px-4 backdrop-blur-md">
+              <SidebarTrigger className="-ml-1 text-muted-foreground" />
+              <Separator orientation="vertical" className="mr-1 !h-4" />
+              <span className="font-display text-[14.5px] tracking-[-0.01em] text-ink">{title}</span>
+            </header>
+          )}
           <div className="flex flex-1 flex-col">{children}</div>
         </SidebarInset>
       </SidebarProvider>

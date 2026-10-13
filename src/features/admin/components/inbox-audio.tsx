@@ -1,11 +1,20 @@
 'use client'
 
-import { Pause, Play } from 'lucide-react'
+import { Mic, Pause, Play } from 'lucide-react'
+import { cn } from '@/src/lib/utils'
 import { useAudioPlayer } from '../hooks/use-audio-player'
+import { useAudioWaveform } from '../hooks/use-audio-waveform'
+import { InboxAvatar } from './inbox-avatar'
+import { InboxMessageText } from './inbox-message-text'
+
+// Shown until the waveform is computed, or when the browser cannot decode the file.
+const FLAT_BARS = Array.from({ length: 40 }, () => 0.2)
 
 interface Props {
   src: string
   transcript: string
+  /** Words of an in-chat search to mark in the transcription. */
+  highlight?: string
 }
 
 function clock(seconds: number): string {
@@ -18,16 +27,17 @@ function clock(seconds: number): string {
  * answered. Stored audio is deleted after a retention period, so a missing
  * file falls back to the transcription alone.
  */
-export function InboxAudio({ src, transcript }: Props) {
+export function InboxAudio({ src, transcript, highlight }: Props) {
   const { audioProps, playing, current, duration, unavailable, toggle, seek } = useAudioPlayer()
-  const progress = duration ? (current / duration) * 100 : 0
+  const bars = useAudioWaveform(src) ?? FLAT_BARS
+  const progress = duration ? current / duration : 0
 
   return (
-    <div className="flex w-[300px] max-w-full flex-col gap-1.5">
+    <div className="flex w-[320px] max-w-full flex-col gap-1.5">
       {unavailable ? (
         <span className="text-[13px] italic text-(--wa-text-2)">El audio ya no está disponible.</span>
       ) : (
-        <div className="flex items-center gap-3 pt-1">
+        <div className="flex items-center gap-2.5 pt-1">
           <audio src={src} {...audioProps} />
           <button
             type="button"
@@ -38,28 +48,46 @@ export function InboxAudio({ src, transcript }: Props) {
             {playing ? <Pause className="size-6 fill-current" /> : <Play className="size-6 fill-current" />}
           </button>
           <div className="flex min-w-0 flex-1 flex-col gap-1">
-            <input
-              type="range"
-              min={0}
-              max={duration || 0}
-              step={0.1}
-              value={current}
-              onChange={e => seek(Number(e.target.value))}
-              aria-label="Posición del audio"
-              className="h-1 w-full cursor-pointer appearance-none rounded-full bg-[#c5cbcf] accent-(--wa-green) [&::-webkit-slider-thumb]:size-3 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-(--wa-green)"
-              style={{
-                background: `linear-gradient(to right, var(--wa-green) ${progress}%, #c5cbcf ${progress}%)`,
-              }}
-            />
+            <div className="relative flex h-7 items-center gap-[2px]">
+              {bars.map((height, i) => (
+                <span
+                  key={i}
+                  className={cn(
+                    'w-[3px] flex-1 rounded-full',
+                    (i + 0.5) / bars.length <= progress ? 'bg-(--wa-icon)' : 'bg-[#b4bcc1]',
+                  )}
+                  style={{ height: `${Math.round(height * 100)}%` }}
+                />
+              ))}
+              <span
+                className="pointer-events-none absolute top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-(--wa-green)"
+                style={{ left: `${progress * 100}%` }}
+              />
+              {/* Invisible slider on top of the bars: click or arrow keys to seek. */}
+              <input
+                type="range"
+                min={0}
+                max={duration || 0}
+                step={0.1}
+                value={current}
+                onChange={e => seek(Number(e.target.value))}
+                aria-label="Posición del audio"
+                className="absolute inset-0 size-full cursor-pointer opacity-0"
+              />
+            </div>
             <span className="text-[11px] leading-none text-(--wa-text-2)">
               {clock(playing || current ? current : duration)}
             </span>
           </div>
+          <span className="relative shrink-0">
+            <InboxAvatar className="size-[46px]" />
+            <Mic className="absolute -bottom-0.5 -left-1 size-4 text-(--wa-green)" strokeWidth={2.5} />
+          </span>
         </div>
       )}
       {transcript && (
         <span className="border-l-2 border-black/10 pl-2 text-[13.5px] italic leading-[19px] text-(--wa-text-2)">
-          {transcript}
+          <InboxMessageText text={transcript} highlight={highlight} />
         </span>
       )}
     </div>

@@ -60,4 +60,16 @@ export const inboxService = {
       body: { text },
     })
   },
+
+  /** A photo (JPEG/PNG) or PDF for the customer, with an optional caption. */
+  sendMedia(conversationId: number, file: File, caption: string, token: string): Promise<InboxMessage> {
+    const form = new FormData()
+    form.append('file', file)
+    if (caption.trim()) form.append('caption', caption.trim())
+    return apiRequest<InboxMessage>(`/admin/inbox/${conversationId}/media`, {
+      method: 'POST',
+      token,
+      body: form,
+    })
+  },
 }
