@@ -2,12 +2,13 @@
 
 import { useState } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { Loader2, MessageCircle, MoreVertical, Search, Trash2 } from 'lucide-react'
+import { Loader2, MoreVertical, Search, Trash2 } from 'lucide-react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { inboxService } from '@/src/services/inbox.service'
 import { useAuth } from '../context/auth-context'
 import { Button } from '@/src/components/ui/button'
+import { WhatsAppIcon } from '@/src/components/ui/brand-icons'
 import {
   AlertDialog,
   AlertDialogContent,
@@ -217,9 +218,7 @@ export function InboxView() {
           />
         ) : (
           <div className="flex flex-1 flex-col items-center justify-center gap-5 border-l border-(--wa-line) bg-(--wa-panel) px-6 text-center">
-            <div className="flex size-24 items-center justify-center rounded-full bg-(--wa-surface) text-(--wa-green) shadow-sm">
-              <MessageCircle className="size-11" strokeWidth={1.5} />
-            </div>
+            <WhatsAppIcon className="size-24 text-(--wa-unread)" />
             {selectedId && !isLoading ? (
               <div className="max-w-md">
                 <p className="text-[28px] font-light text-(--wa-text)">No encontramos ese chat</p>
