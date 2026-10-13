@@ -1,6 +1,7 @@
 'use client'
 
-import { createContext, useContext, useSyncExternalStore, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useRef, useSyncExternalStore, type ReactNode } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 
 const TOKEN_STORAGE_KEY = 'admin_token'
 
@@ -53,13 +54,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   )
   const storedToken = useSyncExternalStore(subscribeToken, getTokenSnapshot, () => null)
   const token = hydrated ? storedToken : null
+  const queryClient = useQueryClient()
+  // Cached queries (profile, role, chats, counters) are not keyed by user: a
+  // new session must never start from what the previous one loaded.
+  const sessionTokenRef = useRef<string | null | undefined>(undefined)
+
+  const switchSession = (newToken: string | null) => {
+    queryClient.clear()
+    sessionTokenRef.current = newToken
+    setStoredToken(newToken)
+  }
+
+  // The session can also change in another tab (login there as someone else).
+  useEffect(() => {
+    if (!hydrated) return
+    if (sessionTokenRef.current === undefined) {
+      sessionTokenRef.current = token
+      return
+    }
+    if (sessionTokenRef.current === token) return
+    sessionTokenRef.current = token
+    void queryClient.resetQueries()
+  }, [hydrated, token, queryClient])
 
   const value: AuthContextValue = {
     token,
     isAuthenticated: !!token,
     hydrated,
-    login: (newToken: string) => setStoredToken(newToken),
-    logout: () => setStoredToken(null),
+    login: (newToken: string) => switchSession(newToken),
+    logout: () => switchSession(null),
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

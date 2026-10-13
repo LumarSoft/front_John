@@ -1,5 +1,6 @@
 'use client'
 
+import { useQueryClient } from '@tanstack/react-query'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { LayoutGrid, FileText, AlertCircle, FolderOpen, LogOut } from 'lucide-react'
@@ -28,9 +29,12 @@ function isActive(pathname: string, href: string): boolean {
 export function PortalSidebar() {
   const pathname = usePathname()
   const router = useRouter()
+  const queryClient = useQueryClient()
 
   function handleLogout() {
     clearToken()
+    // The next person to log in on this browser must not see this client's data.
+    queryClient.clear()
     router.push('/portal/login')
   }
 

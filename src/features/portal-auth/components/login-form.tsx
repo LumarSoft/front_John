@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { BrandMark } from '@/src/components/brand-mark'
@@ -8,6 +9,7 @@ import { loginClient, saveToken } from '@/src/services/portal-auth.service'
 
 export function LoginForm() {
   const router = useRouter()
+  const queryClient = useQueryClient()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -20,6 +22,8 @@ export function LoginForm() {
 
     try {
       const { access_token, requiresPasswordChange } = await loginClient({ email, password })
+      // Start the session clean: nothing cached from whoever used this browser before.
+      queryClient.clear()
       saveToken(access_token)
 
       if (requiresPasswordChange) {
