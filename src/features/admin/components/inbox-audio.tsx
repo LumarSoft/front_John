@@ -5,6 +5,7 @@ import { cn } from '@/src/lib/utils'
 import { useAudioPlayer } from '../hooks/use-audio-player'
 import { useAudioWaveform } from '../hooks/use-audio-waveform'
 import { InboxAvatar } from './inbox-avatar'
+import { InboxMessageText } from './inbox-message-text'
 
 // Shown until the waveform is computed, or when the browser cannot decode the file.
 const FLAT_BARS = Array.from({ length: 40 }, () => 0.2)
@@ -12,6 +13,8 @@ const FLAT_BARS = Array.from({ length: 40 }, () => 0.2)
 interface Props {
   src: string
   transcript: string
+  /** Words of an in-chat search to mark in the transcription. */
+  highlight?: string
 }
 
 function clock(seconds: number): string {
@@ -24,7 +27,7 @@ function clock(seconds: number): string {
  * answered. Stored audio is deleted after a retention period, so a missing
  * file falls back to the transcription alone.
  */
-export function InboxAudio({ src, transcript }: Props) {
+export function InboxAudio({ src, transcript, highlight }: Props) {
   const { audioProps, playing, current, duration, unavailable, toggle, seek } = useAudioPlayer()
   const bars = useAudioWaveform(src) ?? FLAT_BARS
   const progress = duration ? current / duration : 0
@@ -84,7 +87,7 @@ export function InboxAudio({ src, transcript }: Props) {
       )}
       {transcript && (
         <span className="border-l-2 border-black/10 pl-2 text-[13.5px] italic leading-[19px] text-(--wa-text-2)">
-          {transcript}
+          <InboxMessageText text={transcript} highlight={highlight} />
         </span>
       )}
     </div>

@@ -22,15 +22,23 @@ export function useInboxActions(conversationId: number | null) {
     onSuccess: invalidate,
   })
 
+  const refreshThread = () => {
+    if (conversationId !== null) {
+      void queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.inbox.messages(conversationId),
+      })
+    }
+  }
+
   const sendMessage = useMutation({
     mutationFn: (text: string) => inboxService.sendMessage(conversationId as number, text, token as string),
-    onSuccess: () => {
-      if (conversationId !== null) {
-        void queryClient.invalidateQueries({
-          queryKey: QUERY_KEYS.inbox.messages(conversationId),
-        })
-      }
-    },
+    onSuccess: refreshThread,
+  })
+
+  const sendMedia = useMutation({
+    mutationFn: ({ file, caption }: { file: File; caption: string }) =>
+      inboxService.sendMedia(conversationId as number, file, caption, token as string),
+    onSuccess: refreshThread,
   })
 
   const updateContact = useMutation({
@@ -39,5 +47,5 @@ export function useInboxActions(conversationId: number | null) {
     onSuccess: invalidate,
   })
 
-  return { takeover, release, sendMessage, updateContact }
+  return { takeover, release, sendMessage, sendMedia, updateContact }
 }
