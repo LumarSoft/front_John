@@ -454,3 +454,19 @@
   background-color: var(--wa-chat-bg);
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' fill='none' stroke='%23000' stroke-opacity='.045' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 22h22a6 6 0 0 1 6 6v12a6 6 0 0 1-6 6H28l-8 6v-6h-2a6 6 0 0 1-6-6V28a6 6 0 0 1 6-6z'/%3E%3Cpath d='M112 14l14 5v10c0 9-6 15-14 18-8-3-14-9-14-18V19z'/%3E%3Cpath d='M66 92h28l6 10v8H60v-8z'/%3E%3Ccircle cx='70' cy='112' r='4'/%3E%3Ccircle cx='90' cy='112' r='4'/%3E%3Cpath d='M128 96l3 7 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z'/%3E%3Cpath d='M22 120a10 10 0 1 0 20 0 10 10 0 1 0-20 0M32 114v6l4 3'/%3E%3Cpath d='M70 40c3-6 13-6 13 2 0 6-13 13-13 13S57 48 57 42c0-8 10-8 13-2z'/%3E%3Cpath d='M118 62h16M126 54v16'/%3E%3Cpath d='M20 80h10M25 75v10'/%3E%3C/svg%3E");
 }
+
+/* Thin grey scrollbars, as in WhatsApp Web. */
+.wa * {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(11, 20, 26, 0.2) transparent;
+}
+
+.wa ::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.wa ::-webkit-scrollbar-thumb {
+  background: rgba(11, 20, 26, 0.2);
+  border-radius: 3px;
+}

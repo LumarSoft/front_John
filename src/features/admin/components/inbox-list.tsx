@@ -1,6 +1,6 @@
 'use client'
 
-import { Camera, ChevronDown, FileText, MessageCircle, Mic, Trash2 } from 'lucide-react'
+import { Camera, ChevronDown, Clock, FileText, Headset, MessageCircle, Mic, Trash2 } from 'lucide-react'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,7 +9,7 @@ import {
 } from '@/src/components/ui/dropdown-menu'
 import { cn } from '@/src/lib/utils'
 import type { InboxConversation, InboxLastMessage } from '@/src/types/api/inbox'
-import { contactDisplayName } from '../lib/inbox-contact'
+import { contactDisplayName, formatPhone } from '../lib/inbox-contact'
 import { isMediaPlaceholder, listTime, plainPreview, senderLabel } from '../lib/inbox-format'
 import { InboxAvatar } from './inbox-avatar'
 
@@ -77,13 +77,30 @@ export function InboxList({ conversations, selectedId, onSelect, onDelete }: Pro
               <span className="flex h-full min-w-0 flex-1 flex-col justify-center border-b border-(--wa-line) pr-[15px] group-last:border-b-0">
                 <span className="flex items-baseline justify-between gap-2">
                   <span className="truncate text-[17px] leading-[21px] text-(--wa-text)">{name}</span>
-                  <span
-                    className={cn(
-                      'shrink-0 text-[12px] leading-[14px]',
-                      isUnread ? 'font-medium text-(--wa-unread)' : 'text-(--wa-text-2)',
+                  <span className="flex shrink-0 items-center gap-1.5">
+                    {/* Status marks, like WhatsApp Business labels next to the time. */}
+                    {taken ? (
+                      <Headset
+                        className="size-3.5 text-(--wa-green-dark)"
+                        aria-label={conv.botPaused ? 'Tomada por una persona' : 'Atención humana global'}
+                      >
+                        <title>{conv.botPaused ? 'Tomada por una persona' : 'Atención humana global'}</title>
+                      </Headset>
+                    ) : (
+                      conv.status === 'pending' && (
+                        <Clock className="size-3.5 text-amber-600" aria-label="Pendiente">
+                          <title>Pendiente</title>
+                        </Clock>
+                      )
                     )}
-                  >
-                    {listTime(conv.lastMessage?.createdAt ?? conv.lastMessageAt)}
+                    <span
+                      className={cn(
+                        'text-[12px] leading-[14px]',
+                        isUnread ? 'font-medium text-(--wa-unread)' : 'text-(--wa-text-2)',
+                      )}
+                    >
+                      {listTime(conv.lastMessage?.createdAt ?? conv.lastMessageAt)}
+                    </span>
                   </span>
                 </span>
 
@@ -97,21 +114,11 @@ export function InboxList({ conversations, selectedId, onSelect, onDelete }: Pro
                     {conv.lastMessage ? (
                       <Preview message={conv.lastMessage} />
                     ) : (
-                      <span className="truncate">{conv.waId}</span>
+                      <span className="truncate">{formatPhone(conv.waId)}</span>
                     )}
                   </span>
 
                   <span className="flex shrink-0 items-center gap-1.5">
-                    {conv.status === 'pending' && !taken && (
-                      <span className="rounded-full bg-amber-100 px-1.5 text-[11px] font-medium leading-[18px] text-amber-800">
-                        Pendiente
-                      </span>
-                    )}
-                    {taken && (
-                      <span className="rounded-full bg-(--wa-green-soft) px-1.5 text-[11px] font-medium leading-[18px] text-(--wa-green-dark)">
-                        {conv.botPaused ? 'Tomada' : 'Atención global'}
-                      </span>
-                    )}
                     {isUnread && (
                       <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-(--wa-unread) px-1.5 text-[12px] font-semibold text-white">
                         {conv.unreadCount}

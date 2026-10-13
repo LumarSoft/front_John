@@ -8,6 +8,7 @@ import { toast } from 'sonner'
 import { inboxService } from '@/src/services/inbox.service'
 import { useAuth } from '../context/auth-context'
 import { Button } from '@/src/components/ui/button'
+import { SidebarTrigger } from '@/src/components/ui/sidebar'
 import { WhatsAppIcon } from '@/src/components/ui/brand-icons'
 import {
   AlertDialog,
@@ -32,6 +33,7 @@ import { InboxThread } from './inbox-thread'
 import { AseguradoSheet } from './asegurado-sheet'
 import { ScopeFilter, type ScopeFilterValue } from './scope-filter'
 import type { InboxConversation } from '@/src/types/api/inbox'
+import { contactDisplayName } from '../lib/inbox-contact'
 
 type InboxFilter = 'all' | 'unread' | 'pending' | 'taken'
 
@@ -131,29 +133,43 @@ export function InboxView() {
   }
 
   return (
-    <div className="wa flex h-[calc(100svh-3.5rem)] overflow-hidden bg-(--wa-surface)">
+    <div className="wa flex h-svh overflow-hidden bg-(--wa-surface) md:h-[calc(100svh-1rem)] md:rounded-xl">
       {/* Chat list */}
       <aside
         className={cn(
-          'w-full flex-col bg-(--wa-surface) md:flex md:w-[30%] md:min-w-[340px] md:max-w-[440px]',
+          'w-full flex-col bg-(--wa-surface) md:flex md:w-[30%] md:min-w-[360px] md:max-w-[440px]',
           selectedId ? 'hidden' : 'flex',
         )}
       >
-        <div className="flex h-[59px] shrink-0 items-center justify-between pl-5 pr-3">
+        <div className="flex h-[59px] shrink-0 items-center gap-2 pl-3 pr-3">
+          <SidebarTrigger className="text-(--wa-icon) hover:bg-black/5" />
           <h2 className="text-[22px] font-bold text-(--wa-text)">Chats</h2>
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              aria-label="Más opciones"
-              className="rounded-full p-2 text-(--wa-icon) outline-none hover:bg-black/5 data-[state=open]:bg-black/10"
-            >
-              <MoreVertical className="size-5" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="wa w-auto min-w-52">
-              <DropdownMenuItem variant="destructive" onSelect={() => setDeleteTarget('all')}>
-                <Trash2 className="size-4" /> Borrar todos los chats
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div className="ml-auto flex min-w-0 items-center gap-1">
+            <ScopeFilter
+              value={scope}
+              onChange={setScope}
+              allLabel="Todos los números"
+              className={cn(
+                '!h-8 min-w-0 max-w-[180px] cursor-pointer truncate !rounded-full !border-0 !px-3 !text-[13px] outline-none',
+                scope.phoneNumberId != null || scope.producerCodeId != null
+                  ? '!bg-(--wa-green-soft) !text-(--wa-green-dark)'
+                  : '!bg-(--wa-panel) !text-(--wa-text-2)',
+              )}
+            />
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                aria-label="Más opciones"
+                className="ml-auto rounded-full p-2 text-(--wa-icon) outline-none hover:bg-black/5 data-[state=open]:bg-black/10 [:is(select)+&]:ml-0"
+              >
+                <MoreVertical className="size-5" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="wa w-auto min-w-52">
+                <DropdownMenuItem variant="destructive" onSelect={() => setDeleteTarget('all')}>
+                  <Trash2 className="size-4" /> Borrar todos los chats
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
 
         <div className="space-y-2 px-3 pb-2">
@@ -167,27 +183,21 @@ export function InboxView() {
             />
           </label>
 
-          <ScopeFilter
-            value={scope}
-            onChange={setScope}
-            className="!h-[35px] w-full !rounded-lg !border-0 !bg-(--wa-panel) !text-[14px] !text-(--wa-text-2)"
-          />
-
-          <div className="flex gap-2 overflow-x-auto pb-1 pt-1 [scrollbar-width:none]">
+          <div className="flex gap-1 overflow-x-auto pb-1 pt-1 [scrollbar-width:none]">
             {FILTERS.map(f => (
               <button
                 key={f.key}
                 type="button"
                 onClick={() => setFilter(f.key)}
                 className={cn(
-                  'flex h-8 shrink-0 items-center gap-1.5 rounded-full px-3 text-[14px] transition-colors',
+                  'flex h-8 shrink-0 items-center gap-1 rounded-full px-2 text-[13.5px] transition-colors',
                   filter === f.key
                     ? 'bg-(--wa-green-soft) text-(--wa-green-dark)'
                     : 'bg-(--wa-panel) text-(--wa-text-2) hover:bg-[#e9edef]',
                 )}
               >
                 {f.label}
-                {counts[f.key] > 0 && <span className="text-[12px] tabular-nums">{counts[f.key]}</span>}
+                {counts[f.key] > 0 && <span className="text-[11.5px] tabular-nums">{counts[f.key]}</span>}
               </button>
             ))}
           </div>
@@ -252,7 +262,7 @@ export function InboxView() {
             <AlertDialogDescription>
               {deleteTarget === 'all'
                 ? 'Se borrarán todas las conversaciones a las que tenés acceso, incluidas las cerradas y las que no aparecen con los filtros actuales.'
-                : `Se borrará la conversación de ${deleteTarget ? deleteTarget.waId : ''}.`}{' '}
+                : `Se borrará la conversación de ${deleteTarget ? contactDisplayName(deleteTarget) : ''}.`}{' '}
               Se eliminarán sus mensajes y se reiniciará el bot para esos chats. Los clientes, pólizas, cotizaciones y
               siniestros se conservan. Esta acción no se puede deshacer desde el panel.
             </AlertDialogDescription>
