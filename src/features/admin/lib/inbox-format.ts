@@ -77,3 +77,103 @@ export function plainPreview(content: string): string {
     .replace(/([*_~])([^\s*_~](?:[^*_~]*[^\s*_~])?)\1/g, '$2')
     .trim()
 }
+
+/** Id of the oldest of the last `unreadCount` customer messages: where the unread divider goes. */
+export function firstUnreadId(messages: InboxMessage[], unreadCount: number): number | null {
+  if (unreadCount <= 0) return null
+  let remaining = unreadCount
+  for (let i = messages.length - 1; i >= 0; i--) {
+    if (messages[i].role !== 'user') continue
+    remaining--
+    if (remaining === 0) return messages[i].id
+  }
+  return null
+}
+
+const MAX_PHOTO_BYTES = 5 * 1024 * 1024
+const MAX_PDF_BYTES = 16 * 1024 * 1024
+
+/** File types the panel can send through WhatsApp, for the file picker. */
+export const OUTGOING_FILE_ACCEPT = 'image/jpeg,image/png,application/pdf'
+
+/** Why a file can't be sent, or null when it can (same limits as the API). */
+export function outgoingFileProblem(file: File): string | null {
+  if (file.type === 'image/jpeg' || file.type === 'image/png') {
+    return file.size > MAX_PHOTO_BYTES ? 'WhatsApp acepta fotos de hasta 5 MB.' : null
+  }
+  if (file.type === 'application/pdf') {
+    return file.size > MAX_PDF_BYTES ? 'El PDF no puede superar los 16 MB.' : null
+  }
+  return 'Solo se pueden enviar fotos JPG o PNG y archivos PDF.'
+}
+
+/** 48213 → "47 kB". */
+export function fileSize(bytes: number | null): string {
+  if (!bytes) return ''
+  if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} kB`
+  return `${(bytes / (1024 * 1024)).toFixed(1).replace('.', ',')} MB`
+}
+
+/**
+ * Lowercase without accents, one character per character of the input, so a
+ * match found in the folded text points at the same place in the original.
+ */
+export function foldText(text: string): string {
+  let folded = ''
+  for (const char of text) {
+    const plain = char.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase()
+    folded += plain.length === char.length ? plain : char.toLowerCase().padEnd(char.length).slice(0, char.length)
+  }
+  return folded
+}
+
+export interface MessageSearchHit {
+  message: InboxMessage
+  /** Text around the first match, for the results list. */
+  snippet: string
+}
+
+const MIN_SEARCH_LENGTH = 2
+const SNIPPET_CONTEXT = 40
+
+function searchableText(message: InboxMessage): string {
+  const content = isMediaPlaceholder(message.content) ? '' : message.content
+  return [content, message.media?.originalName ?? ''].filter(Boolean).join(' · ')
+}
+
+/** Messages that contain the query, newest first, ignoring case and accents. */
+export function searchMessages(messages: InboxMessage[], query: string): MessageSearchHit[] {
+  const needle = foldText(query.trim())
+  if (needle.length < MIN_SEARCH_LENGTH) return []
+  const hits: MessageSearchHit[] = []
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const text = searchableText(messages[i]).replace(/\s+/g, ' ')
+    const at = foldText(text).indexOf(needle)
+    if (at === -1) continue
+    const start = Math.max(0, at - SNIPPET_CONTEXT)
+    const end = Math.min(text.length, at + needle.length + SNIPPET_CONTEXT)
+    hits.push({
+      message: messages[i],
+      snippet: `${start > 0 ? '…' : ''}${text.slice(start, end)}${end < text.length ? '…' : ''}`,
+    })
+  }
+  return hits
+}
+
+/** Splits text into plain and matching parts, for highlighting a search. */
+export function splitByQuery(text: string, query: string): { text: string; match: boolean }[] {
+  const needle = foldText(query.trim())
+  if (needle.length < MIN_SEARCH_LENGTH) return [{ text, match: false }]
+  const folded = foldText(text)
+  const parts: { text: string; match: boolean }[] = []
+  let last = 0
+  let at = folded.indexOf(needle)
+  while (at !== -1) {
+    if (at > last) parts.push({ text: text.slice(last, at), match: false })
+    parts.push({ text: text.slice(at, at + needle.length), match: true })
+    last = at + needle.length
+    at = folded.indexOf(needle, last)
+  }
+  if (last < text.length) parts.push({ text: text.slice(last), match: false })
+  return parts
+}

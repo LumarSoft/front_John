@@ -30,13 +30,16 @@ async function extractErrorMessage(res: Response): Promise<string> {
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { method = 'GET', token, body } = options
 
+  // A FormData body (file uploads) goes as is: the browser sets the multipart
+  // Content-Type with its boundary.
+  const isForm = body instanceof FormData
   const res = await fetch(`${API_URL}${path}`, {
     method,
     headers: {
-      'Content-Type': 'application/json',
+      ...(isForm ? {} : { 'Content-Type': 'application/json' }),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
-    ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+    ...(body !== undefined ? { body: isForm ? body : JSON.stringify(body) } : {}),
   })
 
   if (!res.ok) throw new ApiError(res.status, await extractErrorMessage(res))

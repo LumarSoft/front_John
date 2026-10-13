@@ -14,6 +14,8 @@ interface ScopeFilterProps {
   value: ScopeFilterValue
   onChange: (value: ScopeFilterValue) => void
   className?: string
+  /** Text of the "no filter" option. */
+  allLabel?: string
 }
 
 /**
@@ -23,7 +25,7 @@ interface ScopeFilterProps {
  * number); choosing a productor filters by that single code. Hidden for plain
  * admins (already restricted to their own codes by the API).
  */
-export function ScopeFilter({ value, onChange, className }: ScopeFilterProps) {
+export function ScopeFilter({ value, onChange, className, allLabel = 'Todos' }: ScopeFilterProps) {
   const { isSuperAdmin } = useRole()
   const { data: codes } = useProducerCodes(isSuperAdmin)
   const { data: numbers } = usePhoneNumbers(isSuperAdmin)
@@ -51,7 +53,7 @@ export function ScopeFilter({ value, onChange, className }: ScopeFilterProps) {
       className={`h-10 rounded-md border border-line-2 bg-background px-3 text-[13px] text-ink-3 ${className ?? ''}`}
       aria-label="Filtrar por número o productor"
     >
-      <option value="">Todos</option>
+      <option value="">{allLabel}</option>
       {numbers && numbers.length > 0 && (
         <optgroup label="Números / Sucursales">
           {numbers.map(n => (
