@@ -280,7 +280,7 @@ function BotStatusControl({ botEnabled, canManage }: { botEnabled: boolean; canM
           <div className="flex gap-3 rounded-lg border border-line-2 bg-secondary/30 p-3 text-[12.5px] leading-relaxed text-muted-foreground">
             <ShieldAlert className="mt-0.5 size-4 shrink-0 text-ember-2" />
             <p>
-              Al activar esta modalidad, los mensajes y fotos siguen entrando a la bandeja, pero el bot no responde, no
+              Al activar esta modalidad, los mensajes y fotos siguen entrando a Whatsapp, pero el bot no responde, no
               avanza flujos ni envía avisos automáticos. Los chats tomados por una persona conservan su estado.
             </p>
           </div>

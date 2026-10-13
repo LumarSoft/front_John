@@ -10,7 +10,7 @@ type ViewId = 'inbox' | 'asegurados' | 'cobranzas' | 'numeros'
 const VIEWS: { id: ViewId; label: string; caption: string }[] = [
   {
     id: 'inbox',
-    label: 'Bandeja de entrada',
+    label: 'Whatsapp',
     caption: 'Todas las conversaciones del número, con el historial completo y el botón para tomar el control.',
   },
   {
@@ -32,7 +32,7 @@ const VIEWS: { id: ViewId; label: string; caption: string }[] = [
 
 const SIDEBAR = [
   { id: 'panel', label: 'Panel' },
-  { id: 'inbox', label: 'Bandeja de entrada' },
+  { id: 'inbox', label: 'Whatsapp' },
   { id: 'asegurados', label: 'Asegurados' },
   { id: 'cobranzas', label: 'Cobranzas' },
   { id: 'siniestros', label: 'Siniestros' },
