@@ -7,6 +7,8 @@ export interface AdminUserProducerCode {
 export interface AdminUser {
   id: number
   email: string
+  /** How the office calls this person ("Mili"); null = show the email. */
+  name?: string | null
   role: AdminRole
   producerId: number
   // Codes this admin can access (empty for SUPERADMIN = all). Present on /users/me and /users.
@@ -26,5 +28,6 @@ export interface LoginResponse {
 
 export interface UpdateProfileRequest {
   email?: string
+  name?: string
   password?: string
 }

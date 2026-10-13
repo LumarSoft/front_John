@@ -9,6 +9,7 @@ import type {
 } from '@/src/types/api/improvements'
 import type { NovedadesQuery } from '@/src/types/api/novedades'
 import type { SolicitudesQuery } from '@/src/types/api/solicitudes'
+import type { TasksQuery } from '@/src/types/api/tasks'
 import type { AdminSiniestrosQuery } from '@/src/services/siniestros.service'
 
 export const QUERY_KEYS = {
@@ -44,6 +45,10 @@ export const QUERY_KEYS = {
     improvementsUnseen: ['admin', 'improvements', 'unseen'] as const,
     proposalsAll: ['admin', 'improvement-proposals'] as const,
     proposals: (params?: PageQuery) => ['admin', 'improvement-proposals', 'list', params ?? {}] as const,
+    tasksAll: ['admin', 'tasks'] as const,
+    tasks: (params: TasksQuery) => ['admin', 'tasks', 'list', params] as const,
+    tasksStats: ['admin', 'tasks', 'stats'] as const,
+    taskPeople: ['admin', 'tasks', 'people'] as const,
   },
   owner: {
     organizations: ['owner', 'organizations'] as const,

@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   Bell,
+  ListTodo,
   Building2,
   ChevronsUpDown,
   ClipboardList,
@@ -48,6 +49,7 @@ import { useInboxMessageSound } from '../hooks/use-inbox-message-sound'
 import { useNewSolicitudesCount } from '../hooks/use-solicitudes'
 import { useImprovementsUnseenCount } from '../hooks/use-improvements'
 import { useNewProposalsCount } from '../hooks/use-proposals'
+import { useTaskStats } from '../hooks/use-tasks'
 
 interface NavItem {
   label: string
@@ -64,6 +66,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { label: 'Inicio', href: '/admin', icon: LayoutDashboard },
   { label: 'Asuntos pendientes', href: '/admin/novedades', icon: Bell },
+  { label: 'Tareas', href: '/admin/tareas', icon: ListTodo },
   { label: 'Solicitudes', href: '/admin/solicitudes', icon: ClipboardList },
   { label: 'Whatsapp', href: '/admin/inbox', icon: MessageSquare },
   { label: 'Siniestros', href: '/admin/siniestros', icon: FileWarning },
@@ -90,6 +93,7 @@ export function AppSidebar() {
   const { logout } = useAuth()
   const { data: profile } = useProfile()
   const { data: novedadesStats } = useNovedadesStats()
+  const { data: taskStats } = useTaskStats()
   // "Pending" conversations = a client asked for a human agent → needs attention.
   const { data: inboxConversations } = useInboxConversations()
   useInboxMessageSound(inboxConversations)
@@ -103,6 +107,7 @@ export function AppSidebar() {
   // Count of items needing the advisor's attention, per sidebar section.
   const alertCount = (href: string): number => {
     if (href === '/admin/novedades') return novedadesStats?.actionableTotal ?? 0
+    if (href === '/admin/tareas') return taskStats?.open ?? 0
     if (href === '/admin/solicitudes') return solicitudesNuevas
     if (href === '/admin/inbox') return inboxPending
     if (href === '/admin/mejoras') return (isOwner ? newProposals?.count : improvementsUnseen?.count) ?? 0
