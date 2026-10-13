@@ -23,6 +23,16 @@ export interface InboxConversation {
   client: { id: number; firstName: string; lastName: string; dni: string } | null
   /** True when the linked client's stored phone is this WhatsApp number (absent on older APIs). */
   clientIsContact?: boolean
+  /** Latest message of any role, for the list preview (absent on older APIs, null for an empty chat). */
+  lastMessage?: InboxLastMessage | null
+}
+
+export interface InboxLastMessage {
+  role: InboxMessage['role']
+  /** One line, cut at 120 characters. */
+  content: string
+  mediaType: 'image' | 'audio' | 'file' | null
+  createdAt: string
 }
 
 export interface UpdateInboxContactRequest {
