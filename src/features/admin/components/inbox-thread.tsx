@@ -30,9 +30,10 @@ import { useInboxActions } from '../hooks/use-inbox-actions'
 import { useChatScroll } from '../hooks/use-chat-scroll'
 import type { InboxConversation, InboxMessage, UpdateInboxContactRequest } from '@/src/types/api/inbox'
 import { adjuntoUrl } from '@/src/services/siniestros.service'
-import { consultedClientLabel, contactDisplayName } from '../lib/inbox-contact'
+import { consultedClientLabel, contactDisplayName, formatPhone, hasContactName } from '../lib/inbox-contact'
 import {
   dayLabel,
+  firstUnreadId,
   isMediaPlaceholder,
   isSameDay,
   messageTime,
@@ -235,7 +236,10 @@ function Notice({ tone = 'info', children }: { tone?: 'info' | 'warning'; childr
 export function InboxThread({ conversation, onOpenClient, onBack }: Props) {
   const { data: messages = [], isLoading } = useInboxMessages(conversation.id)
   const { takeover, release, sendMessage, updateContact } = useInboxActions(conversation.id)
-  const { containerRef, contentRef, onScroll, atBottom, unseen, scrollToBottom } = useChatScroll(messages.length)
+  const { containerProps, contentRef, anchorRef, atBottom, unseen, scrollToBottom } = useChatScroll(messages.length)
+  // Opening the chat marks it read, so keep the count it had when it was opened.
+  const [unreadAtOpen] = useState(conversation.unreadCount)
+  const unreadFromId = firstUnreadId(messages, unreadAtOpen)
   const [text, setText] = useState('')
   const [editingContact, setEditingContact] = useState(false)
   const [windowExpired, setWindowExpired] = useState(false)
@@ -319,7 +323,7 @@ export function InboxThread({ conversation, onOpenClient, onBack }: Props) {
     : conversation.botPaused
       ? `Atendido por ${conversation.assignedTo?.email ?? 'una persona'}`
       : 'Atiende el bot'
-  const subtitle = [status, consulted, contactName === conversation.waId ? null : `+${conversation.waId}`]
+  const subtitle = [status, consulted, hasContactName(conversation) ? formatPhone(conversation.waId) : null]
     .filter(Boolean)
     .join(' · ')
 
@@ -391,7 +395,7 @@ export function InboxThread({ conversation, onOpenClient, onBack }: Props) {
 
       {/* Messages */}
       <div className="wa-wallpaper relative min-h-0 flex-1">
-        <div ref={containerRef} onScroll={onScroll} className="h-full overflow-y-auto">
+        <div {...containerProps} className="h-full overflow-y-auto">
           <div ref={contentRef} className="flex flex-col px-[5%] pb-3 pt-2 lg:px-[7%]">
             {isLoading && (
               <div className="flex justify-center py-8">
@@ -402,13 +406,21 @@ export function InboxThread({ conversation, onOpenClient, onBack }: Props) {
             {messages.map((msg, i) => {
               const prev = messages[i - 1]
               const newDay = !prev || !isSameDay(prev.createdAt, msg.createdAt)
-              const first = newDay || prev.role !== msg.role
+              const unreadStart = msg.id === unreadFromId
+              const first = newDay || unreadStart || prev.role !== msg.role
               return (
                 <Fragment key={msg.id}>
                   {newDay && (
                     <div className="sticky top-2 z-[1] mb-1 mt-3 flex justify-center">
                       <span className="rounded-[7.5px] bg-(--wa-surface) px-3 py-[5px] text-[12.5px] leading-[21px] text-(--wa-text-2) shadow-[0_1px_0.5px_rgba(11,20,26,0.13)]">
                         {dayLabel(msg.createdAt)}
+                      </span>
+                    </div>
+                  )}
+                  {unreadStart && (
+                    <div ref={anchorRef} className="mt-3 flex justify-center bg-white/35 py-1.5">
+                      <span className="rounded-full bg-(--wa-surface) px-3 py-1 text-[12.5px] text-(--wa-text-2) shadow-[0_1px_0.5px_rgba(11,20,26,0.13)]">
+                        {unreadAtOpen === 1 ? '1 mensaje no leído' : `${unreadAtOpen} mensajes no leídos`}
                       </span>
                     </div>
                   )}

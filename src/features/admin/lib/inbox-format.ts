@@ -77,3 +77,15 @@ export function plainPreview(content: string): string {
     .replace(/([*_~])([^\s*_~](?:[^*_~]*[^\s*_~])?)\1/g, '$2')
     .trim()
 }
+
+/** Id of the oldest of the last `unreadCount` customer messages: where the unread divider goes. */
+export function firstUnreadId(messages: InboxMessage[], unreadCount: number): number | null {
+  if (unreadCount <= 0) return null
+  let remaining = unreadCount
+  for (let i = messages.length - 1; i >= 0; i--) {
+    if (messages[i].role !== 'user') continue
+    remaining--
+    if (remaining === 0) return messages[i].id
+  }
+  return null
+}
