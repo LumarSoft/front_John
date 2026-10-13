@@ -211,8 +211,8 @@ function BotConfigForm({ initialName, initialStaff }: { initialName: string; ini
               onChange={e => setStaff(e.target.value)}
             />
             <p className="text-[12.5px] text-muted-foreground">
-              Separados por coma. Si un cliente le escribe a alguien por su nombre (“Hola Mili”), el bot no se presenta
-              y le pasa el mensaje a la oficina.
+              Separados por coma. Si un cliente le escribe a alguien por su nombre (“Hola Mili”), el bot le avisa a esa
+              persona en Asuntos pendientes y sigue atendiendo al cliente.
             </p>
           </div>
         </CardContent>
