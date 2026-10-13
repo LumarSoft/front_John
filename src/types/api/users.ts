@@ -2,6 +2,7 @@ import type { AdminRole } from './auth'
 
 export interface CreateUserRequest {
   email: string
+  name?: string
   password: string
   role?: AdminRole
   producerCodeIds?: number[]
@@ -9,6 +10,7 @@ export interface CreateUserRequest {
 
 export interface UpdateUserRequest {
   email?: string
+  name?: string
   password?: string
   role?: AdminRole
   producerCodeIds?: number[]

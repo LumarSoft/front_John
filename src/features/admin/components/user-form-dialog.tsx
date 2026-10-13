@@ -40,6 +40,7 @@ function UserForm({ user, onDone }: { user: AdminUser | null; onDone: () => void
   const updateUser = useUpdateUser()
 
   const [email, setEmail] = useState(user?.email ?? '')
+  const [name, setName] = useState(user?.name ?? '')
   const [password, setPassword] = useState('')
   const [role, setRole] = useState<AdminRole>(user?.role ?? 'ADMIN')
   const [codeIds, setCodeIds] = useState<number[]>(user?.producerCodes?.map(pc => pc.producerCode.id) ?? [])
@@ -55,7 +56,7 @@ function UserForm({ user, onDone }: { user: AdminUser | null; onDone: () => void
     // SuperAdmin sees all codes implicitly; only send grants for ADMIN.
     const producerCodeIds = role === 'ADMIN' ? codeIds : []
     if (isEdit) {
-      const data = { email, role, producerCodeIds, ...(password ? { password } : {}) }
+      const data = { email, name, role, producerCodeIds, ...(password ? { password } : {}) }
       updateUser.mutate(
         { id: user.id, data },
         {
@@ -68,7 +69,7 @@ function UserForm({ user, onDone }: { user: AdminUser | null; onDone: () => void
       )
     } else {
       createUser.mutate(
-        { email, password, role, producerCodeIds },
+        { email, name, password, role, producerCodeIds },
         {
           onSuccess: () => {
             toast.success('Usuario creado')
@@ -83,6 +84,20 @@ function UserForm({ user, onDone }: { user: AdminUser | null; onDone: () => void
   return (
     <form onSubmit={handleSubmit}>
       <div className="flex flex-col gap-4 py-5">
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="user-name">
+            Nombre <span className="text-muted-foreground">(como lo llaman en la oficina)</span>
+          </Label>
+          <Input
+            id="user-name"
+            maxLength={80}
+            placeholder="Mili"
+            className="h-10"
+            value={name}
+            onChange={e => setName(e.target.value)}
+          />
+        </div>
+
         <div className="flex flex-col gap-2">
           <Label htmlFor="user-email">Correo electrónico</Label>
           <div className="relative">

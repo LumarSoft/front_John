@@ -176,7 +176,8 @@ export function UsersView() {
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex items-center gap-2">
-                        <span className="text-[14px] font-medium text-ink">{user.email}</span>
+                        <span className="text-[14px] font-medium text-ink">{user.name || user.email}</span>
+                        {user.name && <span className="text-[12px] text-muted-foreground">{user.email}</span>}
                         {isSelf && (
                           <Badge variant="secondary" className="bg-ember-soft text-ember-2">
                             Vos

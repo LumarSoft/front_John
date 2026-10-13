@@ -44,21 +44,23 @@ import { PricingPlansSection } from './pricing-plans-section'
 import { BusinessHoursSection } from './business-hours-section'
 import { CoverageSettingsSection } from './coverage-settings-section'
 
-function SettingsForm({ initialEmail }: { initialEmail: string }) {
+function SettingsForm({ initialEmail, initialName }: { initialEmail: string; initialName: string }) {
   const updateProfile = useUpdateProfile()
 
   const [email, setEmail] = useState(initialEmail)
+  const [name, setName] = useState(initialName)
   const [password, setPassword] = useState('')
 
-  const hasChanges = email !== initialEmail || password.length > 0
+  const hasChanges = email !== initialEmail || name !== initialName || password.length > 0
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
 
     const data: UpdateProfileRequest = {}
     if (email !== initialEmail) data.email = email
+    if (name !== initialName) data.name = name
     if (password) data.password = password
-    if (!data.email && !data.password) return
+    if (!hasChanges) return
 
     updateProfile.mutate(data, {
       onSuccess: () => {
@@ -80,9 +82,23 @@ function SettingsForm({ initialEmail }: { initialEmail: string }) {
       <form onSubmit={handleSubmit} className="contents">
         <CardHeader>
           <CardTitle className="font-display text-[18px]">Datos de la cuenta</CardTitle>
-          <CardDescription>Actualizá tu correo electrónico y contraseña de acceso.</CardDescription>
+          <CardDescription>Tu nombre, tu correo electrónico y tu contraseña de acceso.</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-5">
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="settings-name">
+              Nombre <span className="text-muted-foreground">(así te ven en Tareas)</span>
+            </Label>
+            <Input
+              id="settings-name"
+              maxLength={80}
+              placeholder="Mili"
+              className="h-10"
+              value={name}
+              onChange={e => setName(e.target.value)}
+            />
+          </div>
+
           <div className="flex flex-col gap-2">
             <Label htmlFor="settings-email">Correo electrónico</Label>
             <div className="relative">
@@ -377,7 +393,7 @@ export function SettingsView() {
         <TabsContent value="cuenta" className="mt-6">
           {isLoading && <FormSkeleton />}
           {isError && <p className="text-[14px] text-destructive">No se pudo cargar tu perfil.</p>}
-          {profile && <SettingsForm key={profile.id} initialEmail={profile.email} />}
+          {profile && <SettingsForm key={profile.id} initialEmail={profile.email} initialName={profile.name ?? ''} />}
         </TabsContent>
 
         <TabsContent value="asistente" className="mt-6">
