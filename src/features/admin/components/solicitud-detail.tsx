@@ -258,6 +258,7 @@ const PAYLOAD_LABELS: Record<string, string> = {
   codigoPostal: 'Código postal',
   precio: 'Precio desde',
   gnc: 'GNC',
+  ceroKm: '0 km',
   dni: 'DNI',
 }
 
@@ -265,7 +266,13 @@ const PAYLOAD_LABELS: Record<string, string> = {
 const DOC_LABELS: Record<string, string> = {
   dni_frente: 'DNI (frente)',
   dni_dorso: 'DNI (dorso)',
+  tarjeta: 'Tarjeta verde o azul',
+  // Requests taken before the tarjeta could be either color.
   tarjeta_azul: 'Tarjeta azul',
+  certificado_no_rodamiento: 'Certificado de no rodamiento',
+  foto_vehiculo: 'Foto del vehículo',
+  tarjeta_gnc: 'Tarjeta de GNC',
+  documento: 'Documento',
 }
 
 type LeadAdjunto = Adjunto & { tipo?: string }
