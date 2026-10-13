@@ -134,20 +134,34 @@ function SettingsForm({ initialEmail }: { initialEmail: string }) {
   )
 }
 
-function BotConfigForm({ initialName }: { initialName: string }) {
+/** "Mili, Milagros" → ["Mili", "Milagros"]. */
+function splitNames(value: string): string[] {
+  return value
+    .split(',')
+    .map(name => name.trim())
+    .filter(Boolean)
+}
+
+function BotConfigForm({ initialName, initialStaff }: { initialName: string; initialStaff: string[] }) {
   const updateConfig = useUpdateProducerConfig()
   const [botName, setBotName] = useState(initialName)
+  const [staff, setStaff] = useState(initialStaff.join(', '))
 
-  const hasChanges = botName.trim() !== initialName.trim()
+  const nameChanged = botName.trim() !== initialName.trim()
+  const staffChanged = splitNames(staff).join(',') !== initialStaff.join(',')
+  const hasChanges = nameChanged || staffChanged
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
     if (!hasChanges) return
 
     updateConfig.mutate(
-      { botName: botName.trim() },
       {
-        onSuccess: () => toast.success('Nombre del asistente actualizado'),
+        ...(nameChanged ? { botName: botName.trim() } : {}),
+        ...(staffChanged ? { staffNames: splitNames(staff) } : {}),
+      },
+      {
+        onSuccess: () => toast.success('Asistente actualizado'),
         onError: () => toast.error('No se pudo guardar. Intentá de nuevo.'),
       },
     )
@@ -185,6 +199,22 @@ function BotConfigForm({ initialName }: { initialName: string }) {
               Vista previa: <span className="text-ink">{preview}</span>
             </p>
           </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="staff-names">Personas de la oficina</Label>
+            <Input
+              id="staff-names"
+              type="text"
+              maxLength={200}
+              placeholder="Ej: Mili, Milagros"
+              className="h-10"
+              value={staff}
+              onChange={e => setStaff(e.target.value)}
+            />
+            <p className="text-[12.5px] text-muted-foreground">
+              Separados por coma. Si un cliente le escribe a alguien por su nombre (“Hola Mili”), el bot no se presenta
+              y le pasa el mensaje a la oficina.
+            </p>
+          </div>
         </CardContent>
         <CardFooter>
           <Button type="submit" disabled={!hasChanges || updateConfig.isPending} className="h-10">
@@ -193,7 +223,7 @@ function BotConfigForm({ initialName }: { initialName: string }) {
                 <Loader2 className="size-4 animate-spin" /> Guardando…
               </>
             ) : (
-              'Guardar nombre'
+              'Guardar cambios'
             )}
           </Button>
         </CardFooter>
@@ -354,7 +384,11 @@ export function SettingsView() {
           {config ? (
             <div className="space-y-5">
               <BotStatusControl botEnabled={config.botEnabled} canManage={isSuperAdmin} />
-              <BotConfigForm key={config.botName ?? 'no-name'} initialName={config.botName ?? ''} />
+              <BotConfigForm
+                key={`${config.botName ?? ''}|${(config.staffNames ?? []).join(',')}`}
+                initialName={config.botName ?? ''}
+                initialStaff={config.staffNames ?? []}
+              />
             </div>
           ) : (
             <FormSkeleton />
