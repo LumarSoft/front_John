@@ -1,16 +1,17 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { improvementsService } from '@/src/services/improvements.service'
 import { QUERY_KEYS } from '@/src/lib/query-keys'
-import type { ImprovementRequest } from '@/src/types/api/improvements'
+import type { ImprovementRequest, ImprovementsQuery, OwnerImprovementsQuery } from '@/src/types/api/improvements'
 import { useAuth } from '../context/auth-context'
 
-/** Published improvements for the organization's users. */
-export function useImprovements() {
+/** One page of the published improvements for the organization's users. */
+export function useImprovements(params: ImprovementsQuery) {
   const { token } = useAuth()
   return useQuery({
-    queryKey: QUERY_KEYS.admin.improvements,
-    queryFn: () => improvementsService.list(token as string),
+    queryKey: QUERY_KEYS.admin.improvements(params),
+    queryFn: () => improvementsService.list(token as string, params),
     enabled: !!token,
+    placeholderData: keepPreviousData,
   })
 }
 
@@ -26,20 +27,21 @@ export function useImprovementsUnseenCount(enabled = true) {
   })
 }
 
-/** Lumar (OWNER): every improvement, drafts included. */
-export function useOwnerImprovements() {
+/** Lumar (OWNER): one page of every improvement, drafts included. */
+export function useOwnerImprovements(params: OwnerImprovementsQuery) {
   const { token } = useAuth()
   return useQuery({
-    queryKey: QUERY_KEYS.owner.improvements,
-    queryFn: () => improvementsService.ownerList(token as string),
+    queryKey: QUERY_KEYS.owner.improvements(params),
+    queryFn: () => improvementsService.ownerList(token as string, params),
     enabled: !!token,
+    placeholderData: keepPreviousData,
   })
 }
 
 export function useOwnerImprovementActions() {
   const { token } = useAuth()
   const qc = useQueryClient()
-  const invalidate = () => qc.invalidateQueries({ queryKey: QUERY_KEYS.owner.improvements })
+  const invalidate = () => qc.invalidateQueries({ queryKey: QUERY_KEYS.owner.improvementsAll })
 
   const create = useMutation({
     mutationFn: (data: ImprovementRequest) => improvementsService.create(token as string, data),

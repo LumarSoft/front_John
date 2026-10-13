@@ -1,24 +1,38 @@
 import { apiRequest } from '@/src/lib/api-client'
 import type {
-  Improvement,
   ImprovementRequest,
+  ImprovementsListPage,
+  ImprovementsPage,
+  ImprovementsQuery,
+  ImprovementsVisit,
   OwnerImprovement,
+  OwnerImprovementsPage,
+  OwnerImprovementsQuery,
   OwnerProposal,
+  OwnerProposalsPage,
+  OwnerProposalsQuery,
+  PageQuery,
   Proposal,
   ProposalRequest,
   ProposalUpdate,
 } from '@/src/types/api/improvements'
 
-export const improvementsService = {
-  list: (token: string) => apiRequest<Improvement[]>('/admin/improvements', { token }),
-  unseenCount: (token: string) => apiRequest<{ count: number }>('/admin/improvements/unseen-count', { token }),
-  visit: (token: string) =>
-    apiRequest<{ previousVisitAt: string | null; visitedAt: string }>('/admin/improvements/visit', {
-      method: 'POST',
-      token,
-    }),
+function toQueryString(params: Record<string, string | number | undefined>): string {
+  const search = new URLSearchParams()
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== undefined && value !== '') search.set(key, String(value))
+  }
+  return `?${search.toString()}`
+}
 
-  ownerList: (token: string) => apiRequest<OwnerImprovement[]>('/owner/improvements', { token }),
+export const improvementsService = {
+  list: (token: string, query: ImprovementsQuery) =>
+    apiRequest<ImprovementsPage>(`/admin/improvements${toQueryString({ ...query })}`, { token }),
+  unseenCount: (token: string) => apiRequest<{ count: number }>('/admin/improvements/unseen-count', { token }),
+  visit: (token: string) => apiRequest<ImprovementsVisit>('/admin/improvements/visit', { method: 'POST', token }),
+
+  ownerList: (token: string, query: OwnerImprovementsQuery) =>
+    apiRequest<OwnerImprovementsPage>(`/owner/improvements${toQueryString({ ...query })}`, { token }),
   create: (token: string, data: ImprovementRequest) =>
     apiRequest<OwnerImprovement>('/owner/improvements', { method: 'POST', token, body: data }),
   update: (token: string, id: number, data: Partial<ImprovementRequest>) =>
@@ -26,11 +40,15 @@ export const improvementsService = {
   remove: (token: string, id: number) =>
     apiRequest<{ ok: true }>(`/owner/improvements/${id}`, { method: 'DELETE', token }),
 
-  proposals: (token: string) => apiRequest<Proposal[]>('/admin/improvement-proposals', { token }),
+  proposals: (token: string, query: PageQuery) =>
+    apiRequest<ImprovementsListPage<Proposal>>(`/admin/improvement-proposals${toQueryString({ ...query })}`, {
+      token,
+    }),
   propose: (token: string, data: ProposalRequest) =>
     apiRequest<Proposal>('/admin/improvement-proposals', { method: 'POST', token, body: data }),
 
-  ownerProposals: (token: string) => apiRequest<OwnerProposal[]>('/owner/improvement-proposals', { token }),
+  ownerProposals: (token: string, query: OwnerProposalsQuery) =>
+    apiRequest<OwnerProposalsPage>(`/owner/improvement-proposals${toQueryString({ ...query })}`, { token }),
   newProposalsCount: (token: string) =>
     apiRequest<{ count: number }>('/owner/improvement-proposals/new-count', { token }),
   updateProposal: (token: string, id: number, data: ProposalUpdate) =>

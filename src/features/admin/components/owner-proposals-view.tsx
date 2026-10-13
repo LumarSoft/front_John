@@ -10,10 +10,15 @@ import {
   PROPOSAL_STATUSES,
   PROPOSAL_STATUS_LABEL,
   type OwnerProposal,
+  type OwnerProposalFilter,
   type ProposalStatus,
 } from '@/src/types/api/improvements'
+import { useListPage } from '../hooks/use-list-page'
 import { useOwnerProposals, useUpdateProposal } from '../hooks/use-proposals'
+import { ListPagination } from './list-pagination'
 import { ProposalCard } from './proposal-card'
+
+const PAGE_SIZE = 10
 
 const fieldClass =
   'rounded-xl border border-line-2 bg-paper px-3 py-2 text-[13px] text-ink outline-none focus:border-ember focus:shadow-[0_0_0_3px_rgba(232,168,32,0.12)]'
@@ -65,33 +70,36 @@ function ProposalAnswer({ proposal }: { proposal: OwnerProposal }) {
   )
 }
 
-type Filter = 'open' | 'all'
-
 /** Lumar (OWNER): every organization's proposals, to answer and move through the statuses. */
 export function OwnerProposalsView() {
-  const { data: proposals, isLoading, isError } = useOwnerProposals()
-  const [filter, setFilter] = useState<Filter>('open')
+  const [filter, setFilter] = useState<OwnerProposalFilter>('open')
+  const { page, goTo, reset, keepWithin, topRef } = useListPage()
+  const { data: result, isLoading, isError, isFetching } = useOwnerProposals({ page, pageSize: PAGE_SIZE, filter })
+  keepWithin(result?.totalPages)
 
-  const all = proposals ?? []
-  const isOpen = (p: OwnerProposal) => p.status !== 'DONE' && p.status !== 'DISCARDED'
-  const visible = filter === 'open' ? all.filter(isOpen) : all
+  const visible = result?.data ?? []
+
+  const chooseFilter = (next: OwnerProposalFilter) => {
+    setFilter(next)
+    reset()
+  }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div ref={topRef} className="flex scroll-mt-20 flex-col gap-4">
       <p className="text-[13px] text-muted-foreground">
         Lo que proponen las organizaciones. Tu respuesta y el estado los ve todo el equipo que propuso.
       </p>
       <div className="flex flex-wrap gap-2">
         {(
           [
-            { key: 'open', label: 'Abiertas', count: all.filter(isOpen).length },
-            { key: 'all', label: 'Todas', count: all.length },
+            { key: 'open', label: 'Abiertas', count: result?.counts.open ?? 0 },
+            { key: 'all', label: 'Todas', count: result?.counts.all ?? 0 },
           ] as const
         ).map(chip => (
           <button
             key={chip.key}
             type="button"
-            onClick={() => setFilter(chip.key)}
+            onClick={() => chooseFilter(chip.key)}
             className={cn(
               'rounded-full border px-3 py-1.5 text-[12.5px] font-medium transition-colors',
               filter === chip.key
@@ -115,11 +123,24 @@ export function OwnerProposalsView() {
           No hay propuestas en esta lista.
         </p>
       )}
-      {visible.map(proposal => (
-        <ProposalCard key={proposal.id} proposal={proposal} meta={<span>· {proposal.producer.name}</span>}>
-          <ProposalAnswer key={`${proposal.id}-${proposal.status}-${proposal.response}`} proposal={proposal} />
-        </ProposalCard>
-      ))}
+      <div className={cn('flex flex-col gap-4 transition-opacity', isFetching && !isLoading && 'opacity-60')}>
+        {visible.map(proposal => (
+          <ProposalCard key={proposal.id} proposal={proposal} meta={<span>· {proposal.producer.name}</span>}>
+            <ProposalAnswer key={`${proposal.id}-${proposal.status}-${proposal.response}`} proposal={proposal} />
+          </ProposalCard>
+        ))}
+      </div>
+      {result && (
+        <ListPagination
+          page={result.page}
+          pageSize={result.pageSize}
+          total={result.total}
+          totalPages={result.totalPages}
+          noun={['propuesta', 'propuestas']}
+          onPageChange={goTo}
+          disabled={isFetching}
+        />
+      )}
     </div>
   )
 }

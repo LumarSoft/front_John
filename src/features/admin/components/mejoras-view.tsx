@@ -11,7 +11,11 @@ import {
 } from '@/src/types/api/improvements'
 import { useImprovements } from '../hooks/use-improvements'
 import { useImprovementsVisit } from '../hooks/use-improvements-visit'
+import { useListPage } from '../hooks/use-list-page'
 import { ImprovementCard } from './improvement-card'
+import { ListPagination } from './list-pagination'
+
+const PAGE_SIZE = 10
 
 const MONTH_FORMAT = new Intl.DateTimeFormat('es-AR', { month: 'long', year: 'numeric', timeZone: 'UTC' })
 
@@ -39,17 +43,29 @@ function isNewSince(improvement: Improvement, previousVisitAt: string | null | u
 }
 
 export function MejorasView() {
-  const { data: improvements, isLoading, isError } = useImprovements()
-  const { previousVisitAt } = useImprovementsVisit()
   const [area, setArea] = useState<ImprovementArea | ''>('')
+  const { page, goTo, reset, keepWithin, topRef } = useListPage()
+  const {
+    data: result,
+    isLoading,
+    isError,
+    isFetching,
+  } = useImprovements({ page, pageSize: PAGE_SIZE, area: area || undefined })
+  const { previousVisitAt, newCount } = useImprovementsVisit()
+  keepWithin(result?.totalPages)
 
-  const all = improvements ?? []
-  const areas = IMPROVEMENT_AREAS.filter(a => all.some(i => i.area === a))
-  const visible = area ? all.filter(i => i.area === area) : all
-  const newCount = all.filter(i => isNewSince(i, previousVisitAt)).length
+  const improvements = result?.data ?? []
+  const areaCounts = result?.areaCounts
+  const totalPublished = areaCounts ? Object.values(areaCounts).reduce((sum, n) => sum + n, 0) : 0
+  const areas = IMPROVEMENT_AREAS.filter(a => (areaCounts?.[a] ?? 0) > 0)
+
+  const chooseArea = (next: ImprovementArea | '') => {
+    setArea(next)
+    reset()
+  }
 
   return (
-    <div>
+    <div ref={topRef} className="scroll-mt-20">
       <p className="mb-5 text-[13px] text-muted-foreground">
         Lo que fuimos cambiando en el bot y en el panel.
         {newCount > 0 && ` ${newCount === 1 ? 'Hay 1 nueva' : `Hay ${newCount} nuevas`} desde tu última visita.`}
@@ -58,17 +74,13 @@ export function MejorasView() {
       {areas.length > 1 && (
         <div className="mb-5 flex flex-wrap gap-2">
           {[
-            { key: '' as const, label: 'Todas', count: all.length },
-            ...areas.map(a => ({
-              key: a,
-              label: IMPROVEMENT_AREA_LABEL[a],
-              count: all.filter(i => i.area === a).length,
-            })),
+            { key: '' as const, label: 'Todas', count: totalPublished },
+            ...areas.map(a => ({ key: a, label: IMPROVEMENT_AREA_LABEL[a], count: areaCounts?.[a] ?? 0 })),
           ].map(chip => (
             <button
               key={chip.key || 'all'}
               type="button"
-              onClick={() => setArea(chip.key)}
+              onClick={() => chooseArea(chip.key)}
               className={cn(
                 'rounded-full border px-3 py-1.5 text-[12.5px] font-medium transition-colors',
                 area === chip.key
@@ -96,14 +108,14 @@ export function MejorasView() {
         </p>
       )}
 
-      {!isLoading && !isError && all.length === 0 && (
+      {!isLoading && !isError && totalPublished === 0 && (
         <p className="rounded-xl border border-line-2 bg-card p-6 text-center text-[13.5px] text-muted-foreground">
           Todavía no hay mejoras publicadas. Cuando hagamos cambios los vas a ver acá.
         </p>
       )}
 
-      <div className="flex flex-col gap-8">
-        {groupByMonth(visible).map(group => (
+      <div className={cn('flex flex-col gap-8 transition-opacity', isFetching && !isLoading && 'opacity-60')}>
+        {groupByMonth(improvements).map(group => (
           <section key={group.month} className="flex flex-col gap-4">
             <h2 className="text-[11px] font-semibold uppercase tracking-[0.16em] text-faint">{group.month}</h2>
             {group.items.map(improvement => (
@@ -116,6 +128,19 @@ export function MejorasView() {
           </section>
         ))}
       </div>
+
+      {result && (
+        <ListPagination
+          page={result.page}
+          pageSize={result.pageSize}
+          total={result.total}
+          totalPages={result.totalPages}
+          noun={['mejora', 'mejoras']}
+          onPageChange={goTo}
+          disabled={isFetching}
+          className="mt-6"
+        />
+      )}
     </div>
   )
 }

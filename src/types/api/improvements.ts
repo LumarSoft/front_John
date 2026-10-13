@@ -31,6 +31,47 @@ export interface OwnerImprovement extends Improvement {
   updatedAt: string
 }
 
+/** One page of a "Mejoras" list (same shape as the other paginated admin lists). */
+export interface ImprovementsListPage<T> {
+  data: T[]
+  total: number
+  page: number
+  pageSize: number
+  totalPages: number
+}
+
+export interface PageQuery {
+  page: number
+  pageSize: number
+}
+
+export interface ImprovementsQuery extends PageQuery {
+  area?: ImprovementArea
+}
+
+export interface ImprovementsPage extends ImprovementsListPage<Improvement> {
+  /** Published improvements per area, regardless of the area filter (for the chips). */
+  areaCounts: Record<ImprovementArea, number>
+}
+
+export type OwnerImprovementFilter = 'all' | 'drafts' | 'published'
+
+export interface OwnerImprovementsQuery extends PageQuery {
+  filter: OwnerImprovementFilter
+}
+
+export interface OwnerImprovementsPage extends ImprovementsListPage<OwnerImprovement> {
+  /** Size of each status list, regardless of the filter (for the chips). */
+  counts: Record<OwnerImprovementFilter, number>
+}
+
+export interface ImprovementsVisit {
+  previousVisitAt: string | null
+  visitedAt: string
+  /** Published since the previous visit (all of them on a first visit). */
+  newCount: number
+}
+
 export interface ImprovementRequest {
   title: string
   summary: string
@@ -73,6 +114,17 @@ export interface Proposal {
 
 export interface OwnerProposal extends Omit<Proposal, 'mine'> {
   producer: { id: number; name: string }
+}
+
+export type OwnerProposalFilter = 'open' | 'all'
+
+export interface OwnerProposalsQuery extends PageQuery {
+  filter: OwnerProposalFilter
+}
+
+export interface OwnerProposalsPage extends ImprovementsListPage<OwnerProposal> {
+  /** Size of each list, regardless of the filter (for the chips). */
+  counts: Record<OwnerProposalFilter, number>
 }
 
 export interface ProposalRequest {
