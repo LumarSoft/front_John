@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { MessagesSquare, Search, Trash2, Loader2 } from 'lucide-react'
+import { Loader2, MessageCircle, MoreVertical, Search, Trash2 } from 'lucide-react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { inboxService } from '@/src/services/inbox.service'
@@ -17,7 +17,12 @@ import {
   AlertDialogFooter,
   AlertDialogCancel,
 } from '@/src/components/ui/alert-dialog'
-import { Input } from '@/src/components/ui/input'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/src/components/ui/dropdown-menu'
 import { cn } from '@/src/lib/utils'
 import { useDebouncedValue } from '@/src/hooks/use-debounced-value'
 import { useInboxConversations } from '../hooks/use-inbox-conversations'
@@ -27,15 +32,17 @@ import { AseguradoSheet } from './asegurado-sheet'
 import { ScopeFilter, type ScopeFilterValue } from './scope-filter'
 import type { InboxConversation } from '@/src/types/api/inbox'
 
-type InboxFilter = 'all' | 'pending' | 'taken'
+type InboxFilter = 'all' | 'unread' | 'pending' | 'taken'
 
 const FILTERS: { key: InboxFilter; label: string }[] = [
-  { key: 'all', label: 'Todas' },
+  { key: 'all', label: 'Todos' },
+  { key: 'unread', label: 'No leídos' },
   { key: 'pending', label: 'Pendientes' },
-  { key: 'taken', label: 'Tomadas' },
+  { key: 'taken', label: 'Tomados' },
 ]
 
 function matchesFilter(conv: InboxConversation, filter: InboxFilter): boolean {
+  if (filter === 'unread') return conv.unreadCount > 0
   if (filter === 'pending') return conv.status === 'pending'
   if (filter === 'taken') return conv.botPaused || conv.globalBotDisabled
   return true
@@ -43,13 +50,13 @@ function matchesFilter(conv: InboxConversation, filter: InboxFilter): boolean {
 
 function InboxListSkeleton() {
   return (
-    <ul className="divide-y divide-line">
-      {Array.from({ length: 6 }).map((_, i) => (
-        <li key={i} className="flex items-start gap-3 px-4 py-3.5">
-          <div className="size-9 shrink-0 animate-pulse rounded-full bg-line-2" />
-          <div className="min-w-0 flex-1 space-y-2">
-            <div className="h-3 w-2/3 animate-pulse rounded bg-line-2" />
-            <div className="h-2.5 w-1/3 animate-pulse rounded bg-line" />
+    <ul>
+      {Array.from({ length: 8 }).map((_, i) => (
+        <li key={i} className="flex h-[72px] items-center gap-[15px] px-3">
+          <div className="size-[49px] shrink-0 animate-pulse rounded-full bg-(--wa-panel)" />
+          <div className="min-w-0 flex-1 space-y-2.5">
+            <div className="h-3 w-1/2 animate-pulse rounded bg-(--wa-panel)" />
+            <div className="h-2.5 w-3/4 animate-pulse rounded bg-(--wa-panel)" />
           </div>
         </li>
       ))}
@@ -78,6 +85,10 @@ export function InboxView() {
     setPickedId(id)
     window.history.replaceState(window.history.state, '', inboxConversationHref(id))
   }
+  const clearSelection = () => {
+    setPickedId(null)
+    window.history.replaceState(window.history.state, '', '/admin/inbox')
+  }
   const [selectedClientId, setSelectedClientId] = useState<number | null>(null)
   const [searchInput, setSearchInput] = useState('')
   const [filter, setFilter] = useState<InboxFilter>('all')
@@ -90,10 +101,7 @@ export function InboxView() {
     mutationFn: (target: InboxConversation | 'all') =>
       inboxService.deleteConversations(token as string, target === 'all' ? undefined : target.id),
     onSuccess: async (result, target) => {
-      if (target === 'all' || target.id === selectedId) {
-        setPickedId(null)
-        window.history.replaceState(window.history.state, '', '/admin/inbox')
-      }
+      if (target === 'all' || target.id === selectedId) clearSelection()
       queryClient.removeQueries({
         predicate: query =>
           query.queryKey[0] === 'admin' &&
@@ -115,114 +123,121 @@ export function InboxView() {
   const selected = conversations.find(c => c.id === selectedId) ?? null
 
   const counts: Record<InboxFilter, number> = {
-    all: conversations.length,
+    all: 0,
+    unread: conversations.filter(c => c.unreadCount > 0).length,
     pending: conversations.filter(c => c.status === 'pending').length,
     taken: conversations.filter(c => c.botPaused || c.globalBotDisabled).length,
   }
 
   return (
-    <div className="h-[calc(100vh-3.5rem)] px-4 pb-4 pt-6">
-      <div className="flex h-full overflow-hidden rounded-2xl border border-line-2 bg-card shadow-sm">
-        {/* Left column — conversation list */}
-        <aside className="flex w-80 shrink-0 flex-col border-r border-line-2 bg-secondary/20">
-          <div className="space-y-3 px-4 pb-3 pt-4">
-            <div className="flex items-center justify-between gap-2">
-              <h2 className="font-display text-[14px] tracking-[-0.01em] text-ink">Conversaciones</h2>
-              <span className="rounded-full bg-secondary px-2 py-0.5 text-[11px] font-medium tabular-nums text-muted-foreground">
-                {counts.all}
-              </span>
-            </div>
-
-            <div className="relative">
-              <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                value={searchInput}
-                onChange={e => setSearchInput(e.target.value)}
-                placeholder="Buscar por DNI, nombre o teléfono"
-                className="h-9 bg-card pl-8 text-[12.5px]"
-              />
-            </div>
-
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full text-destructive"
-              onClick={() => setDeleteTarget('all')}
+    <div className="wa flex h-[calc(100svh-3.5rem)] overflow-hidden bg-(--wa-surface)">
+      {/* Chat list */}
+      <aside
+        className={cn(
+          'w-full flex-col bg-(--wa-surface) md:flex md:w-[30%] md:min-w-[340px] md:max-w-[440px]',
+          selectedId ? 'hidden' : 'flex',
+        )}
+      >
+        <div className="flex h-[59px] shrink-0 items-center justify-between pl-5 pr-3">
+          <h2 className="text-[22px] font-bold text-(--wa-text)">Chats</h2>
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              aria-label="Más opciones"
+              className="rounded-full p-2 text-(--wa-icon) outline-none hover:bg-black/5 data-[state=open]:bg-black/10"
             >
-              <Trash2 className="size-3.5" /> Borrar todos los chats
-            </Button>
+              <MoreVertical className="size-5" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="wa w-auto min-w-52">
+              <DropdownMenuItem variant="destructive" onSelect={() => setDeleteTarget('all')}>
+                <Trash2 className="size-4" /> Borrar todos los chats
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
 
-            <ScopeFilter value={scope} onChange={setScope} className="!h-9 w-full" />
+        <div className="space-y-2 px-3 pb-2">
+          <label className="flex h-[35px] items-center gap-3 rounded-lg bg-(--wa-panel) px-3 focus-within:bg-(--wa-surface) focus-within:ring-2 focus-within:ring-(--wa-green)">
+            <Search className="size-4 shrink-0 text-(--wa-icon)" />
+            <input
+              value={searchInput}
+              onChange={e => setSearchInput(e.target.value)}
+              placeholder="Buscar por nombre, DNI o teléfono"
+              className="min-w-0 flex-1 bg-transparent text-[15px] text-(--wa-text) outline-none placeholder:text-(--wa-text-2)"
+            />
+          </label>
 
-            <div className="flex gap-0.5 rounded-lg bg-secondary/70 p-0.5">
-              {FILTERS.map(f => (
-                <button
-                  key={f.key}
-                  type="button"
-                  onClick={() => setFilter(f.key)}
-                  className={cn(
-                    'flex flex-1 items-center justify-center gap-1.5 rounded-md py-1.5 text-[11.5px] font-medium transition-colors',
-                    filter === f.key ? 'bg-card text-ink shadow-sm' : 'text-muted-foreground hover:text-ink-3',
-                  )}
-                >
-                  {f.label}
-                  {counts[f.key] > 0 && (
-                    <span
-                      className={cn(
-                        'rounded-full px-1.5 text-[10px] tabular-nums',
-                        filter === f.key ? 'bg-ember-soft text-ember-2' : 'bg-line-2 text-muted-foreground',
-                      )}
-                    >
-                      {counts[f.key]}
-                    </span>
-                  )}
-                </button>
-              ))}
-            </div>
+          <ScopeFilter
+            value={scope}
+            onChange={setScope}
+            className="!h-[35px] w-full !rounded-lg !border-0 !bg-(--wa-panel) !text-[14px] !text-(--wa-text-2)"
+          />
+
+          <div className="flex gap-2 overflow-x-auto pb-1 pt-1 [scrollbar-width:none]">
+            {FILTERS.map(f => (
+              <button
+                key={f.key}
+                type="button"
+                onClick={() => setFilter(f.key)}
+                className={cn(
+                  'flex h-8 shrink-0 items-center gap-1.5 rounded-full px-3 text-[14px] transition-colors',
+                  filter === f.key
+                    ? 'bg-(--wa-green-soft) text-(--wa-green-dark)'
+                    : 'bg-(--wa-panel) text-(--wa-text-2) hover:bg-[#e9edef]',
+                )}
+              >
+                {f.label}
+                {counts[f.key] > 0 && <span className="text-[12px] tabular-nums">{counts[f.key]}</span>}
+              </button>
+            ))}
           </div>
+        </div>
 
-          <div className="flex-1 overflow-y-auto border-t border-line-2">
-            {isLoading ? (
-              <InboxListSkeleton />
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          {isLoading ? (
+            <InboxListSkeleton />
+          ) : (
+            <InboxList
+              conversations={filtered}
+              selectedId={selectedId}
+              onSelect={selectConversation}
+              onDelete={setDeleteTarget}
+            />
+          )}
+        </div>
+      </aside>
+
+      {/* Conversation */}
+      <main className={cn('min-w-0 flex-1 flex-col md:flex', selectedId ? 'flex' : 'hidden')}>
+        {selected ? (
+          <InboxThread
+            key={selected.id}
+            conversation={selected}
+            onOpenClient={setSelectedClientId}
+            onBack={clearSelection}
+          />
+        ) : (
+          <div className="flex flex-1 flex-col items-center justify-center gap-5 border-l border-(--wa-line) bg-(--wa-panel) px-6 text-center">
+            <div className="flex size-24 items-center justify-center rounded-full bg-(--wa-surface) text-(--wa-green) shadow-sm">
+              <MessageCircle className="size-11" strokeWidth={1.5} />
+            </div>
+            {selectedId && !isLoading ? (
+              <div className="max-w-md">
+                <p className="text-[28px] font-light text-(--wa-text)">No encontramos ese chat</p>
+                <p className="mt-3 text-[14px] leading-5 text-(--wa-text-2)">
+                  Puede estar cerrado o fuera de los filtros actuales. Elegí un chat de la lista.
+                </p>
+              </div>
             ) : (
-              <InboxList
-                conversations={filtered}
-                selectedId={selectedId}
-                onSelect={selectConversation}
-                onDelete={setDeleteTarget}
-              />
+              <div className="max-w-md">
+                <p className="text-[32px] font-light text-(--wa-text)">Whatsapp</p>
+                <p className="mt-3 text-[14px] leading-5 text-(--wa-text-2)">
+                  Elegí un chat de la lista para ver la conversación completa y responderle al cliente.
+                </p>
+              </div>
             )}
           </div>
-        </aside>
-
-        {/* Right column — message thread */}
-        <main className="flex min-w-0 flex-1 flex-col bg-background">
-          {selected ? (
-            <InboxThread conversation={selected} onOpenClient={setSelectedClientId} />
-          ) : (
-            <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
-              <div className="flex size-16 items-center justify-center rounded-2xl bg-ember-soft text-ember-2 ring-1 ring-ember-ring">
-                <MessagesSquare className="size-7" />
-              </div>
-              {selectedId && !isLoading ? (
-                <div className="max-w-sm">
-                  <p className="font-display text-[16px] text-ink">No encontramos esa conversación</p>
-                  <p className="mt-1.5 text-[13px] leading-relaxed text-muted-foreground">
-                    Puede estar cerrada o fuera de los filtros actuales. Elegí un chat de la lista.
-                  </p>
-                </div>
-              ) : (
-                <div className="max-w-sm">
-                  <p className="font-display text-[16px] text-ink">Elegí una conversación</p>
-                  <p className="mt-1.5 text-[13px] leading-relaxed text-muted-foreground">
-                    Seleccioná un chat de la lista para ver el historial completo y responderle al cliente por WhatsApp.
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
-        </main>
-      </div>
+        )}
+      </main>
 
       <AlertDialog
         open={deleteTarget !== null}

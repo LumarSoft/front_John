@@ -3,83 +3,243 @@
 import { Fragment, useEffect, useRef, useState } from 'react'
 import {
   AlertTriangle,
+  ArrowLeft,
+  CornerUpLeft,
+  ChevronDown,
   IdCard,
   Info,
   Loader2,
-  MessageCircle,
+  MoreVertical,
   Pencil,
-  SendHorizonal,
+  SendHorizontal,
+  Smile,
   UserCheck,
   UserX,
 } from 'lucide-react'
 import { toast } from 'sonner'
-import { Button } from '@/src/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/src/components/ui/dropdown-menu'
 import { cn } from '@/src/lib/utils'
 import { useInboxMessages } from '../hooks/use-inbox-messages'
 import { useInboxActions } from '../hooks/use-inbox-actions'
-import type { InboxConversation } from '@/src/types/api/inbox'
+import { useChatScroll } from '../hooks/use-chat-scroll'
+import type { InboxConversation, InboxMessage, UpdateInboxContactRequest } from '@/src/types/api/inbox'
 import { adjuntoUrl } from '@/src/services/siniestros.service'
 import { consultedClientLabel, contactDisplayName } from '../lib/inbox-contact'
+import {
+  dayLabel,
+  isMediaPlaceholder,
+  isSameDay,
+  messageTime,
+  senderLabel,
+  splitReplyButtons,
+} from '../lib/inbox-format'
 import { InboxAudio } from './inbox-audio'
+import { InboxAvatar } from './inbox-avatar'
 import { InboxContactDialog } from './inbox-contact-dialog'
-import type { UpdateInboxContactRequest } from '@/src/types/api/inbox'
+import { InboxMessageText } from './inbox-message-text'
 
 const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000
+
+const EMOJIS = [
+  '😀',
+  '😊',
+  '🙂',
+  '😉',
+  '😅',
+  '🙏',
+  '👍',
+  '👌',
+  '👏',
+  '🙌',
+  '💪',
+  '🤝',
+  '😢',
+  '😮',
+  '🤔',
+  '😬',
+  '❤️',
+  '✅',
+  '❌',
+  '⚠️',
+  '📄',
+  '📎',
+  '📷',
+  '🚗',
+  '🏍️',
+  '🏠',
+  '🔧',
+  '🚑',
+  '📞',
+  '💳',
+  '📅',
+  '⏰',
+  '👋',
+  '✨',
+  '🎉',
+  '📌',
+]
+
+// Sender name colours on outgoing bubbles, like participant names in a WhatsApp group.
+const SENDER_COLOR: Record<InboxMessage['role'], string> = {
+  user: 'text-(--wa-green-dark)',
+  assistant: 'text-[#1f7aa8]',
+  agent: 'text-[#b4532a]',
+}
 
 interface Props {
   conversation: InboxConversation
   onOpenClient: (clientId: number) => void
+  onBack: () => void
 }
 
-function roleBubble(role: string) {
-  if (role === 'user') return 'bg-card border border-line-2 text-ink rounded-bl-md'
-  if (role === 'agent') return 'bg-ember text-on-dark rounded-br-md'
-  return 'bg-ember-soft text-ink border border-ember/15 rounded-br-md'
+function mediaUrl(media: NonNullable<InboxMessage['media']>): string {
+  return adjuntoUrl({
+    filename: media.originalName,
+    originalName: media.originalName,
+    url: media.url,
+    mimeType: media.mimeType,
+    size: media.size ?? 0,
+  })
 }
 
-function roleLabel(role: string) {
-  if (role === 'user') return 'Cliente'
-  if (role === 'agent') return 'Asesor'
-  return 'Bot'
+/** The little notch on the first bubble of a group. */
+function BubbleTail({ outgoing }: { outgoing: boolean }) {
+  return (
+    <svg
+      viewBox="0 0 8 13"
+      className={cn(
+        'absolute top-0 h-[13px] w-2',
+        outgoing ? '-right-2 text-(--wa-bubble-out)' : '-left-2 -scale-x-100 text-(--wa-bubble-in)',
+      )}
+      aria-hidden
+    >
+      <path d="M0 0h6.2C7.9 0 8.4 1.1 7.4 2.4L0 12.6z" fill="currentColor" />
+    </svg>
+  )
 }
 
-function fmtTime(iso: string) {
-  return new Date(iso).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })
+function MessageBubble({ message, first }: { message: InboxMessage; first: boolean }) {
+  const outgoing = message.role !== 'user'
+  const isImage = message.media?.mimeType.startsWith('image/') ?? false
+  const isAudio = message.media?.mimeType.startsWith('audio/') ?? false
+  const caption = isMediaPlaceholder(message.content) ? '' : message.content
+  const { body, buttons } = message.role === 'assistant' ? splitReplyButtons(caption) : { body: caption, buttons: [] }
+  const time = messageTime(message.createdAt)
+
+  return (
+    <div className={cn('flex', outgoing ? 'justify-end' : 'justify-start', first ? 'mt-3' : 'mt-0.5')}>
+      <div className="flex max-w-[min(65%,560px)] flex-col gap-0.5">
+        <div
+          className={cn(
+            'relative rounded-[7.5px] text-[14.2px] leading-[19px] text-(--wa-text) shadow-[0_1px_0.5px_rgba(11,20,26,0.13)]',
+            outgoing ? 'bg-(--wa-bubble-out)' : 'bg-(--wa-bubble-in)',
+            first && (outgoing ? 'rounded-tr-none' : 'rounded-tl-none'),
+            isImage ? 'p-[3px]' : 'px-[9px] pb-2 pt-1.5',
+          )}
+        >
+          {first && <BubbleTail outgoing={outgoing} />}
+
+          {first && outgoing && (
+            <p
+              className={cn(
+                'text-[12.8px] font-medium leading-[22px]',
+                SENDER_COLOR[message.role],
+                isImage && 'px-1.5',
+              )}
+            >
+              {senderLabel(message.role)}
+            </p>
+          )}
+
+          {isImage && message.media ? (
+            <>
+              <a
+                href={mediaUrl(message.media)}
+                target="_blank"
+                rel="noreferrer"
+                className="relative block"
+                title="Abrir imagen en tamaño completo"
+              >
+                {/* Signed API URLs are dynamic and cannot go through Next's image optimizer. */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={mediaUrl(message.media)}
+                  alt={
+                    message.media.tipo
+                      ? `Imagen: ${message.media.tipo.replaceAll('_', ' ')}`
+                      : 'Imagen enviada por el cliente'
+                  }
+                  className="max-h-[338px] w-auto max-w-[330px] rounded-[6px] object-cover"
+                />
+                {!caption && (
+                  <span className="absolute inset-x-0 bottom-0 flex h-7 items-end justify-end rounded-b-[6px] bg-linear-to-t from-black/40 to-transparent px-2 pb-1 text-[11px] text-white">
+                    {time}
+                  </span>
+                )}
+              </a>
+              {caption && (
+                <p className="relative px-1.5 pb-1.5 pt-1">
+                  <InboxMessageText text={caption} />
+                  <span className="inline-block w-12" />
+                  <span className="absolute bottom-1 right-2 text-[11px] leading-[15px] text-(--wa-text-2)">
+                    {time}
+                  </span>
+                </p>
+              )}
+            </>
+          ) : (
+            <div className="relative">
+              {isAudio && message.media ? (
+                <InboxAudio src={mediaUrl(message.media)} transcript={caption} />
+              ) : (
+                <InboxMessageText text={body || message.content} />
+              )}
+              {/* Reserves room so the time never overlaps the last line, as in WhatsApp. */}
+              <span className="inline-block w-12" />
+              <span className="absolute -bottom-1 right-0 text-[11px] leading-[15px] text-(--wa-text-2)">{time}</span>
+            </div>
+          )}
+        </div>
+        {buttons.map(label => (
+          <div
+            key={label}
+            className="flex items-center justify-center gap-1.5 rounded-[7.5px] bg-(--wa-bubble-out) px-3 py-2 text-[14px] text-[#027eb5] shadow-[0_1px_0.5px_rgba(11,20,26,0.13)]"
+          >
+            <CornerUpLeft className="size-4 shrink-0" />
+            {label}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
 }
 
-function dayKey(iso: string): string {
-  const d = new Date(iso)
-  return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`
+function Notice({ tone = 'info', children }: { tone?: 'info' | 'warning'; children: React.ReactNode }) {
+  const Icon = tone === 'warning' ? AlertTriangle : Info
+  return (
+    <div className="my-3 flex justify-center">
+      <div className="flex max-w-[min(85%,520px)] items-start gap-2 rounded-[7.5px] bg-(--wa-notice) px-3 py-[6px] text-center text-[12.5px] leading-[18px] text-(--wa-icon) shadow-[0_1px_0.5px_rgba(11,20,26,0.13)]">
+        <Icon className="mt-px size-3.5 shrink-0" />
+        <span>{children}</span>
+      </div>
+    </div>
+  )
 }
 
-function dayLabel(iso: string): string {
-  const d = new Date(iso)
-  const today = new Date()
-  const yesterday = new Date()
-  yesterday.setDate(today.getDate() - 1)
-  if (dayKey(iso) === dayKey(today.toISOString())) return 'Hoy'
-  if (dayKey(iso) === dayKey(yesterday.toISOString())) return 'Ayer'
-  return d.toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' })
-}
-
-function initialsOf(name: string) {
-  const parts = name.trim().split(/\s+/).filter(Boolean)
-  if (parts.length === 0) return ''
-  return (parts[0][0] + (parts[1]?.[0] ?? '')).toUpperCase()
-}
-
-export function InboxThread({ conversation, onOpenClient }: Props) {
+export function InboxThread({ conversation, onOpenClient, onBack }: Props) {
   const { data: messages = [], isLoading } = useInboxMessages(conversation.id)
   const { takeover, release, sendMessage, updateContact } = useInboxActions(conversation.id)
+  const { containerRef, contentRef, onScroll, atBottom, unseen, scrollToBottom } = useChatScroll(messages.length)
   const [text, setText] = useState('')
   const [editingContact, setEditingContact] = useState(false)
   const [windowExpired, setWindowExpired] = useState(false)
-  const bottomRef = useRef<HTMLDivElement>(null)
-
-  // Scroll to bottom when new messages arrive
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages.length])
+  const inputRef = useRef<HTMLTextAreaElement>(null)
 
   // Detect the 24-hour Meta window: free-text replies are only allowed within
   // 24 h of the last inbound user message. The clock is read asynchronously (in
@@ -100,6 +260,14 @@ export function InboxThread({ conversation, onOpenClient }: Props) {
     }
   }, [messages])
 
+  // Grow the box with its content up to six lines, like WhatsApp's composer.
+  useEffect(() => {
+    const el = inputRef.current
+    if (!el) return
+    el.style.height = 'auto'
+    el.style.height = `${Math.min(el.scrollHeight, 132)}px`
+  }, [text])
+
   const humanAttention = conversation.botPaused || conversation.globalBotDisabled
   const canSend = humanAttention && !windowExpired
   const isSending = sendMessage.isPending
@@ -107,7 +275,23 @@ export function InboxThread({ conversation, onOpenClient }: Props) {
   function handleSend() {
     const trimmed = text.trim()
     if (!trimmed || isSending) return
-    sendMessage.mutate(trimmed, { onSuccess: () => setText('') })
+    sendMessage.mutate(trimmed, {
+      onSuccess: () => {
+        setText('')
+        scrollToBottom()
+      },
+    })
+  }
+
+  function insertEmoji(emoji: string) {
+    const el = inputRef.current
+    const start = el?.selectionStart ?? text.length
+    const end = el?.selectionEnd ?? text.length
+    setText(text.slice(0, start) + emoji + text.slice(end))
+    requestAnimationFrame(() => {
+      el?.focus()
+      el?.setSelectionRange(start + emoji.length, start + emoji.length)
+    })
   }
 
   function handleSaveContact(data: UpdateInboxContactRequest) {
@@ -129,210 +313,210 @@ export function InboxThread({ conversation, onOpenClient }: Props) {
 
   const client = conversation.client
   const contactName = contactDisplayName(conversation)
-  const initials = contactName !== conversation.waId ? initialsOf(contactName) : ''
   const consulted = consultedClientLabel(conversation)
+  const status = conversation.globalBotDisabled
+    ? 'Atención humana global'
+    : conversation.botPaused
+      ? `Atendido por ${conversation.assignedTo?.email ?? 'una persona'}`
+      : 'Atiende el bot'
+  const subtitle = [status, consulted, contactName === conversation.waId ? null : `+${conversation.waId}`]
+    .filter(Boolean)
+    .join(' · ')
 
   return (
-    <div className="flex h-full flex-col bg-background">
+    <div className="flex h-full flex-col">
       {/* Header */}
-      <div className="flex shrink-0 items-center justify-between gap-3 border-b border-line bg-card px-5 py-3.5">
-        <div className="flex min-w-0 items-center gap-3">
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-ember-soft text-[13px] font-semibold text-ember-2">
-            {initials || <MessageCircle className="size-5" />}
-          </div>
-          <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <p className="truncate text-[14px] font-semibold text-ink">{contactName}</p>
-              <span
-                className={cn(
-                  'hidden shrink-0 items-center gap-1.5 rounded-full border px-2 py-0.5 text-[10.5px] font-medium sm:inline-flex',
-                  humanAttention
-                    ? 'border-ember/25 bg-ember-soft text-ember-2'
-                    : 'border-line-2 bg-secondary text-muted-foreground',
-                )}
-              >
-                <span
-                  className={cn('size-1.5 rounded-full', humanAttention ? 'bg-ember-2' : 'bg-faint-2')}
-                  aria-hidden
-                />
-                {conversation.globalBotDisabled
-                  ? 'Atención humana global'
-                  : conversation.botPaused
-                    ? 'Atención humana'
-                    : 'Bot activo'}
-              </span>
-            </div>
-            <p className="mt-0.5 truncate text-[11.5px] text-muted-foreground">
-              {consulted ? `${consulted} · ${conversation.waId}` : conversation.waId}
-            </p>
-          </div>
-        </div>
-        <div className="flex shrink-0 gap-2">
-          <Button size="sm" variant="outline" onClick={() => setEditingContact(true)}>
-            <Pencil className="size-3.5" />
-            Editar contacto
-          </Button>
-          {client && (
-            <Button size="sm" variant="outline" onClick={() => onOpenClient(client.id)}>
-              <IdCard className="size-3.5" />
-              Ver ficha
-            </Button>
-          )}
-          {conversation.globalBotDisabled ? null : !conversation.botPaused ? (
-            <Button size="sm" variant="outline" onClick={() => takeover.mutate()} disabled={takeover.isPending}>
-              {takeover.isPending ? <Loader2 className="size-3.5 animate-spin" /> : <UserCheck className="size-3.5" />}
+      <header className="z-10 flex h-[59px] shrink-0 items-center gap-1 border-l border-(--wa-line) bg-(--wa-panel) px-4">
+        <button
+          type="button"
+          onClick={onBack}
+          aria-label="Volver a los chats"
+          className="-ml-2 mr-1 rounded-full p-1.5 text-(--wa-icon) md:hidden"
+        >
+          <ArrowLeft className="size-5" />
+        </button>
+        <button
+          type="button"
+          onClick={() => (client ? onOpenClient(client.id) : setEditingContact(true))}
+          title={client ? 'Ver ficha del asegurado' : 'Editar contacto'}
+          className="flex min-w-0 flex-1 items-center gap-[15px] text-left"
+        >
+          <InboxAvatar className="size-10" />
+          <span className="min-w-0">
+            <span className="block truncate text-[16px] leading-[21px] text-(--wa-text)">{contactName}</span>
+            <span className="block truncate text-[13px] leading-5 text-(--wa-text-2)">{subtitle}</span>
+          </span>
+        </button>
+
+        <div className="flex shrink-0 items-center gap-2.5 pl-2">
+          {!conversation.globalBotDisabled && !conversation.botPaused && (
+            <button
+              type="button"
+              onClick={() => takeover.mutate()}
+              disabled={takeover.isPending}
+              className="flex h-9 items-center gap-1.5 rounded-full bg-(--wa-green) px-4 text-[14px] font-medium text-white transition-colors hover:bg-(--wa-green-dark) disabled:opacity-60"
+            >
+              {takeover.isPending ? <Loader2 className="size-4 animate-spin" /> : <UserCheck className="size-4" />}
               Tomar
-            </Button>
-          ) : (
-            <Button size="sm" variant="outline" onClick={() => release.mutate()} disabled={release.isPending}>
-              {release.isPending ? <Loader2 className="size-3.5 animate-spin" /> : <UserX className="size-3.5" />}
-              Devolver al bot
-            </Button>
+            </button>
           )}
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              aria-label="Opciones del chat"
+              className="rounded-full p-2 text-(--wa-icon) outline-none hover:bg-black/5 data-[state=open]:bg-black/10"
+            >
+              <MoreVertical className="size-5" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="wa w-auto min-w-52">
+              {client && (
+                <DropdownMenuItem onSelect={() => onOpenClient(client.id)}>
+                  <IdCard className="size-4" /> Ver ficha del asegurado
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuItem onSelect={() => setEditingContact(true)}>
+                <Pencil className="size-4" /> Editar contacto
+              </DropdownMenuItem>
+              {conversation.botPaused && !conversation.globalBotDisabled && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onSelect={() => release.mutate()} disabled={release.isPending}>
+                    <UserX className="size-4" /> Devolver al bot
+                  </DropdownMenuItem>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
-      </div>
+      </header>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="mx-auto flex w-full max-w-4xl flex-col gap-3 px-4 py-6">
-          {isLoading && (
-            <div className="flex justify-center py-8">
-              <Loader2 className="size-5 animate-spin text-muted-foreground" />
-            </div>
-          )}
-          {!isLoading && messages.length === 0 && (
-            <div className="flex flex-col items-center gap-2 py-16 text-center">
-              <div className="flex size-11 items-center justify-center rounded-full bg-secondary text-muted-foreground">
-                <MessageCircle className="size-5" />
+      <div className="wa-wallpaper relative min-h-0 flex-1">
+        <div ref={containerRef} onScroll={onScroll} className="h-full overflow-y-auto">
+          <div ref={contentRef} className="flex flex-col px-[5%] pb-3 pt-2 lg:px-[7%]">
+            {isLoading && (
+              <div className="flex justify-center py-8">
+                <Loader2 className="size-5 animate-spin text-(--wa-icon)" />
               </div>
-              <p className="text-[13px] text-muted-foreground">Todavía no hay mensajes en esta conversación.</p>
-            </div>
-          )}
-          {messages.map((msg, i) => {
-            const isUser = msg.role === 'user'
-            const prev = messages[i - 1]
-            const showDay = !prev || dayKey(prev.createdAt) !== dayKey(msg.createdAt)
-            return (
-              <Fragment key={msg.id}>
-                {showDay && (
-                  <div className="my-1.5 flex items-center justify-center">
-                    <span className="rounded-full bg-secondary px-3 py-1 text-[10.5px] font-medium text-muted-foreground">
-                      {dayLabel(msg.createdAt)}
-                    </span>
-                  </div>
-                )}
-                <div className={cn('flex max-w-[82%] flex-col gap-1', isUser ? 'self-start' : 'self-end')}>
-                  <div
-                    className={cn(
-                      'rounded-2xl px-3.5 py-2.5 text-[13px] leading-relaxed whitespace-pre-wrap shadow-sm',
-                      roleBubble(msg.role),
-                    )}
-                  >
-                    {msg.media?.mimeType.startsWith('image/') ? (
-                      <a
-                        href={adjuntoUrl({
-                          filename: msg.media.originalName,
-                          originalName: msg.media.originalName,
-                          url: msg.media.url,
-                          mimeType: msg.media.mimeType,
-                          size: msg.media.size ?? 0,
-                        })}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="block"
-                        title="Abrir imagen en tamaño completo"
-                      >
-                        {/* Signed API URLs are dynamic and cannot go through Next's image optimizer. */}
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={adjuntoUrl({
-                            filename: msg.media.originalName,
-                            originalName: msg.media.originalName,
-                            url: msg.media.url,
-                            mimeType: msg.media.mimeType,
-                            size: msg.media.size ?? 0,
-                          })}
-                          alt={
-                            msg.media.tipo
-                              ? `Imagen: ${msg.media.tipo.replaceAll('_', ' ')}`
-                              : 'Imagen enviada por el cliente'
-                          }
-                          className="max-h-80 w-auto max-w-full rounded-xl object-contain"
-                        />
-                        <span className="mt-1.5 block text-[11px] opacity-70">Tocá para ampliar</span>
-                      </a>
-                    ) : msg.media?.mimeType.startsWith('audio/') ? (
-                      <InboxAudio
-                        src={adjuntoUrl({
-                          filename: msg.media.originalName,
-                          originalName: msg.media.originalName,
-                          url: msg.media.url,
-                          mimeType: msg.media.mimeType,
-                          size: msg.media.size ?? 0,
-                        })}
-                        transcript={msg.content}
-                      />
-                    ) : (
-                      msg.content
-                    )}
-                  </div>
-                  <span className={cn('px-1 text-[10.5px] text-faint', isUser ? 'text-left' : 'text-right')}>
-                    {roleLabel(msg.role)} · {fmtTime(msg.createdAt)}
-                  </span>
-                </div>
-              </Fragment>
-            )
-          })}
-          <div ref={bottomRef} />
+            )}
+            {!isLoading && messages.length === 0 && <Notice>Todavía no hay mensajes en esta conversación.</Notice>}
+            {messages.map((msg, i) => {
+              const prev = messages[i - 1]
+              const newDay = !prev || !isSameDay(prev.createdAt, msg.createdAt)
+              const first = newDay || prev.role !== msg.role
+              return (
+                <Fragment key={msg.id}>
+                  {newDay && (
+                    <div className="sticky top-2 z-[1] mb-1 mt-3 flex justify-center">
+                      <span className="rounded-[7.5px] bg-(--wa-surface) px-3 py-[5px] text-[12.5px] leading-[21px] text-(--wa-text-2) shadow-[0_1px_0.5px_rgba(11,20,26,0.13)]">
+                        {dayLabel(msg.createdAt)}
+                      </span>
+                    </div>
+                  )}
+                  <MessageBubble message={msg} first={first} />
+                </Fragment>
+              )
+            })}
+            {windowExpired && humanAttention && (
+              <Notice tone="warning">
+                El cliente no escribe hace más de 24 h. WhatsApp no permite enviarle un mensaje libre hasta que vuelva a
+                escribir.
+              </Notice>
+            )}
+          </div>
         </div>
+
+        {!atBottom && (
+          <button
+            type="button"
+            onClick={() => scrollToBottom()}
+            aria-label="Ir al último mensaje"
+            className="absolute bottom-4 right-5 flex size-[42px] items-center justify-center rounded-full bg-(--wa-surface) text-(--wa-icon) shadow-[0_1px_1px_rgba(11,20,26,0.06),0_2px_5px_rgba(11,20,26,0.2)]"
+          >
+            <ChevronDown className="size-6" />
+            {unseen > 0 && (
+              <span className="absolute -top-1.5 -left-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-(--wa-unread) px-1 text-[11px] font-semibold text-white">
+                {unseen}
+              </span>
+            )}
+          </button>
+        )}
       </div>
 
-      {/* Reply box */}
-      <div className="shrink-0 border-t border-line bg-card px-4 py-3">
-        <div className="mx-auto w-full max-w-4xl">
-          {windowExpired && (
-            <div className="mb-2.5 flex items-start gap-2 rounded-lg border border-amber/30 bg-amber-subtle px-3 py-2 text-[11.5px] leading-relaxed text-amber-700 dark:text-amber">
-              <AlertTriangle className="mt-px size-3.5 shrink-0" />
-              <span>
-                El usuario no escribió en más de 24 h. No se puede enviar un mensaje libre (ventana de Meta expirada).
-              </span>
-            </div>
-          )}
+      {/* Composer */}
+      {humanAttention ? (
+        <footer className="shrink-0 bg-(--wa-panel)">
           {conversation.globalBotDisabled && (
-            <div className="mb-2.5 flex items-start gap-2 rounded-lg border border-ember/25 bg-ember-soft px-3 py-2 text-[11.5px] leading-relaxed text-ember-2">
-              <Info className="mt-px size-3.5 shrink-0" />
-              <span>La atención humana global está activa. Podés responder sin tomar este chat individualmente.</span>
-            </div>
+            <p className="px-5 pt-2 text-center text-[12.5px] text-(--wa-text-2)">
+              La atención humana global está activa: podés responder sin tomar este chat.
+            </p>
           )}
-          {!humanAttention && (
-            <div className="mb-2.5 flex items-start gap-2 rounded-lg border border-line-2 bg-secondary/50 px-3 py-2 text-[11.5px] leading-relaxed text-muted-foreground">
-              <Info className="mt-px size-3.5 shrink-0" />
-              <span>
-                Tomá la conversación con <span className="font-medium text-ink-3">Tomar</span> para poder escribir.
-              </span>
-            </div>
-          )}
-          <div className="flex items-end gap-2">
+          <div className="flex min-h-[62px] items-end gap-2 px-4 py-[10px]">
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                disabled={!canSend}
+                aria-label="Emojis"
+                className="mb-[3px] rounded-full p-1.5 text-(--wa-icon) outline-none hover:bg-black/5 disabled:opacity-40 data-[state=open]:bg-black/10"
+              >
+                <Smile className="size-6" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                side="top"
+                align="start"
+                className="w-auto p-2"
+                onCloseAutoFocus={e => e.preventDefault()}
+              >
+                <div className="grid grid-cols-9 gap-0.5">
+                  {EMOJIS.map(emoji => (
+                    <DropdownMenuItem
+                      key={emoji}
+                      onSelect={() => insertEmoji(emoji)}
+                      className="flex size-9 items-center justify-center p-0 text-[22px]"
+                    >
+                      {emoji}
+                    </DropdownMenuItem>
+                  ))}
+                </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <textarea
+              ref={inputRef}
               value={text}
               onChange={e => setText(e.target.value)}
               onKeyDown={handleKeyDown}
               disabled={!canSend || isSending}
-              placeholder={canSend ? 'Escribí un mensaje… (Enter para enviar, Shift+Enter para salto de línea)' : ''}
+              placeholder={windowExpired ? 'No se puede escribir: pasaron más de 24 h' : 'Escribí un mensaje'}
               rows={1}
-              className="max-h-32 min-h-[44px] flex-1 resize-none rounded-xl border border-line-2 bg-background px-3.5 py-3 text-[13px] leading-relaxed placeholder:text-muted-foreground focus:border-ember focus:outline-none focus:ring-[3px] focus:ring-ember/15 disabled:cursor-not-allowed disabled:opacity-50"
+              className="min-h-[42px] flex-1 resize-none rounded-lg bg-(--wa-surface) px-3 py-[10px] text-[15px] leading-[22px] text-(--wa-text) outline-none placeholder:text-(--wa-text-2) disabled:cursor-not-allowed disabled:opacity-60"
             />
-            <Button
-              size="icon"
+            <button
+              type="button"
               onClick={handleSend}
               disabled={!canSend || !text.trim() || isSending}
-              className="size-11 shrink-0 rounded-xl"
+              aria-label="Enviar"
+              className={cn(
+                'mb-px flex size-10 shrink-0 items-center justify-center rounded-full transition-colors',
+                text.trim() && canSend ? 'bg-(--wa-green) text-white hover:bg-(--wa-green-dark)' : 'text-(--wa-icon)',
+                'disabled:cursor-not-allowed',
+              )}
             >
-              {isSending ? <Loader2 className="size-4 animate-spin" /> : <SendHorizonal className="size-4" />}
-            </Button>
+              {isSending ? <Loader2 className="size-5 animate-spin" /> : <SendHorizontal className="size-5" />}
+            </button>
           </div>
-        </div>
-      </div>
+        </footer>
+      ) : (
+        <footer className="flex min-h-[62px] shrink-0 flex-wrap items-center justify-center gap-x-4 gap-y-2 bg-(--wa-panel) px-4 py-3 text-center">
+          <span className="text-[14px] text-(--wa-text-2)">El bot está atendiendo este chat.</span>
+          <button
+            type="button"
+            onClick={() => takeover.mutate()}
+            disabled={takeover.isPending}
+            className="flex items-center gap-1.5 text-[14px] font-medium text-(--wa-green-dark) hover:underline disabled:opacity-60"
+          >
+            {takeover.isPending && <Loader2 className="size-4 animate-spin" />}
+            Tomar la conversación para escribir
+          </button>
+        </footer>
+      )}
 
       {editingContact && (
         <InboxContactDialog
