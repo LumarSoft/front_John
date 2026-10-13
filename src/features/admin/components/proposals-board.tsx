@@ -7,13 +7,18 @@ import { Button } from '@/src/components/ui/button'
 import { Input } from '@/src/components/ui/input'
 import { Label } from '@/src/components/ui/label'
 import { Skeleton } from '@/src/components/ui/skeleton'
+import { cn } from '@/src/lib/utils'
+import { useListPage } from '../hooks/use-list-page'
 import { useCreateProposal, useProposals } from '../hooks/use-proposals'
+import { ListPagination } from './list-pagination'
 import { ProposalCard } from './proposal-card'
+
+const PAGE_SIZE = 10
 
 const fieldClass =
   'w-full rounded-xl border border-line-2 bg-paper px-3.5 py-2.5 text-[13.5px] text-ink outline-none transition-[border-color,box-shadow] focus:border-ember focus:shadow-[0_0_0_3px_rgba(232,168,32,0.12)]'
 
-function ProposalForm() {
+function ProposalForm({ onCreated }: { onCreated: () => void }) {
   const create = useCreateProposal()
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
@@ -31,6 +36,7 @@ function ProposalForm() {
           toast.success('¡Gracias! Le llegó tu propuesta a Lumar.')
           setTitle('')
           setDescription('')
+          onCreated()
         },
         onError: () => toast.error('No se pudo enviar. Intentá de nuevo.'),
       },
@@ -79,7 +85,9 @@ function ProposalForm() {
 
 /** The organization's shared board: propose, and see every proposal with its status and Lumar's answer. */
 export function ProposalsBoard() {
-  const { data: proposals, isLoading, isError } = useProposals()
+  const { page, goTo, reset, keepWithin, topRef } = useListPage()
+  const { data: result, isLoading, isError, isFetching } = useProposals({ page, pageSize: PAGE_SIZE })
+  keepWithin(result?.totalPages)
 
   return (
     <div className="flex flex-col gap-5">
@@ -87,7 +95,8 @@ export function ProposalsBoard() {
         Todo el equipo ve las propuestas, en qué estado están y lo que respondemos. Antes de proponer, fijate si ya
         está.
       </p>
-      <ProposalForm />
+      {/* A new proposal goes first, so show the first page where it landed. */}
+      <ProposalForm onCreated={reset} />
 
       {isLoading && <Skeleton className="h-32 rounded-2xl" />}
       {isError && (
@@ -95,14 +104,30 @@ export function ProposalsBoard() {
           No se pudieron cargar las propuestas.
         </p>
       )}
-      {proposals && proposals.length === 0 && (
+      {result && result.total === 0 && (
         <p className="rounded-xl border border-line-2 bg-card p-6 text-center text-[13.5px] text-muted-foreground">
           Todavía no hay propuestas. ¡Sé el primero!
         </p>
       )}
-      {proposals?.map(proposal => (
-        <ProposalCard key={proposal.id} proposal={proposal} />
-      ))}
+      <div
+        ref={topRef}
+        className={cn('flex scroll-mt-20 flex-col gap-5 transition-opacity', isFetching && !isLoading && 'opacity-60')}
+      >
+        {result?.data.map(proposal => (
+          <ProposalCard key={proposal.id} proposal={proposal} />
+        ))}
+      </div>
+      {result && (
+        <ListPagination
+          page={result.page}
+          pageSize={result.pageSize}
+          total={result.total}
+          totalPages={result.totalPages}
+          noun={['propuesta', 'propuestas']}
+          onPageChange={goTo}
+          disabled={isFetching}
+        />
+      )}
     </div>
   )
 }

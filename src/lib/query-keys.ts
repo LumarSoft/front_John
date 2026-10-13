@@ -1,6 +1,12 @@
 import type { AdminClientsQuery } from '@/src/types/api/clients'
 import type { CobranzasQuery } from '@/src/types/api/cobranzas'
 import type { VehicleType } from '@/src/types/api/cotizador'
+import type {
+  ImprovementsQuery,
+  OwnerImprovementsQuery,
+  OwnerProposalsQuery,
+  PageQuery,
+} from '@/src/types/api/improvements'
 import type { NovedadesQuery } from '@/src/types/api/novedades'
 import type { SolicitudesQuery } from '@/src/types/api/solicitudes'
 import type { AdminSiniestrosQuery } from '@/src/services/siniestros.service'
@@ -34,15 +40,18 @@ export const QUERY_KEYS = {
     pricingPlans: ['admin', 'pricing'] as const,
     businessHours: ['admin', 'business-hours'] as const,
     coverageSettings: ['admin', 'coverage-settings'] as const,
-    improvements: ['admin', 'improvements'] as const,
+    improvements: (params?: ImprovementsQuery) => ['admin', 'improvements', 'list', params ?? {}] as const,
     improvementsUnseen: ['admin', 'improvements', 'unseen'] as const,
-    proposals: ['admin', 'improvement-proposals'] as const,
+    proposalsAll: ['admin', 'improvement-proposals'] as const,
+    proposals: (params?: PageQuery) => ['admin', 'improvement-proposals', 'list', params ?? {}] as const,
   },
   owner: {
     organizations: ['owner', 'organizations'] as const,
     organization: (id: number) => ['owner', 'organizations', id] as const,
-    improvements: ['owner', 'improvements'] as const,
-    proposals: ['owner', 'improvement-proposals'] as const,
+    improvementsAll: ['owner', 'improvements'] as const,
+    improvements: (params?: OwnerImprovementsQuery) => ['owner', 'improvements', 'list', params ?? {}] as const,
+    proposalsAll: ['owner', 'improvement-proposals'] as const,
+    proposals: (params?: OwnerProposalsQuery) => ['owner', 'improvement-proposals', 'list', params ?? {}] as const,
     proposalsNew: ['owner', 'improvement-proposals', 'new'] as const,
   },
   pricing: {

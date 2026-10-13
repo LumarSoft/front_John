@@ -15,37 +15,39 @@ import {
 import { Button } from '@/src/components/ui/button'
 import { Skeleton } from '@/src/components/ui/skeleton'
 import { cn } from '@/src/lib/utils'
-import type { OwnerImprovement } from '@/src/types/api/improvements'
+import type { OwnerImprovement, OwnerImprovementFilter } from '@/src/types/api/improvements'
 import { useOwnerImprovementActions, useOwnerImprovements } from '../hooks/use-improvements'
+import { useListPage } from '../hooks/use-list-page'
 import { ImprovementCard } from './improvement-card'
 import { ImprovementFormDialog } from './improvement-form-dialog'
+import { ListPagination } from './list-pagination'
 
-type StatusFilter = 'all' | 'drafts' | 'published'
+const PAGE_SIZE = 10
 
-const FILTERS: { key: StatusFilter; label: string }[] = [
+const FILTERS: { key: OwnerImprovementFilter; label: string }[] = [
   { key: 'all', label: 'Todas' },
   { key: 'drafts', label: 'Borradores' },
   { key: 'published', label: 'Publicadas' },
 ]
 
-function matchesFilter(improvement: OwnerImprovement, filter: StatusFilter): boolean {
-  if (filter === 'drafts') return !improvement.publishedAt
-  if (filter === 'published') return !!improvement.publishedAt
-  return true
-}
-
 /** Lumar (OWNER) writes, previews and publishes the improvements the organizations read. */
 export function MejorasEditorView() {
-  const { data: improvements, isLoading, isError } = useOwnerImprovements()
+  const [filter, setFilter] = useState<OwnerImprovementFilter>('all')
+  const { page, goTo, reset, keepWithin, topRef } = useListPage()
+  const { data: result, isLoading, isError, isFetching } = useOwnerImprovements({ page, pageSize: PAGE_SIZE, filter })
+  keepWithin(result?.totalPages)
   const { update, remove } = useOwnerImprovementActions()
-  const [filter, setFilter] = useState<StatusFilter>('all')
   const [editing, setEditing] = useState<OwnerImprovement | null>(null)
   const [formOpen, setFormOpen] = useState(false)
   const [deleting, setDeleting] = useState<OwnerImprovement | null>(null)
 
-  const all = improvements ?? []
-  const drafts = all.filter(i => !i.publishedAt).length
-  const visible = all.filter(i => matchesFilter(i, filter))
+  const visible = result?.data ?? []
+  const drafts = result?.counts.drafts ?? 0
+
+  const chooseFilter = (next: OwnerImprovementFilter) => {
+    setFilter(next)
+    reset()
+  }
 
   const openForm = (improvement: OwnerImprovement | null) => {
     setEditing(improvement)
@@ -73,7 +75,7 @@ export function MejorasEditorView() {
   }
 
   return (
-    <div>
+    <div ref={topRef} className="scroll-mt-20">
       <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
         <p className="max-w-xl text-[13px] text-muted-foreground">
           Lo que publiques acá lo ven los usuarios de la organización en su panel, con un aviso de nuevas.
@@ -89,7 +91,7 @@ export function MejorasEditorView() {
           <button
             key={f.key}
             type="button"
-            onClick={() => setFilter(f.key)}
+            onClick={() => chooseFilter(f.key)}
             className={cn(
               'rounded-full border px-3 py-1.5 text-[12.5px] font-medium transition-colors',
               filter === f.key
@@ -97,7 +99,7 @@ export function MejorasEditorView() {
                 : 'border-line-2 bg-card text-ink-3 hover:border-ember/50',
             )}
           >
-            {f.label} <span className="tabular-nums text-faint">{all.filter(i => matchesFilter(i, f.key)).length}</span>
+            {f.label} <span className="tabular-nums text-faint">{result?.counts[f.key] ?? 0}</span>
           </button>
         ))}
       </div>
@@ -120,7 +122,7 @@ export function MejorasEditorView() {
         </p>
       )}
 
-      <div className="flex flex-col gap-4">
+      <div className={cn('flex flex-col gap-4 transition-opacity', isFetching && !isLoading && 'opacity-60')}>
         {visible.map(improvement => {
           const published = !!improvement.publishedAt
           const busy = update.isPending && update.variables?.id === improvement.id
@@ -175,6 +177,19 @@ export function MejorasEditorView() {
           )
         })}
       </div>
+
+      {result && (
+        <ListPagination
+          page={result.page}
+          pageSize={result.pageSize}
+          total={result.total}
+          totalPages={result.totalPages}
+          noun={['mejora', 'mejoras']}
+          onPageChange={goTo}
+          disabled={isFetching}
+          className="mt-6"
+        />
+      )}
 
       <ImprovementFormDialog improvement={editing} open={formOpen} onOpenChange={setFormOpen} />
 
