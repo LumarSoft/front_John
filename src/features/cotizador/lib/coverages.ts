@@ -14,6 +14,8 @@ export interface CoverageCard {
   tagline: string | null
   benefits: string[]
   exclusions: string[]
+  /** The franquicia paid on each claim, shown apart from what it does not include. */
+  deductible: string | null
   highlighted: boolean
   paymentOptions: CotizacionPaymentOption[]
 }
@@ -33,6 +35,7 @@ export function buildCoverageCards(coverages: CotizacionCoverage[]): CoverageCar
     benefits: coverage.benefits,
     // An API that predates exclusions does not send them.
     exclusions: coverage.exclusions ?? [],
+    deductible: coverage.deductible ?? null,
     highlighted: coverage.highlighted,
     paymentOptions: coverage.paymentOptions.filter(p => p.premium > 0).sort(byPaymentOrder),
   }))
@@ -45,6 +48,14 @@ const arsFormatter = new Intl.NumberFormat('es-AR', {
 })
 
 export const formatARS = (value: number): string => arsFormatter.format(value)
+
+/**
+ * What the client pays each month. Triunfo quotes monthly installments: with
+ * one installment the premium is that installment, with several it is the
+ * period's total and the installment is the monthly amount.
+ */
+export const monthlyPrice = (option: CotizacionPaymentOption): number =>
+  option.installments > 1 ? option.installmentValue : option.premium
 
 /**
  * The value the vehicle is insured for, as Triunfo resolved it. Null when it

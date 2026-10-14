@@ -6,6 +6,10 @@ export interface CotizarVehiculoRequest {
   manufactureYear: number
   postalCode: number
   coverage?: string
+  /** Brand new and not registered yet: Triunfo prices the casco differently. */
+  zeroKm?: boolean
+  /** Cars: has GNC. Not priced yet; the API adds a notice saying so. */
+  hasGnc?: boolean
 }
 
 export interface CotizacionPaymentOption {
@@ -24,6 +28,8 @@ export interface CotizacionCoverage {
   benefits: string[]
   /** What it does not include. Absent from an API that predates it. */
   exclusions?: string[]
+  /** The franquicia paid on each claim, or null. Absent from an older API. */
+  deductible?: string | null
   highlighted: boolean
   paymentOptions: CotizacionPaymentOption[]
 }
@@ -34,6 +40,11 @@ export interface CotizarVehiculoResponse {
   vehicleValue: string | null
   coverages: CotizacionCoverage[]
   messages: string[]
+  /**
+   * Triunfo could not value the vehicle and priced only Responsabilidad Civil:
+   * not a final quote, an advisor quotes the rest. Absent from an older API.
+   */
+  valuationMissing?: boolean
 }
 
 export type PersonType = 'FISICA' | 'JURIDICA'

@@ -1,6 +1,6 @@
 'use client'
 
-import { formatARS, formatSumInsured, type CoverageCard } from '../lib/coverages'
+import { formatARS, formatSumInsured, monthlyPrice, type CoverageCard } from '../lib/coverages'
 import { formatDisplayDate } from '../lib/dates'
 
 interface CotizacionResumenProps {
@@ -34,7 +34,7 @@ export function CotizacionResumen({
           <li key={p.code}>
             <div className="text-[11px] text-faint tracking-[0.02em]">{p.name}</div>
             <div className="flex items-baseline gap-1">
-              <span className="font-display text-[24px] text-ink leading-none">{formatARS(p.premium)}</span>
+              <span className="font-display text-[24px] text-ink leading-none">{formatARS(monthlyPrice(p))}</span>
               <span className="text-[12px] text-faint">/mes</span>
             </div>
           </li>

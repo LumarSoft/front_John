@@ -26,6 +26,11 @@ export function VehiculoStep({ form: hook, vehicleType }: Readonly<VehiculoStepP
     yearOptions,
     yearHint,
     cotizarErrorMessage,
+    postalCodeError,
+    zeroKmAvailable,
+    zeroKmOnly,
+    handleZeroKmChange,
+    handleGncChange,
     handleBrandChange,
     handleGroupChange,
     handleCodiaChange,
@@ -144,11 +149,39 @@ export function VehiculoStep({ form: hook, vehicleType }: Readonly<VehiculoStepP
             type="text"
             inputMode="numeric"
             className={inputClass}
-            placeholder="1425"
+            placeholder="2000"
+            maxLength={4}
+            aria-invalid={postalCodeError ? true : undefined}
             value={form.postalCode}
             onChange={e => handlePostalCodeChange(e.target.value)}
           />
+          {postalCodeError && <p className="text-[12px] text-red-600 leading-[1.45] m-0">{postalCodeError}</p>}
         </div>
+      </div>
+
+      <div className="flex flex-col gap-[10px] mt-5">
+        {zeroKmAvailable && !zeroKmOnly && (
+          <label className="inline-flex items-center gap-2 text-[13px] text-ink-3 cursor-pointer w-fit">
+            <input
+              type="checkbox"
+              className="accent-[var(--color-ember)] w-4 h-4"
+              checked={form.zeroKm}
+              onChange={e => handleZeroKmChange(e.target.checked)}
+            />
+            Es 0 km (nuevo, sin patentar)
+          </label>
+        )}
+        {vehicleType === 'auto' && (
+          <label className="inline-flex items-center gap-2 text-[13px] text-ink-3 cursor-pointer w-fit">
+            <input
+              type="checkbox"
+              className="accent-[var(--color-ember)] w-4 h-4"
+              checked={form.hasGnc}
+              onChange={e => handleGncChange(e.target.checked)}
+            />
+            Tiene GNC
+          </label>
+        )}
       </div>
 
       {cotizarError && (

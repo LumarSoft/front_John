@@ -14,6 +14,23 @@ interface FormState {
   codia: number | null
   year: number | null
   postalCode: string
+  /** The client says it is brand new (only offered for this year's or last year's model). */
+  zeroKm: boolean
+  /** Cars: the client says it has GNC. */
+  hasGnc: boolean
+}
+
+/**
+ * Argentine postal codes run from 1000 to the 9400s. Triunfo prices an
+ * unknown one instead of rejecting it (9999 came back at half the price), so
+ * the form stops it first. Null when valid or still empty.
+ */
+export function postalCodeError(value: string): string | null {
+  const trimmed = value.trim()
+  if (!trimmed) return null
+  if (!/^\d{4}$/.test(trimmed)) return 'El código postal tiene 4 dígitos (por ejemplo 2000).'
+  const code = Number(trimmed)
+  return code >= 1000 && code <= 9499 ? null : 'Ese código postal no existe. Revisá los 4 dígitos.'
 }
 
 export interface YearOption {
@@ -68,6 +85,8 @@ const INITIAL: FormState = {
   codia: null,
   year: null,
   postalCode: '',
+  zeroKm: false,
+  hasGnc: false,
 }
 
 interface UseCotizadorVehiculoFormOptions {
@@ -94,6 +113,14 @@ export interface CotizadorVehiculoFormHook {
   yearHint: string | null
   /** What the API said when it refused the quote (wrong year, no reference price), or null for other failures. */
   cotizarErrorMessage: string | null
+  /** Why the postal code can't be quoted, while it is being typed. */
+  postalCodeError: string | null
+  /** Whether "es 0 km" applies: a model of this year or the previous one. */
+  zeroKmAvailable: boolean
+  /** The version is only sold new (0km list price, no used range): always 0 km. */
+  zeroKmOnly: boolean
+  handleZeroKmChange: (checked: boolean) => void
+  handleGncChange: (checked: boolean) => void
   handleBrandChange: (val: string) => void
   handleGroupChange: (val: string) => void
   handleCodiaChange: (val: string) => void
@@ -134,7 +161,12 @@ export function useCotizadorVehiculoForm({
   const { options: yearOptions, hint: yearHint } = yearOptionsFor(selectedModel, vehicleType)
   const yearAllowed = form.year !== null && yearOptions.some(o => o.value === form.year)
 
-  const isValid = Boolean(form.brandId && form.codia && yearAllowed && form.postalCode.trim())
+  const postalError = postalCodeError(form.postalCode)
+  const zeroKmOnly = !!selectedModel && typeof selectedModel.prices_from !== 'number' && !!selectedModel.list_price
+  const zeroKmAvailable = form.year !== null && form.year >= CURRENT_YEAR - 1
+  const zeroKm = zeroKmOnly || (zeroKmAvailable && form.zeroKm)
+
+  const isValid = Boolean(form.brandId && form.codia && yearAllowed && form.postalCode.trim() && !postalError)
 
   // A 400 carries the API's own explanation (year outside the catalog, no
   // reference price); anything else is a generic failure.
@@ -180,16 +212,26 @@ export function useCotizadorVehiculoForm({
     setForm(prev => ({ ...prev, postalCode: val }))
   }
 
+  const handleZeroKmChange = (checked: boolean) => {
+    setForm(prev => ({ ...prev, zeroKm: checked }))
+  }
+
+  const handleGncChange = (checked: boolean) => {
+    setForm(prev => ({ ...prev, hasGnc: checked }))
+  }
+
   const handleSubmit = (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault()
     const trimmedPostal = form.postalCode.trim()
-    if (!form.brandId || !form.codia || !form.year || !yearAllowed || !trimmedPostal) return
+    if (!form.brandId || !form.codia || !form.year || !yearAllowed || !trimmedPostal || postalError) return
     cotizar(
       {
         brand: String(form.brandId),
         model: String(form.codia),
         manufactureYear: form.year,
         postalCode: Number(trimmedPostal),
+        ...(zeroKm ? { zeroKm: true } : {}),
+        ...(vehicleType === 'auto' && form.hasGnc ? { hasGnc: true } : {}),
       },
       { onSuccess: () => onCotizado?.() },
     )
@@ -216,6 +258,11 @@ export function useCotizadorVehiculoForm({
     yearOptions,
     yearHint,
     cotizarErrorMessage,
+    postalCodeError: postalError,
+    zeroKmAvailable,
+    zeroKmOnly,
+    handleZeroKmChange,
+    handleGncChange,
     handleBrandChange,
     handleGroupChange,
     handleCodiaChange,
