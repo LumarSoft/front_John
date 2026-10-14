@@ -1,7 +1,7 @@
 'use client'
 
 import type { CotizarVehiculoResponse } from '@/src/types/api/cotizador'
-import { buildCoverageCards, formatARS, formatSumInsured, type CoverageCard } from '../lib/coverages'
+import { buildCoverageCards, formatARS, formatSumInsured, monthlyPrice, type CoverageCard } from '../lib/coverages'
 
 const Check = () => (
   <svg
@@ -63,6 +63,26 @@ export function CotizacionResultados({ result, onSelect, onReset }: Readonly<Cot
 
   return (
     <div className="flex flex-col gap-7">
+      {/* A quote with only RC because Triunfo could not value the vehicle used
+          to look final: one card and no word about the missing coverages. */}
+      {(result.valuationMissing || result.messages.length > 0) && (
+        <div
+          role="status"
+          className="mx-auto max-w-[560px] rounded-2xl border border-ember/50 bg-ember/10 px-5 py-4 text-left"
+        >
+          {result.valuationMissing && (
+            <div className="text-[13.5px] font-semibold text-ink mb-1">Esta cotización está incompleta</div>
+          )}
+          <ul className="m-0 p-0 list-none flex flex-col gap-1">
+            {result.messages.map(message => (
+              <li key={message} className="text-[13px] text-ink-3 leading-[1.55]">
+                {message}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       <div className="text-center">
         <h3 className="font-display text-[26px] text-ink m-0 mb-2">Elegí tu cobertura</h3>
         <p className="text-[13px] text-faint tracking-[0.02em]">
@@ -114,7 +134,12 @@ export function CotizacionResultados({ result, onSelect, onReset }: Readonly<Cot
               {card.paymentOptions.map(p => (
                 <li key={p.code}>
                   <div className="text-[11px] text-faint tracking-[0.02em]">{p.name}</div>
-                  <div className="font-display text-[22px] text-ink leading-tight">{formatARS(p.premium)}</div>
+                  <div className="flex items-baseline gap-1">
+                    <span className="font-display text-[22px] text-ink leading-tight">
+                      {formatARS(monthlyPrice(p))}
+                    </span>
+                    <span className="text-[12px] text-faint">/mes</span>
+                  </div>
                 </li>
               ))}
             </ul>
@@ -128,6 +153,13 @@ export function CotizacionResultados({ result, onSelect, onReset }: Readonly<Cot
                   </li>
                 ))}
               </ul>
+            )}
+
+            {card.deductible && (
+              <div className="flex flex-col gap-[5px]">
+                <div className="text-[10.5px] tracking-[0.2em] uppercase text-faint font-semibold">Franquicia</div>
+                <p className="m-0 text-[12px] text-ink-3 leading-snug">{card.deductible}</p>
+              </div>
             )}
 
             {card.exclusions.length > 0 && (
