@@ -29,6 +29,8 @@ export const QUERY_KEYS = {
     clients: (params?: AdminClientsQuery) => ['admin', 'clients', 'list', params ?? {}] as const,
     clientsStats: ['admin', 'clients', 'stats'] as const,
     client: (id: number) => ['admin', 'clients', id] as const,
+    clientPolizaDocumentos: (clientId: number, polizaId: number) =>
+      ['admin', 'clients', clientId, 'polizas', polizaId, 'documentos'] as const,
     cobranzas: (params?: CobranzasQuery) => ['admin', 'cobranzas', 'list', params ?? {}] as const,
     cobranzasStats: ['admin', 'cobranzas', 'stats'] as const,
     novedades: (params?: NovedadesQuery) => ['admin', 'novedades', 'list', params ?? {}] as const,

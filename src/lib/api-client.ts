@@ -46,3 +46,10 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   if (res.status === 204) return undefined as T
   return res.json() as Promise<T>
 }
+
+/** Downloads a file the API serves (a PDF) with the panel's token. */
+export async function apiDownload(path: string, token: string): Promise<Blob> {
+  const res = await fetch(`${API_URL}${path}`, { headers: { Authorization: `Bearer ${token}` } })
+  if (!res.ok) throw new ApiError(res.status, await extractErrorMessage(res))
+  return res.blob()
+}
