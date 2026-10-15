@@ -1,5 +1,11 @@
-import { apiRequest } from '@/src/lib/api-client'
-import type { AdminClientDetail, AdminClientsPage, AdminClientsQuery, AdminClientsStats } from '@/src/types/api/clients'
+import { apiDownload, apiRequest } from '@/src/lib/api-client'
+import type {
+  AdminClientDetail,
+  AdminClientsPage,
+  AdminClientsQuery,
+  AdminClientsStats,
+  AdminPolizaDocumento,
+} from '@/src/types/api/clients'
 
 function buildListQuery(params: AdminClientsQuery): string {
   const search = new URLSearchParams()
@@ -20,4 +26,9 @@ export const adminClientsService = {
     apiRequest<AdminClientsPage>(`/admin/clients${buildListQuery(params)}`, { token }),
   stats: (token: string) => apiRequest<AdminClientsStats>('/admin/clients/stats', { token }),
   get: (id: number, token: string) => apiRequest<AdminClientDetail>(`/admin/clients/${id}`, { token }),
+  // Documents Triunfo has for one policy, fetched live by the API.
+  documentos: (clientId: number, polizaId: number, token: string) =>
+    apiRequest<AdminPolizaDocumento[]>(`/admin/clients/${clientId}/polizas/${polizaId}/documentos`, { token }),
+  downloadDocumento: (clientId: number, polizaId: number, code: string, token: string) =>
+    apiDownload(`/admin/clients/${clientId}/polizas/${polizaId}/documentos/${code}`, token),
 }

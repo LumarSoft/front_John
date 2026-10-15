@@ -62,6 +62,13 @@ export interface AdminPolizaDetail {
   installments: AdminCuota[]
 }
 
+/** A document Triunfo has for a policy (tarjeta verde, certificado, constancia…). */
+export interface AdminPolizaDocumento {
+  code: string
+  name: string
+  url: string
+}
+
 export interface AdminCuotaStats {
   pending: number
   overdue: number

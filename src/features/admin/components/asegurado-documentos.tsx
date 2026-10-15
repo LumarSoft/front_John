@@ -9,8 +9,9 @@ import { Separator } from '@/src/components/ui/separator'
 import type { AdminClientDetail, AdminPolizaDetail } from '@/src/types/api/clients'
 import { formatCurrency, formatDate, polizaStatus, RISK_LABELS, RiskIcon } from '../lib/asegurados-ui'
 import { PolizaStatusBadge } from './poliza-status-badge'
+import { TriunfoDocumentosCard } from './asegurado-triunfo-documentos'
 
-type DocFormat = 'credencial' | 'certificado'
+type DocFormat = 'triunfo' | 'credencial' | 'certificado'
 
 // ─── Tarjeta credencial ─────────────────────────────────────────────────────────
 
@@ -234,6 +235,7 @@ function CertificadoCard({ poliza, client }: { poliza: AdminPolizaDetail; client
 // ─── Documentos tab ───────────────────────────────────────────────────────────────
 
 const FORMAT_OPTIONS: { value: DocFormat; label: string; icon: typeof CreditCard }[] = [
+  { value: 'triunfo', label: 'Triunfo', icon: Building2 },
   { value: 'credencial', label: 'Credenciales', icon: CreditCard },
   { value: 'certificado', label: 'Certificados', icon: FileText },
 ]
@@ -279,7 +281,7 @@ function printableDoc(format: DocFormat, poliza: AdminPolizaDetail, client: Admi
 }
 
 export function AseguradoDocumentosTab({ client }: { client: AdminClientDetail }) {
-  const [format, setFormat] = useState<DocFormat>('credencial')
+  const [format, setFormat] = useState<DocFormat>('triunfo')
   const [printDoc, setPrintDoc] = useState<ReactNode>(null)
 
   if (client.policies.length === 0) {
@@ -298,7 +300,7 @@ export function AseguradoDocumentosTab({ client }: { client: AdminClientDetail }
   return (
     <div className="space-y-4 pb-6">
       {/* Format switch — fixed equal-width segments, no reflow on change */}
-      <div className="grid grid-cols-2 gap-1 rounded-lg border border-line-2 bg-secondary/50 p-1">
+      <div className="grid grid-cols-3 gap-1 rounded-lg border border-line-2 bg-secondary/50 p-1">
         {FORMAT_OPTIONS.map(option => {
           const active = format === option.value
           const Icon = option.icon
@@ -318,29 +320,37 @@ export function AseguradoDocumentosTab({ client }: { client: AdminClientDetail }
         })}
       </div>
 
-      <div className={format === 'credencial' ? 'grid grid-cols-1 gap-5 sm:grid-cols-2' : 'space-y-5'}>
-        {client.policies.map(poliza => (
-          <div key={poliza.id} className="space-y-2">
-            {format === 'credencial' ? (
-              <TarjetaCredencial poliza={poliza} client={client} />
-            ) : (
-              <CertificadoCard poliza={poliza} client={client} />
-            )}
-            <div className="flex justify-end">
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => setPrintDoc(printableDoc(format, poliza, client))}
-                className="h-7 gap-1.5 px-2 text-[12px] text-ink-3 hover:bg-ember-soft hover:text-ember-2"
-              >
-                <Download className="size-3.5" />
-                Descargar PDF
-              </Button>
+      {format === 'triunfo' ? (
+        <div className="space-y-4">
+          {client.policies.map(poliza => (
+            <TriunfoDocumentosCard key={poliza.id} client={client} poliza={poliza} />
+          ))}
+        </div>
+      ) : (
+        <div className={format === 'credencial' ? 'grid grid-cols-1 gap-5 sm:grid-cols-2' : 'space-y-5'}>
+          {client.policies.map(poliza => (
+            <div key={poliza.id} className="space-y-2">
+              {format === 'credencial' ? (
+                <TarjetaCredencial poliza={poliza} client={client} />
+              ) : (
+                <CertificadoCard poliza={poliza} client={client} />
+              )}
+              <div className="flex justify-end">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setPrintDoc(printableDoc(format, poliza, client))}
+                  className="h-7 gap-1.5 px-2 text-[12px] text-ink-3 hover:bg-ember-soft hover:text-ember-2"
+                >
+                  <Download className="size-3.5" />
+                  Descargar PDF
+                </Button>
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       {printDoc && <PrintFrame onDone={() => setPrintDoc(null)}>{printDoc}</PrintFrame>}
     </div>
