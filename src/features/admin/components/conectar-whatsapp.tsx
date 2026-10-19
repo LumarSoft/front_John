@@ -18,7 +18,6 @@ import { useEmbeddedSignupConfig, useOnboardWhatsapp } from '../hooks/use-whatsa
  */
 
 const COEXISTENCE_FEATURE = 'whatsapp_business_app_onboarding'
-const SESSION_INFO_VERSION = '3'
 const SDK_SRC = 'https://connect.facebook.net/en_US/sdk.js'
 
 interface SessionInfo {
@@ -212,10 +211,12 @@ export function ConectarWhatsapp({ coexistence = true, pin, responsibleProducerC
         config_id: config.configId,
         response_type: 'code',
         override_default_response_type: true,
+        // Embedded Signup v4: the configuration picks the version. The v2
+        // `sessionInfoVersion` made Meta drop the Business-app option after
+        // v2/v3 were retired on 15/10/2026 (straight to the SMS signup).
         extras: {
           setup: {},
           ...(coexistence ? { featureType: COEXISTENCE_FEATURE } : {}),
-          sessionInfoVersion: SESSION_INFO_VERSION,
         },
       },
     )
