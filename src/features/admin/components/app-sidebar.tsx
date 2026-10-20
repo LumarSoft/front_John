@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
+  BanknoteX,
   Bell,
   ListTodo,
   Building2,
@@ -72,6 +73,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Siniestros', href: '/admin/siniestros', icon: FileWarning },
   { label: 'Asegurados', href: '/admin/asegurados', icon: ShieldCheck },
   { label: 'Cobranzas', href: '/admin/cobranzas', icon: Wallet },
+  { label: 'Rechazos', href: '/admin/rechazos', icon: BanknoteX },
   { label: 'Usuarios', href: '/admin/usuarios', icon: Users, superAdminOnly: true },
   { label: 'Números', href: '/admin/numeros', icon: Phone, superAdminOnly: true },
   { label: 'Organizaciones', href: '/admin/organizaciones', icon: Building2, ownerOnly: true },

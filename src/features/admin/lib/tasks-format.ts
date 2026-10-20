@@ -1,7 +1,7 @@
 import type { TaskPerson } from '@/src/types/api/tasks'
 
 /** "Mili", or the part of the email before the @ when no name was set. */
-export function personName(person: TaskPerson): string {
+export function personName(person: Pick<TaskPerson, 'name' | 'email'>): string {
   return person.name?.trim() || person.email.split('@')[0]
 }
 
