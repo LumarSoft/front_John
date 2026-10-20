@@ -305,10 +305,8 @@ export function NumerosView() {
       </div>
       {numbers?.[0]?.usage.pricing && (
         <p className="mb-4 text-[13px] text-muted-foreground">
-          Por número y mes completo: {money(numbers[0].usage.pricing.minimumUsd)} a{' '}
-          {money(numbers[0].usage.pricing.maximumUsd)}. Sin consumo: USD 0. Tarifa: USD{' '}
-          {numbers[0].usage.pricing.tokenRatePer1000.toLocaleString('es-AR', { maximumFractionDigits: 4 })} por 1.000
-          tokens y USD{' '}
+          Tarifa: USD {numbers[0].usage.pricing.tokenRatePer1000.toLocaleString('es-AR', { maximumFractionDigits: 4 })}{' '}
+          por 1.000 tokens y USD{' '}
           {numbers[0].usage.pricing.metaMessageRateUsd.toLocaleString('es-AR', { maximumFractionDigits: 4 })} por
           mensaje Meta.
         </p>
