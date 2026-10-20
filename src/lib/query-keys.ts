@@ -51,6 +51,9 @@ export const QUERY_KEYS = {
     tasks: (params: TasksQuery) => ['admin', 'tasks', 'list', params] as const,
     tasksStats: ['admin', 'tasks', 'stats'] as const,
     taskPeople: ['admin', 'tasks', 'people'] as const,
+    rejectionsAll: ['admin', 'rejections'] as const,
+    rejectionImports: ['admin', 'rejections', 'list'] as const,
+    rejectionImport: (id: number) => ['admin', 'rejections', 'detail', id] as const,
   },
   owner: {
     organizations: ['owner', 'organizations'] as const,
