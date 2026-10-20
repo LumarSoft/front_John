@@ -56,6 +56,14 @@ import { InboxSearchPanel } from './inbox-search-panel'
 
 const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000
 
+/**
+ * Why a reply did not go out. The API explains a disconnected number (409) and a
+ * send WhatsApp rejected (502) in the agent's words; anything else gets the fallback.
+ */
+function sendFailureMessage(error: Error, fallback: string): string {
+  return error instanceof ApiError && (error.status === 409 || error.status === 502) ? error.message : fallback
+}
+
 /** "Cupon octubre.pdf" → "PDF". */
 function fileExtension(name: string): string {
   const dot = name.lastIndexOf('.')
@@ -352,6 +360,8 @@ export function InboxThread({ conversation, onOpenClient, onBack }: Props) {
         setText('')
         scrollToBottom()
       },
+      onError: error =>
+        toast.error(sendFailureMessage(error, 'No se pudo enviar el mensaje por WhatsApp. Probá de nuevo.')),
     })
   }
 
@@ -385,7 +395,7 @@ export function InboxThread({ conversation, onOpenClient, onBack }: Props) {
           toast.error(
             error instanceof ApiError && error.status === 413
               ? 'El archivo supera los 16 MB.'
-              : 'No se pudo enviar el archivo por WhatsApp. Probá de nuevo.',
+              : sendFailureMessage(error, 'No se pudo enviar el archivo por WhatsApp. Probá de nuevo.'),
           ),
       },
     )

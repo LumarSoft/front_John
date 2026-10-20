@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, type FormEvent } from 'react'
-import { Loader2, Phone, Plus, Trash2 } from 'lucide-react'
+import { AlertTriangle, Loader2, Phone, Plus, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Card } from '@/src/components/ui/card'
 import { Button } from '@/src/components/ui/button'
@@ -35,6 +35,41 @@ import { useProducerCodes } from '../hooks/use-producer-codes'
 import { usePhoneNumbers, usePhoneNumberMutations } from '../hooks/use-phone-numbers'
 
 const money = (n: number) => `USD ${n.toFixed(2)}`
+
+const formatMoment = (iso: string) =>
+  new Date(iso).toLocaleString('es-AR', {
+    timeZone: 'America/Argentina/Cordoba',
+    day: '2-digit',
+    month: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+
+/** What happened to each dropped number and what to do, above the reconnect button. */
+function DisconnectedNotice({ numbers }: { numbers: AdminPhoneNumber[] }) {
+  return (
+    <div className="mb-3 flex gap-3">
+      <AlertTriangle className="mt-0.5 size-5 shrink-0 text-destructive" />
+      <div>
+        <h2 className="font-display text-[15px] text-ink">WhatsApp desconectado</h2>
+        <ul className="mt-1 flex flex-col gap-1 text-[13px] text-ink-3">
+          {numbers.map(n => (
+            <li key={n.id}>
+              <span className="font-medium text-ink">{n.number}</span> se desconectó el{' '}
+              {formatMoment(n.disconnectedAt as string)}. Motivo: {n.disconnectReasonLabel ?? n.disconnectReason}.
+            </li>
+          ))}
+        </ul>
+        <p className="mt-2 text-[13px] text-muted-foreground">
+          Mientras tanto el bot no recibe ni responde mensajes y lo que se envíe desde el panel no llega. Con el celular
+          de WhatsApp Business a mano, tocá <span className="font-medium text-ink">Reconectar número</span> y seguí los
+          pasos de Meta. No hace falta darlo de baja: se conservan el consumo del mes, los chats y los códigos. No uses
+          “Conectar” ni “Añadir número” en el Administrador de WhatsApp de Meta: saca el número de la app del celular.
+        </p>
+      </div>
+    </div>
+  )
+}
 
 function NumberForm({ existing, onDone }: { existing: AdminPhoneNumber | null; onDone: () => void }) {
   const isEdit = !!existing
@@ -205,6 +240,7 @@ export function NumerosView() {
 
   // Tenants see what they are charged; the provider cost is not sent to them.
   const grandTotal = (numbers ?? []).reduce((sum, n) => sum + n.usage.billedUsd, 0)
+  const disconnected = (numbers ?? []).filter(n => n.disconnectedAt)
 
   return (
     <div className="mx-auto w-full max-w-6xl px-5 py-8 md:px-8 md:py-10">
@@ -232,15 +268,21 @@ export function NumerosView() {
       {/* Alta por Embedded Signup: el número queda conectado y suscripto a los
           webhooks sin cargar nada a mano. "Registrar número" queda para los
           casos en que el número ya existe en Meta y solo hay que darlo de alta acá. */}
-      <Card className="mb-4 border-line-2 p-4">
-        <div className="mb-3">
-          <h2 className="font-display text-[15px] text-ink">Conectar un número desde Meta</h2>
-          <p className="mt-1 text-[13px] text-muted-foreground">
-            Abre el alta de Meta y deja el número listo para recibir mensajes. El número sigue funcionando en la app de
-            WhatsApp Business del celular.
-          </p>
-        </div>
-        <ConectarWhatsapp />
+      <Card
+        className={`mb-4 p-4 ${disconnected.length > 0 ? 'border-destructive/40 bg-destructive/5' : 'border-line-2'}`}
+      >
+        {disconnected.length > 0 ? (
+          <DisconnectedNotice numbers={disconnected} />
+        ) : (
+          <div className="mb-3">
+            <h2 className="font-display text-[15px] text-ink">Conectar un número desde Meta</h2>
+            <p className="mt-1 text-[13px] text-muted-foreground">
+              Abre el alta de Meta y deja el número listo para recibir mensajes. El número sigue funcionando en la app
+              de WhatsApp Business del celular.
+            </p>
+          </div>
+        )}
+        <ConectarWhatsapp label={disconnected.length > 0 ? 'Reconectar número' : undefined} />
       </Card>
 
       <div className="mb-4 flex flex-wrap items-end gap-3">
@@ -356,6 +398,11 @@ export function NumerosView() {
                     <span className="text-[14px] font-medium text-ink">{n.number}</span>
                     <span className="font-mono text-[11px] text-muted-foreground">{n.phoneNumberId}</span>
                     <div className="mt-1 flex flex-wrap gap-1">
+                      {n.disconnectedAt && (
+                        <Badge variant="destructive" title={n.disconnectReasonLabel ?? undefined}>
+                          Desconectado de WhatsApp
+                        </Badge>
+                      )}
                       {!n.isActive && (
                         <Badge variant="secondary" className="text-faint-2">
                           Inactivo
@@ -446,7 +493,8 @@ export function NumerosView() {
           <AlertDialogHeader>
             <AlertDialogTitle>¿Dar de baja el número?</AlertDialogTitle>
             <AlertDialogDescription>
-              El bot dejará de atender <span className="font-medium text-ink">{deleteTarget?.number}</span>.
+              El bot dejará de atender <span className="font-medium text-ink">{deleteTarget?.number}</span> y su consumo
+              del mes deja de verse acá. Si Meta lo desconectó, no lo des de baja: usá Reconectar número.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
