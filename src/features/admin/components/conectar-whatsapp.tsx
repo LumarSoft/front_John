@@ -59,9 +59,17 @@ interface Props {
   pin?: string
   responsibleProducerCodeId?: number
   onConnected?: (metaPhoneNumberId: string) => void
+  /** Button text; "Reconectar número" when Meta dropped a number. */
+  label?: string
 }
 
-export function ConectarWhatsapp({ coexistence = true, pin, responsibleProducerCodeId, onConnected }: Props) {
+export function ConectarWhatsapp({
+  coexistence = true,
+  pin,
+  responsibleProducerCodeId,
+  onConnected,
+  label = 'Conectar número de WhatsApp',
+}: Props) {
   const { data: config, isLoading: loadingConfig } = useEmbeddedSignupConfig()
   const onboard = useOnboardWhatsapp()
 
@@ -239,13 +247,13 @@ export function ConectarWhatsapp({ coexistence = true, pin, responsibleProducerC
   return (
     <div className="flex flex-col gap-2">
       <Button onClick={launch} disabled={!sdkReady || onboard.isPending} className="w-fit">
-        {onboard.isPending ? 'Conectando…' : 'Conectar número de WhatsApp'}
+        {onboard.isPending ? 'Conectando…' : label}
       </Button>
 
       {coexistence && (
         <p className="text-xs text-muted-foreground max-w-prose">
-          El número sigue funcionando en la app de WhatsApp Business del celular. Meta enviará allí un código de
-          verificación para confirmar la conexión.
+          El número sigue funcionando en la app de WhatsApp Business del celular. Meta pide confirmar la conexión desde
+          esa app (escaneando un código QR o con un código de verificación), así que tené el celular a mano.
         </p>
       )}
 
@@ -257,7 +265,9 @@ export function ConectarWhatsapp({ coexistence = true, pin, responsibleProducerC
             onboardingNeedsAttention ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'
           }`}
         >
-          Número conectado y suscripto a los webhooks.
+          {onboard.data.reconnected
+            ? 'Número reconectado: se conservaron el consumo del mes, los chats y los códigos.'
+            : 'Número conectado y suscripto a los webhooks.'}
           {coexistence &&
             onboard.data.coexistenceVerified &&
             ' Coexistencia verificada con la app de WhatsApp Business.'}

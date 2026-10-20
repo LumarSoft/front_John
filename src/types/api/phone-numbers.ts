@@ -35,6 +35,12 @@ export interface AdminPhoneNumber {
   isActive: boolean
   monthlyBudgetUsd: number | null
   budgetExceededAt: string | null
+  /** Set when Meta dropped the number off the WhatsApp API; cleared by reconnecting. */
+  disconnectedAt: string | null
+  /** Meta's reason code, e.g. BUSINESS_DOWNGRADE. */
+  disconnectReason: string | null
+  /** The reason in plain words, for the office. */
+  disconnectReasonLabel: string | null
   responsibleCode: PhoneNumberCodeRef | null
   servedCodes: PhoneNumberCodeRef[]
   usage: PhoneNumberUsage

@@ -21,6 +21,8 @@ export interface OnboardWhatsappRequest {
 
 export interface OnboardWhatsappResponse {
   phoneNumberId: number
+  /** True when an existing number was revived: its usage, chats and codes were kept. */
+  reconnected: boolean
   wabaAccountId: number
   metaPhoneNumberId: string
   wabaId: string
