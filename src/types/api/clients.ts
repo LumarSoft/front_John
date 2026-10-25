@@ -58,6 +58,8 @@ export interface AdminPolizaDetail {
   validTo: string | null
   premium: string | null
   paymentMethod: string | null
+  /** What the API calls a non-vehicle policy ("Acc. personales", "Sepelio"…); null for vehicles. */
+  product?: string | null
   vehicle: AdminVehiculoDetail | null
   installments: AdminCuota[]
 }

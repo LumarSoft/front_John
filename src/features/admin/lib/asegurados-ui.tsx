@@ -4,9 +4,15 @@ import type { AdminPolizaSummary, EstadoVigencia, RiskType } from '@/src/types/a
 export const RISK_LABELS: Record<RiskType, string> = {
   auto: 'Automotor',
   home: 'Hogar',
-  life: 'Vida',
+  // Triunfo's articles grouped as 'life' are personal accidents and sepelio, none is a life policy.
+  life: 'AP y sepelio',
   commercial: 'Comercial',
   other: 'Otro',
+}
+
+/** A policy's name: its product ("Acc. personales", "Sepelio"…) when the API knows it, else its risk type. */
+export function policyName(poliza: { riskType: RiskType; product?: string | null }): string {
+  return poliza.product || RISK_LABELS[poliza.riskType]
 }
 
 export function RiskIcon({ type, className }: { type: RiskType; className?: string }) {

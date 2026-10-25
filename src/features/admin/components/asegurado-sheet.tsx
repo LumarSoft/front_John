@@ -33,8 +33,8 @@ import {
   formatDate,
   initials,
   overdueLabel,
+  policyName,
   polizaStatus,
-  RISK_LABELS,
   RiskIcon,
 } from '../lib/asegurados-ui'
 import { AseguradoDocumentosTab } from './asegurado-documentos'
@@ -136,7 +136,7 @@ function PolizaCard({ poliza }: { poliza: AdminPolizaDetail }) {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-[13px] font-semibold text-ink">{RISK_LABELS[poliza.riskType]}</span>
+              <span className="text-[13px] font-semibold text-ink">{policyName(poliza)}</span>
               <span className="text-[11px] text-muted-foreground">#{poliza.certificateNumber}</span>
             </div>
             <div className="text-[11px] capitalize text-muted-foreground">{poliza.company}</div>
@@ -270,7 +270,7 @@ function PolizaPagosCard({ poliza }: { poliza: AdminPolizaDetail }) {
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
-            <span className="text-[13px] font-semibold text-ink">{RISK_LABELS[poliza.riskType]}</span>
+            <span className="text-[13px] font-semibold text-ink">{policyName(poliza)}</span>
             <span className="text-[11px] text-muted-foreground">#{poliza.certificateNumber}</span>
           </div>
           {poliza.vehicle?.licensePlate && (

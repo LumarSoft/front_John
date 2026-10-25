@@ -14,6 +14,7 @@ import {
   formatDate,
   vigenciaBadge,
   polizaSubject,
+  ramoLabel,
   RISK_ICONS,
   RISK_LABELS,
 } from '../lib/portal-ui'
@@ -73,7 +74,7 @@ function matchesSearch(p: PolizaListItem, q: string): boolean {
     p.vehicle?.brand,
     p.vehicle?.model,
     p.vehicle?.version,
-    RISK_LABELS[effectiveRiskType(p)],
+    ramoLabel(p),
   ]
     .filter(Boolean)
     .join(' ')
@@ -163,7 +164,7 @@ function PolizaRow({ poliza }: { poliza: PolizaListItem }) {
         </div>
 
         <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[12px] text-faint">
-          <span className="font-medium uppercase tracking-wide">{RISK_LABELS[ramo]}</span>
+          <span className="font-medium uppercase tracking-wide">{ramoLabel(poliza)}</span>
           <span className="text-line-2">·</span>
           <span>
             Póliza {poliza.certificateNumber}

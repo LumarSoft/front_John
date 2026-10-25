@@ -14,7 +14,7 @@ import { RiskIcon } from '../lib/asegurados-ui'
 const RAMOS: { value: RiskType; label: string }[] = [
   { value: 'auto', label: 'Automotor' },
   { value: 'home', label: 'Hogar' },
-  { value: 'life', label: 'Vida' },
+  { value: 'life', label: 'AP y sepelio' },
   { value: 'commercial', label: 'Comercial' },
 ]
 

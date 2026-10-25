@@ -7,7 +7,7 @@ import { BrandMark } from '@/src/components/brand-mark'
 import { Button } from '@/src/components/ui/button'
 import { Separator } from '@/src/components/ui/separator'
 import type { AdminClientDetail, AdminPolizaDetail } from '@/src/types/api/clients'
-import { formatCurrency, formatDate, polizaStatus, RISK_LABELS, RiskIcon } from '../lib/asegurados-ui'
+import { formatCurrency, formatDate, policyName, polizaStatus, RiskIcon } from '../lib/asegurados-ui'
 import { PolizaStatusBadge } from './poliza-status-badge'
 import { TriunfoDocumentosCard } from './asegurado-triunfo-documentos'
 
@@ -70,7 +70,7 @@ function TarjetaCredencial({ poliza, client }: { poliza: AdminPolizaDetail; clie
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2 text-ember">
             <RiskIcon type={poliza.riskType} className="size-4" />
-            <span className="text-[11px] font-bold uppercase tracking-[0.14em]">{RISK_LABELS[poliza.riskType]}</span>
+            <span className="text-[11px] font-bold uppercase tracking-[0.14em]">{policyName(poliza)}</span>
           </div>
           {poliza.vehicle?.licensePlate && (
             <div className="rounded-lg border border-ember/30 bg-ember/10 px-3 py-1 font-mono text-[13px] font-bold tracking-widest text-ember">
@@ -133,7 +133,7 @@ function CertificadoCard({ poliza, client }: { poliza: AdminPolizaDetail; client
                 <div className="text-[9.5px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                   Certificado de Cobertura
                 </div>
-                <div className="text-[15.5px] font-semibold text-ink">{RISK_LABELS[poliza.riskType]}</div>
+                <div className="text-[15.5px] font-semibold text-ink">{policyName(poliza)}</div>
               </div>
             </div>
             <div className="shrink-0 text-right">

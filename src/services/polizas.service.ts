@@ -52,6 +52,8 @@ export interface PolizaListItem {
   premium: string | null
   paymentMethod: string | null
   createdAt: string
+  /** What the API calls a non-vehicle policy ("Acc. personales", "Sepelio"…); null for vehicles. */
+  product?: string | null
   vehicle: Vehiculo | null
   installments: Cuota[]
   insuredItem: BienData | null
