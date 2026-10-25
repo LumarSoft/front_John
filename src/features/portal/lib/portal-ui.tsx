@@ -14,7 +14,7 @@ export const RISK_LABELS: Record<RiskType, string> = {
   auto: 'Automotor',
   moto: 'Moto',
   home: 'Hogar',
-  life: 'Vida / Sepelio',
+  life: 'Accidentes y sepelio',
   commercial: 'Comercio',
   other: 'Otro',
 }
@@ -52,6 +52,11 @@ export function isMotoTipo(tipo: string | null | undefined): boolean {
 
 export function effectiveRiskType(poliza: PolizaListItem): RiskType {
   return poliza.vehicle && isMotoTipo(poliza.vehicle.type) ? 'moto' : poliza.riskType
+}
+
+/** The policy's line under its name: the product for a non-vehicle policy when the API knows it, else the ramo. */
+export function ramoLabel(p: PolizaListItem): string {
+  return (!p.vehicle && p.product) || RISK_LABELS[effectiveRiskType(p)]
 }
 
 export function polizaSubject(p: PolizaListItem): string {

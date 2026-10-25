@@ -4,7 +4,7 @@ import { AlertCircle, Download, FileText, Loader2, RefreshCw } from 'lucide-reac
 import { Button } from '@/src/components/ui/button'
 import type { AdminClientDetail, AdminPolizaDetail, AdminPolizaDocumento } from '@/src/types/api/clients'
 import { useAdminPolizaDocumentos, useDownloadPolizaDocumento } from '../hooks/use-admin-poliza-documentos'
-import { RISK_LABELS, RiskIcon } from '../lib/asegurados-ui'
+import { policyName, RiskIcon } from '../lib/asegurados-ui'
 
 function DocumentoRow({
   client,
@@ -45,8 +45,7 @@ function DocumentoRow({
 export function TriunfoDocumentosCard({ client, poliza }: { client: AdminClientDetail; poliza: AdminPolizaDetail }) {
   const { data, isLoading, isError, isFetching, refetch } = useAdminPolizaDocumentos(client.id, poliza.id)
 
-  const subject =
-    [poliza.vehicle?.brand, poliza.vehicle?.model].filter(Boolean).join(' ') || RISK_LABELS[poliza.riskType]
+  const subject = [poliza.vehicle?.brand, poliza.vehicle?.model].filter(Boolean).join(' ') || policyName(poliza)
 
   return (
     <div className="overflow-hidden rounded-2xl border border-line-2 bg-card">

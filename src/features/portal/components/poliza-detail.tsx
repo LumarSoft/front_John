@@ -26,7 +26,7 @@ const RISK_LABELS: Record<RiskType, string> = {
   auto: 'Automotor',
   moto: 'Moto',
   home: 'Hogar',
-  life: 'Vida / Sepelio',
+  life: 'Accidentes y sepelio',
   commercial: 'Comercio',
   other: 'Otro',
 }
@@ -131,7 +131,9 @@ export function PolizaDetailView({ id }: { id: number }) {
             <div>
               <div className="flex flex-wrap items-center gap-2">
                 <h1 className="font-display text-[20px] font-semibold tracking-[-0.025em] text-ink">
-                  {v ? [v.brand, v.model].filter(Boolean).join(' ') || 'Automotor' : RISK_LABELS[poliza.riskType]}
+                  {v
+                    ? [v.brand, v.model].filter(Boolean).join(' ') || 'Automotor'
+                    : poliza.product || RISK_LABELS[poliza.riskType]}
                 </h1>
                 {v?.year && <span className="font-display text-[16px] font-normal text-faint">{v.year}</span>}
                 <span

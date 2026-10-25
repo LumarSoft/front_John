@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { MapPin, User } from 'lucide-react'
 import type { PolizaListItem } from '@/src/services/polizas.service'
-import { effectiveRiskType, formatCurrency, formatDate, RISK_ICONS, RISK_LABELS, vigenciaBadge } from '../lib/portal-ui'
+import { effectiveRiskType, formatCurrency, formatDate, ramoLabel, RISK_ICONS, vigenciaBadge } from '../lib/portal-ui'
 
 export function BienCard({ poliza }: { poliza: PolizaListItem }) {
   const ramo = effectiveRiskType(poliza)
@@ -66,7 +66,7 @@ export function BienCard({ poliza }: { poliza: PolizaListItem }) {
         </>
       ) : (
         <div className="px-5">
-          <p className="text-[10.5px] font-semibold uppercase tracking-[0.12em] text-faint">{RISK_LABELS[ramo]}</p>
+          <p className="text-[10.5px] font-semibold uppercase tracking-[0.12em] text-faint">{ramoLabel(poliza)}</p>
           <h3 className="mt-0.5 font-display text-[17px] font-bold leading-tight tracking-[-0.02em] text-ink">
             {b?.description?.split(' - DNI:')[0].trim() ?? `Póliza ${poliza.certificateNumber}`}
           </h3>
