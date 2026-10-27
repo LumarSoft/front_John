@@ -1,4 +1,5 @@
 import type { AdminRole } from './auth'
+import type { TokenPlan } from './phone-numbers'
 
 export interface OrganizationCode {
   id: number
@@ -27,10 +28,12 @@ export interface PhoneNumberUsage {
   metaCostUsd: number
   /** What the number costs us (OpenAI + Meta). Measured. */
   totalCostUsd: number
-  /** Full monthly charge for the number. */
+  /** Messages the platform sent this month: one token each. */
+  tokens: number
+  plan: TokenPlan
+  prorated: boolean
+  /** What the number is invoiced for the month. */
   billedUsd: number
-  /** Portion of that charge run up so far this month. */
-  accruedUsd: number
   marginUsd: number
 }
 
@@ -47,12 +50,9 @@ export interface OrganizationNumber {
 
 export interface OrganizationBilling {
   period: string
-  /** 0–1: how much of the month has gone by. */
-  elapsedFraction: number
   activeNumbers: number
   costUsd: number
   billedUsd: number
-  accruedUsd: number
   marginUsd: number
 }
 
