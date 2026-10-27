@@ -50,6 +50,8 @@ export interface OrganizationNumber {
 
 export interface OrganizationBilling {
   period: string
+  /** Every block of tokens costs the same, e.g. USD 60 per 1,000. */
+  pricing: { blockTokens: number; blockPriceUsd: number }
   activeNumbers: number
   costUsd: number
   billedUsd: number
