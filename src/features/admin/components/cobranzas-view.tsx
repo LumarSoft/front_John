@@ -26,7 +26,6 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/src/
 import { useDebouncedValue } from '@/src/hooks/use-debounced-value'
 import type { CobranzaCliente, CobranzaEstadoFilter, CobranzasStats } from '@/src/types/api/cobranzas'
 import { useCobranzas } from '../hooks/use-cobranzas'
-import { usePanelBrand } from '../context/panel-brand-context'
 import { useCobranzasStats } from '../hooks/use-cobranzas-stats'
 import { ScopeFilter, type ScopeFilterValue } from './scope-filter'
 import {
@@ -111,7 +110,6 @@ function MontoCell({ client }: { client: CobranzaCliente }) {
 
 function CobranzaRow({ client, onSelect }: { client: CobranzaCliente; onSelect: () => void }) {
   const fullName = `${client.lastName}, ${client.firstName}`
-  const { signature } = usePanelBrand()
   return (
     <TableRow
       role="button"
@@ -179,11 +177,7 @@ function CobranzaRow({ client, onSelect }: { client: CobranzaCliente; onSelect: 
                     variant="ghost"
                     className="size-8 rounded-full text-ink-3 hover:bg-ember-soft hover:text-ember-2"
                   >
-                    <a
-                      href={buildCobranzaWhatsappUrl(client.phone, { ...client, signature })}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
+                    <a href={buildCobranzaWhatsappUrl(client.phone, client)} target="_blank" rel="noopener noreferrer">
                       <WhatsAppIcon className="size-4" />
                       <span className="sr-only">Recordar pago por WhatsApp</span>
                     </a>

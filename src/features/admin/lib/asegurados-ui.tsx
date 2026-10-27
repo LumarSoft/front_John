@@ -161,8 +161,6 @@ export function overdueLabel(dueDate: string | null | undefined): string | null 
 
 interface CobranzaReminderInput {
   firstName: string
-  /** The organization the office writes for ("John Pellegrini Seguros"). */
-  signature: string
   totalDebt: string
   overdueCount: number
   rejectedCount: number
@@ -181,7 +179,7 @@ export function buildCobranzaWhatsappUrl(phone: string, input: CobranzaReminderI
     parts.push(`${input.pendingCount} ${input.pendingCount === 1 ? 'cuota pendiente' : 'cuotas pendientes'}`)
   const detalle = parts.length ? ` (${parts.join(', ')})` : ''
   const message =
-    `Hola ${input.firstName}, te escribimos de ${input.signature}. ` +
+    `Hola ${input.firstName}, te escribimos de John Pellegrini Seguros. ` +
     `Queríamos recordarte que figura un saldo pendiente de ${formatCurrency(input.totalDebt)}${detalle}. ` +
     `¿Coordinamos el pago? ¡Gracias!`
   return `https://wa.me/${digits}?text=${encodeURIComponent(message)}`
