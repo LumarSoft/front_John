@@ -41,7 +41,11 @@ export function BillingSummary({ billing }: { billing: OrganizationBilling }) {
   const cards = [
     { label: 'Números activos', value: int(billing.activeNumbers) },
     { label: 'Costo real del mes', value: usd(billing.costUsd), hint: 'OpenAI + Meta' },
-    { label: 'Total estimado del mes', value: usd(billing.billedUsd), hint: 'Planes por tokens' },
+    {
+      label: 'Total estimado del mes',
+      value: usd(billing.billedUsd),
+      hint: `Planes de USD ${int(billing.pricing.blockPriceUsd)} cada ${int(billing.pricing.blockTokens)} tokens`,
+    },
     { label: 'Ganancia estimada', value: usd(billing.marginUsd), hint: 'Total menos costo de proveedores' },
   ]
 
@@ -79,8 +83,8 @@ export function NumbersSection({ numbers }: { numbers: OrganizationNumber[] }) {
             <TableRow>
               <TableHead>Número</TableHead>
               <TableHead>Código</TableHead>
-              <TableHead className="text-right">IA</TableHead>
-              <TableHead className="text-right">Tokens · plan</TableHead>
+              <TableHead className="text-right">OpenAI</TableHead>
+              <TableHead className="text-right">Tokens (mensajes) · plan</TableHead>
               <TableHead className="text-right">Costo</TableHead>
               <TableHead className="text-right">Total del mes</TableHead>
               <TableHead className="text-right">Ganancia</TableHead>
@@ -121,11 +125,11 @@ export function NumbersSection({ numbers }: { numbers: OrganizationNumber[] }) {
                     )}
                   </TableCell>
                   <TableCell className="text-right text-[12px] text-muted-foreground">
-                    {int(n.usage.openaiCalls)} llamadas · {int(llmTokens)} tokens de IA
+                    {int(n.usage.openaiCalls)} llamadas · {int(llmTokens)} tokens
                   </TableCell>
                   <TableCell className="text-right text-[12px] text-muted-foreground">
-                    {int(n.usage.tokens)} · {n.usage.plan.name}
-                    {n.usage.prorated && ' (prorrateado)'}
+                    {int(n.usage.tokens)} · <span className="text-ink">{n.usage.plan.name}</span> (USD{' '}
+                    {int(n.usage.plan.priceUsd)}){n.usage.prorated && ' · prorrateado'}
                   </TableCell>
                   <TableCell className="text-right text-[12px] text-muted-foreground">
                     {usd(n.usage.totalCostUsd)}

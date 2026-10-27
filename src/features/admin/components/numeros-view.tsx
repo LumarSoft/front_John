@@ -34,7 +34,7 @@ import { useRole } from '../hooks/use-role'
 import { useProducerCodes } from '../hooks/use-producer-codes'
 import { usePhoneNumbers, usePhoneNumberMutations } from '../hooks/use-phone-numbers'
 
-const money = (n: number) => `USD ${n.toFixed(2)}`
+const int = (n: number) => n.toLocaleString('es-AR')
 
 const formatMoment = (iso: string) =>
   new Date(iso).toLocaleString('es-AR', {
@@ -79,9 +79,6 @@ function NumberForm({ existing, onDone }: { existing: AdminPhoneNumber | null; o
   const [phoneNumberId, setPhoneNumberId] = useState(existing?.phoneNumberId ?? '')
   const [number, setNumber] = useState(existing?.number ?? '')
   const [responsible, setResponsible] = useState<number | undefined>(existing?.responsibleCode?.id)
-  const [budget, setBudget] = useState<string>(
-    existing?.monthlyBudgetUsd != null ? String(existing.monthlyBudgetUsd) : '',
-  )
   const [served, setServed] = useState<number[]>(existing?.servedCodes.map(c => c.id) ?? [])
 
   const pending = create.isPending || update.isPending
@@ -93,7 +90,6 @@ function NumberForm({ existing, onDone }: { existing: AdminPhoneNumber | null; o
     const body = {
       responsibleProducerCodeId: responsible,
       servedCodeIds: served,
-      monthlyBudgetUsd: budget.trim() ? Number(budget) : undefined,
     }
     if (isEdit) {
       update.mutate(
@@ -186,19 +182,6 @@ function NumberForm({ existing, onDone }: { existing: AdminPhoneNumber | null; o
         </div>
       </div>
 
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="budget">Presupuesto mensual de IA (USD)</Label>
-        <Input
-          id="budget"
-          type="number"
-          min={0}
-          step="1"
-          placeholder="20 (por defecto)"
-          value={budget}
-          onChange={e => setBudget(e.target.value)}
-        />
-      </div>
-
       <DialogFooter>
         <Button type="button" variant="outline" onClick={onDone}>
           Cancelar
@@ -220,27 +203,29 @@ function NumberForm({ existing, onDone }: { existing: AdminPhoneNumber | null; o
 }
 
 export function NumerosView() {
-  const { isSuperAdmin, isLoading: roleLoading } = useRole()
+  const { isSuperAdmin, isAdmin, isLoading: roleLoading } = useRole()
+  const canView = isSuperAdmin || isAdmin
   const currentMonth = new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Argentina/Cordoba' }).slice(0, 7)
   const [period, setPeriod] = useState(currentMonth)
-  const { data: numbers, isLoading, isError } = usePhoneNumbers(isSuperAdmin, period)
+  const { data: numbers, isLoading, isError } = usePhoneNumbers(canView, period)
   const { remove } = usePhoneNumberMutations()
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editing, setEditing] = useState<AdminPhoneNumber | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<AdminPhoneNumber | null>(null)
 
-  if (!roleLoading && !isSuperAdmin) {
+  if (!roleLoading && !canView) {
     return (
       <div className="mx-auto w-full max-w-5xl px-5 py-16 text-center md:px-8">
         <h1 className="font-display text-[22px] text-ink">Acceso restringido</h1>
-        <p className="mt-2 text-[14px] text-muted-foreground">Solo un SuperAdmin puede gestionar los números.</p>
+        <p className="mt-2 text-[14px] text-muted-foreground">Tu usuario no tiene acceso a los números.</p>
       </div>
     )
   }
 
-  // Tenants see what they are charged; the provider cost is not sent to them.
-  const grandTotal = (numbers ?? []).reduce((sum, n) => sum + n.usage.billedUsd, 0)
+  // The client is billed in tokens: the API sends no amounts in USD to tenants.
+  const totalTokens = (numbers ?? []).reduce((sum, n) => sum + n.usage.tokens, 0)
   const disconnected = (numbers ?? []).filter(n => n.disconnectedAt)
+  const columns = isSuperAdmin ? 5 : 3
 
   return (
     <div className="mx-auto w-full max-w-6xl px-5 py-8 md:px-8 md:py-10">
@@ -248,42 +233,48 @@ export function NumerosView() {
         <div>
           <div className="text-[10.5px] font-medium uppercase tracking-[0.3em] text-ember-2">Plataforma</div>
           <h1 className="mt-2 font-display text-[clamp(26px,3.5vw,36px)] tracking-[-0.035em] text-ink">
-            Números y costos
+            Números y consumo
           </h1>
           <p className="mt-1.5 text-[14px] text-muted-foreground">
-            Números de WhatsApp, código responsable de facturación y tokens del mes.
+            {isSuperAdmin
+              ? 'Números de WhatsApp, código responsable y consumo del mes: tokens y uso de la IA.'
+              : 'Tokens consumidos en el mes por cada número de WhatsApp.'}
           </p>
         </div>
-        <Button
-          onClick={() => {
-            setEditing(null)
-            setDialogOpen(true)
-          }}
-          className="h-10"
-        >
-          <Plus className="size-4" /> Registrar número
-        </Button>
+        {isSuperAdmin && (
+          <Button
+            onClick={() => {
+              setEditing(null)
+              setDialogOpen(true)
+            }}
+            className="h-10"
+          >
+            <Plus className="size-4" /> Registrar número
+          </Button>
+        )}
       </div>
 
       {/* Alta por Embedded Signup: el número queda conectado y suscripto a los
           webhooks sin cargar nada a mano. "Registrar número" queda para los
           casos en que el número ya existe en Meta y solo hay que darlo de alta acá. */}
-      <Card
-        className={`mb-4 p-4 ${disconnected.length > 0 ? 'border-destructive/40 bg-destructive/5' : 'border-line-2'}`}
-      >
-        {disconnected.length > 0 ? (
-          <DisconnectedNotice numbers={disconnected} />
-        ) : (
-          <div className="mb-3">
-            <h2 className="font-display text-[15px] text-ink">Conectar un número desde Meta</h2>
-            <p className="mt-1 text-[13px] text-muted-foreground">
-              Abre el alta de Meta y deja el número listo para recibir mensajes. El número sigue funcionando en la app
-              de WhatsApp Business del celular.
-            </p>
-          </div>
-        )}
-        <ConectarWhatsapp label={disconnected.length > 0 ? 'Reconectar número' : undefined} />
-      </Card>
+      {isSuperAdmin && (
+        <Card
+          className={`mb-4 p-4 ${disconnected.length > 0 ? 'border-destructive/40 bg-destructive/5' : 'border-line-2'}`}
+        >
+          {disconnected.length > 0 ? (
+            <DisconnectedNotice numbers={disconnected} />
+          ) : (
+            <div className="mb-3">
+              <h2 className="font-display text-[15px] text-ink">Conectar un número desde Meta</h2>
+              <p className="mt-1 text-[13px] text-muted-foreground">
+                Abre el alta de Meta y deja el número listo para recibir mensajes. El número sigue funcionando en la app
+                de WhatsApp Business del celular.
+              </p>
+            </div>
+          )}
+          <ConectarWhatsapp label={disconnected.length > 0 ? 'Reconectar número' : undefined} />
+        </Card>
+      )}
 
       <div className="mb-4 flex flex-wrap items-end gap-3">
         <div>
@@ -303,13 +294,6 @@ export function NumerosView() {
           1 token = 1 mensaje enviado por el asistente o desde el panel. Se factura a mes vencido.
         </p>
       </div>
-      {numbers?.[0]?.usage.pricing && (
-        <p className="mb-4 text-[13px] text-muted-foreground">
-          Planes: USD {numbers[0].usage.pricing.blockPriceUsd.toLocaleString('es-AR')} cada{' '}
-          {numbers[0].usage.pricing.blockTokens.toLocaleString('es-AR')} tokens (Inicial, Estándar, Profesional…). Si un
-          número supera los tokens de su plan, ese mes se factura el plan siguiente.
-        </p>
-      )}
       {isError && (
         <p role="alert" className="mb-4 text-destructive">
           No se pudo cargar el consumo de este mes.
@@ -322,8 +306,8 @@ export function NumerosView() {
         </p>
       )}
       <Card className="mb-4 flex items-center justify-between border-line-2 p-4">
-        <span className="text-[13px] text-muted-foreground">Total estimado · {period} (todos los números)</span>
-        <span className="font-display text-[20px] text-ink">{numbers && !isError ? money(grandTotal) : '—'}</span>
+        <span className="text-[13px] text-muted-foreground">Tokens del mes · {period} (todos los números)</span>
+        <span className="font-display text-[20px] text-ink">{numbers && !isError ? int(totalTokens) : '—'}</span>
       </Card>
 
       <Card className="overflow-hidden border-line-2 py-0 shadow-sm">
@@ -337,49 +321,33 @@ export function NumerosView() {
                 Responsable
               </TableHead>
               <TableHead className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
-                Tokens y plan
+                Tokens del mes
               </TableHead>
-              <TableHead className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
-                Total del mes
-              </TableHead>
-              <TableHead className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
-                Presupuesto IA
-              </TableHead>
-              <TableHead>Llamadas IA</TableHead>
-              <TableHead className="w-24 pr-5" />
+              {isSuperAdmin && (
+                <>
+                  <TableHead className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+                    Uso de IA (OpenAI)
+                  </TableHead>
+                  <TableHead className="w-24 pr-5" />
+                </>
+              )}
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading &&
               Array.from({ length: 3 }).map((_, i) => (
                 <TableRow key={i}>
-                  <TableCell className="pl-5">
-                    <Skeleton className="h-4 w-40" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-4 w-24" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-4 w-20" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-4 w-20" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-4 w-20" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-4 w-20" />
-                  </TableCell>
-                  <TableCell className="pr-5">
-                    <Skeleton className="ml-auto h-8 w-16" />
-                  </TableCell>
+                  {Array.from({ length: columns }).map((_, j) => (
+                    <TableCell key={j} className={j === 0 ? 'pl-5' : undefined}>
+                      <Skeleton className={j === 0 ? 'h-4 w-40' : 'h-4 w-20'} />
+                    </TableCell>
+                  ))}
                 </TableRow>
               ))}
 
             {numbers && numbers.length === 0 && (
               <TableRow>
-                <TableCell colSpan={7} className="py-16 text-center">
+                <TableCell colSpan={columns} className="py-16 text-center">
                   <div className="flex flex-col items-center gap-3">
                     <div className="flex size-12 items-center justify-center rounded-full bg-secondary text-muted-foreground">
                       <Phone className="size-5" />
@@ -408,7 +376,12 @@ export function NumerosView() {
                         </Badge>
                       )}
                       {n.budgetExceededAt && (
-                        <Badge className="bg-destructive/15 text-destructive">Sobre presupuesto</Badge>
+                        <Badge
+                          className="bg-destructive/15 text-destructive"
+                          title="Se alcanzó el límite de IA del mes: el asistente sigue atendiendo con los menús."
+                        >
+                          IA en pausa
+                        </Badge>
                       )}
                       {n.servedCodes.length > 0 && (
                         <Badge variant="secondary" className="text-ink-3">
@@ -424,53 +397,45 @@ export function NumerosView() {
                     : '—'}
                 </TableCell>
                 <TableCell className="text-[13px]">
-                  <span className="text-ink">
-                    {n.usage.tokens.toLocaleString('es-AR')} de {n.usage.plan.includedTokens.toLocaleString('es-AR')}
-                  </span>
-                  <div className="text-[11px] text-muted-foreground">
-                    Plan {n.usage.plan.name}
-                    {n.usage.prorated && ' · prorrateado'}
-                  </div>
+                  <span className="font-medium text-ink">{int(n.usage.tokens)}</span>
+                  <div className="text-[11px] text-muted-foreground">mensajes enviados</div>
                 </TableCell>
-                <TableCell className="text-[13px]">
-                  <span className="font-medium text-ink">{money(n.usage.billedUsd)}</span>
-                </TableCell>
-                <TableCell className="text-[13px] text-ink-3">
-                  {n.monthlyBudgetUsd != null ? money(n.monthlyBudgetUsd) : 'Por defecto'}
-                </TableCell>
-                <TableCell className="text-[13px]">
-                  {n.usage.openaiCalls > 0
-                    ? n.usage.openaiCalls.toLocaleString('es-AR')
-                    : n.usage.inputTokens + n.usage.outputTokens > 0
-                      ? '—'
-                      : '0'}
-                  <div className="text-[11px] text-muted-foreground">
-                    {(n.usage.inputTokens + n.usage.outputTokens).toLocaleString('es-AR')} tokens de IA
-                  </div>
-                </TableCell>
-                <TableCell className="pr-5">
-                  <div className="flex justify-end gap-1">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8"
-                      onClick={() => {
-                        setEditing(n)
-                        setDialogOpen(true)
-                      }}
-                    >
-                      Editar
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="size-8 text-muted-foreground"
-                      onClick={() => setDeleteTarget(n)}
-                    >
-                      <Trash2 className="size-4" />
-                    </Button>
-                  </div>
-                </TableCell>
+                {isSuperAdmin && (
+                  <>
+                    <TableCell className="text-[13px]">
+                      <span className="text-ink">
+                        {int((n.usage.inputTokens ?? 0) + (n.usage.outputTokens ?? 0))} tokens de OpenAI
+                      </span>
+                      <div className="text-[11px] text-muted-foreground">
+                        {int(n.usage.openaiCalls ?? 0)} llamadas · {int(n.usage.inputTokens ?? 0)} de entrada ·{' '}
+                        {int(n.usage.outputTokens ?? 0)} de salida
+                      </div>
+                    </TableCell>
+                    <TableCell className="pr-5">
+                      <div className="flex justify-end gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8"
+                          onClick={() => {
+                            setEditing(n)
+                            setDialogOpen(true)
+                          }}
+                        >
+                          Editar
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="size-8 text-muted-foreground"
+                          onClick={() => setDeleteTarget(n)}
+                        >
+                          <Trash2 className="size-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </>
+                )}
               </TableRow>
             ))}
           </TableBody>
@@ -485,7 +450,7 @@ export function NumerosView() {
             </DialogTitle>
             <DialogDescription>
               {editing
-                ? 'Actualizá el código responsable, los códigos servidos o el presupuesto.'
+                ? 'Actualizá el número visible, el código responsable o los códigos servidos.'
                 : 'Registrá un número de Meta para que el bot lo atienda.'}
             </DialogDescription>
           </DialogHeader>
