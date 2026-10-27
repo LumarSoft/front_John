@@ -81,6 +81,14 @@ Use `@import "tailwindcss"`. Theme tokens go inside `@theme inline { ... }` in C
 
 Flat config only (`eslint.config.mjs`). No `.eslintrc.*` files.
 
+## Multi-organization admin panel
+
+The admin panel (`/admin`) serves every organization of the platform; the public site and the client portal are JPMG's only.
+
+- Brand: `usePanelBrand()` (`src/features/admin/context/panel-brand-context.tsx`) gives JPMG's logo and name to users of the org whose slug is `NEXT_PUBLIC_HOME_ORG_SLUG` (default `john`) and the org's initials and name to anyone else. Never write an organization's name in admin code: use `usePanelBrand().name` / `.signature`.
+- Before login, a host listed in `PANEL_NEUTRAL_HOSTS` (server env, comma separated, e.g. `panel.lumarsoft.com.ar`) shows the platform's neutral mark and title; any other host shows JPMG's.
+- Configuración → Asistente → "Datos de la productora" edits what the bot says for the org (`/admin/config/profile`); Organizaciones → detalle → "Integración con Triunfo" sets the org's own Triunfo credentials (owner only).
+
 ## Development rules
 
 @docs/rules/code-style.md

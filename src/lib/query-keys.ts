@@ -22,6 +22,7 @@ export const QUERY_KEYS = {
     dashboard: ['admin', 'dashboard'] as const,
     profile: ['admin', 'profile'] as const,
     config: ['admin', 'config'] as const,
+    botProfile: ['admin', 'config', 'profile'] as const,
     users: ['admin', 'users'] as const,
     producerCodes: ['admin', 'producer-codes'] as const,
     phoneNumbers: ['admin', 'phone-numbers'] as const,
@@ -58,6 +59,7 @@ export const QUERY_KEYS = {
   owner: {
     organizations: ['owner', 'organizations'] as const,
     organization: (id: number) => ['owner', 'organizations', id] as const,
+    organizationTriunfo: (id: number) => ['owner', 'organizations', id, 'triunfo'] as const,
     improvementsAll: ['owner', 'improvements'] as const,
     improvements: (params?: OwnerImprovementsQuery) => ['owner', 'improvements', 'list', params ?? {}] as const,
     proposalsAll: ['owner', 'improvement-proposals'] as const,

@@ -21,7 +21,6 @@ import {
   Wallet,
   type LucideIcon,
 } from 'lucide-react'
-import { BrandMark } from '@/src/components/brand-mark'
 import {
   Sidebar,
   SidebarContent,
@@ -43,6 +42,8 @@ import {
 } from '@/src/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback } from '@/src/components/ui/avatar'
 import { useAuth } from '../context/auth-context'
+import { usePanelBrand } from '../context/panel-brand-context'
+import { OrgMark } from './org-mark'
 import { useProfile } from '../hooks/use-profile'
 import { useNovedadesStats } from '../hooks/use-novedades-stats'
 import { useInboxConversations } from '../hooks/use-inbox-conversations'
@@ -116,7 +117,8 @@ export function AppSidebar() {
     return 0
   }
 
-  const initials = profile?.email.slice(0, 2).toUpperCase() ?? 'JP'
+  const brand = usePanelBrand()
+  const initials = profile?.email.slice(0, 2).toUpperCase() ?? brand.initials
   const isSuperAdmin = profile?.role === 'SUPERADMIN'
   const roleLabel = isOwner ? 'Owner · Lumar' : isSuperAdmin ? 'SuperAdmin' : 'Administrador'
   // The OWNER's interface is "Organizaciones" plus the "Mejoras" editor. Everyone
@@ -133,9 +135,9 @@ export function AppSidebar() {
     <Sidebar collapsible="icon" variant="inset">
       <SidebarHeader>
         <div className="flex items-center gap-2.5 px-1 py-1 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
-          <BrandMark size={32} className="rounded-lg shadow-sm" />
+          <OrgMark brand={brand} size={32} className="rounded-lg shadow-sm" />
           <div className="grid flex-1 leading-tight group-data-[collapsible=icon]:hidden">
-            <span className="truncate font-display text-[13.5px] text-sidebar-foreground">John Pellegrini</span>
+            <span className="truncate font-display text-[13.5px] text-sidebar-foreground">{brand.name}</span>
             <span className="truncate text-[11px] text-muted-foreground">Panel admin</span>
           </div>
         </div>

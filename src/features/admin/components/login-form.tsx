@@ -4,18 +4,20 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { AlertCircle, Eye, EyeOff, Loader2, Lock, Mail } from 'lucide-react'
-import { BrandMark } from '@/src/components/brand-mark'
 import { Button } from '@/src/components/ui/button'
 import { Input } from '@/src/components/ui/input'
 import { Label } from '@/src/components/ui/label'
 import { ApiError } from '@/src/lib/api-client'
 import { useAuth } from '../context/auth-context'
+import { useHostBrand } from '../context/panel-brand-context'
+import { OrgMark } from './org-mark'
 import { useLogin } from '../hooks/use-login'
 
 export function LoginForm() {
   const router = useRouter()
   const { isAuthenticated, hydrated } = useAuth()
   const login = useLogin()
+  const brand = useHostBrand()
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -58,7 +60,7 @@ export function LoginForm() {
         className="relative w-full max-w-[400px]"
       >
         <div className="mb-8 text-center">
-          <BrandMark size={48} className="mx-auto mb-5 rounded-2xl shadow-md" />
+          <OrgMark brand={brand} size={48} className="mx-auto mb-5 rounded-2xl shadow-md" />
           <div className="mb-2 text-[10.5px] font-medium uppercase tracking-[0.36em] text-ember-2">
             Panel de administración
           </div>

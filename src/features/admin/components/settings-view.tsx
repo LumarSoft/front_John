@@ -40,6 +40,7 @@ import { useProducerConfig } from '../hooks/use-producer-config'
 import { useUpdateProducerConfig } from '../hooks/use-update-producer-config'
 import { useSetBotStatus } from '../hooks/use-set-bot-status'
 import { useRole } from '../hooks/use-role'
+import { BotProfileSection } from './bot-profile-section'
 import { PricingPlansSection } from './pricing-plans-section'
 import { BusinessHoursSection } from './business-hours-section'
 import { CoverageSettingsSection } from './coverage-settings-section'
@@ -158,7 +159,21 @@ function splitNames(value: string): string[] {
     .filter(Boolean)
 }
 
-function BotConfigForm({ initialName, initialStaff }: { initialName: string; initialStaff: string[] }) {
+/** How the bot names the organization: "John Pellegrini Management Group (JPMG)". */
+interface OrgNaming {
+  name: string
+  shortName: string | null
+}
+
+function BotConfigForm({
+  initialName,
+  initialStaff,
+  org,
+}: {
+  initialName: string
+  initialStaff: string[]
+  org: OrgNaming
+}) {
   const updateConfig = useUpdateProducerConfig()
   const [botName, setBotName] = useState(initialName)
   const [staff, setStaff] = useState(initialStaff.join(', '))
@@ -184,8 +199,8 @@ function BotConfigForm({ initialName, initialStaff }: { initialName: string; ini
   }
 
   const preview = botName.trim()
-    ? `Soy ${botName.trim()}, el asistente de John Pellegrini Management Group`
-    : 'Soy el asistente de John Pellegrini Management Group (JPMG)'
+    ? `Soy ${botName.trim()}, el asistente de ${org.name}`
+    : `Soy el asistente de ${org.name}${org.shortName ? ` (${org.shortName})` : ''}`
 
   return (
     <Card className="max-w-xl border-line-2 shadow-sm">
@@ -193,7 +208,8 @@ function BotConfigForm({ initialName, initialStaff }: { initialName: string; ini
         <CardHeader>
           <CardTitle className="font-display text-[18px]">Asistente de WhatsApp</CardTitle>
           <CardDescription>
-            Elegí el nombre con el que el bot se presenta. Si lo dejás vacío, se presenta como “el asistente de JPMG”.
+            Elegí el nombre con el que el bot se presenta. Si lo dejás vacío, se presenta como “el asistente de{' '}
+            {org.shortName ?? org.name}”.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-5">
@@ -404,7 +420,12 @@ export function SettingsView() {
                 key={`${config.botName ?? ''}|${(config.staffNames ?? []).join(',')}`}
                 initialName={config.botName ?? ''}
                 initialStaff={config.staffNames ?? []}
+                org={{
+                  name: profile?.organization?.displayName ?? 'tu productora',
+                  shortName: profile?.organization?.shortName ?? null,
+                }}
               />
+              <BotProfileSection canEdit={isSuperAdmin} />
             </div>
           ) : (
             <FormSkeleton />

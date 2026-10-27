@@ -14,6 +14,7 @@ import { ApiError } from '@/src/lib/api-client'
 import { useRole } from '../hooks/use-role'
 import { useOrganization, useOrganizationMutations } from '../hooks/use-organizations'
 import { BillingSummary, CodesTable, NumbersSection, UsersSection } from './organizacion-secciones'
+import { OrganizacionTriunfo } from './organizacion-triunfo'
 
 function errMsg(error: unknown, fallback = 'No se pudo guardar. Intentá de nuevo.') {
   return error instanceof ApiError ? error.message : fallback
@@ -167,6 +168,8 @@ export function OrganizacionDetalleView({ orgId }: { orgId: number }) {
           }
         />
       </section>
+
+      <OrganizacionTriunfo orgId={orgId} />
 
       <UsersSection orgId={orgId} users={org.users} />
 
