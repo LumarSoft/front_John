@@ -16,6 +16,7 @@ import type {
 import { adjuntoUrl, type Adjunto } from '@/src/services/siniestros.service'
 import { useSolicitud } from '../hooks/use-solicitudes'
 import { useSolicitudActions } from '../hooks/use-solicitud-actions'
+import { usePanelBrand } from '../context/panel-brand-context'
 import { buildSolicitudWhatsappUrl, productLabel, STATUS_LABELS, STATUS_ORDER, timeAgo } from '../lib/solicitudes-ui'
 import { StatusPill } from './solicitud-status-pill'
 
@@ -80,6 +81,7 @@ function SolicitudEditor({
   onClose,
 }: Readonly<{ data: SolicitudDetail; target: { kind: SolicitudKind; id: number }; onClose: () => void }>) {
   const { update } = useSolicitudActions()
+  const brand = usePanelBrand()
   const [status, setStatus] = useState<SolicitudStatus>(data.status)
   const [notes, setNotes] = useState(data.notes ?? '')
 
@@ -98,7 +100,7 @@ function SolicitudEditor({
 
   const contactName = data.kind === 'lead' ? data.contactName : fullName(data)
   const contactPhone = data.kind === 'lead' ? data.phone : data.applicantPhone
-  const whatsappUrl = buildSolicitudWhatsappUrl(contactPhone, contactName, detailProductType(data))
+  const whatsappUrl = buildSolicitudWhatsappUrl(contactPhone, contactName, detailProductType(data), brand.signature)
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-6 p-5">

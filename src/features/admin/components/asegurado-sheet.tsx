@@ -27,6 +27,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/src/components/ui/ta
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/src/components/ui/tooltip'
 import type { AdminClientDetail, AdminCuota, AdminPolizaDetail } from '@/src/types/api/clients'
 import { useAdminClient } from '../hooks/use-admin-client'
+import { usePanelBrand } from '../context/panel-brand-context'
 import {
   buildCobranzaWhatsappUrl,
   formatCurrency,
@@ -75,12 +76,13 @@ function whatsappLink(phone: string): string {
   return `https://wa.me/${digits}`
 }
 
-function debtorWhatsappUrl(client: AdminClientDetail): string {
+function debtorWhatsappUrl(client: AdminClientDetail, signature: string): string {
   const debt = computeDebt(client.policies)
   if (!client.phone) return ''
   if (debt.totalDeuda <= 0) return whatsappLink(client.phone)
   return buildCobranzaWhatsappUrl(client.phone, {
     firstName: client.firstName,
+    signature,
     totalDebt: debt.totalDeuda.toFixed(2),
     overdueCount: debt.overdueCount,
     rejectedCount: debt.rejectedCount,
@@ -334,6 +336,7 @@ function PolizaPagosCard({ poliza }: { poliza: AdminPolizaDetail }) {
 }
 
 function PagosTab({ client }: { client: AdminClientDetail }) {
+  const { signature } = usePanelBrand()
   const polizas = client.policies
   const allCuotas = polizas.flatMap(p => p.installments)
   const totalDeuda = allCuotas.filter(c => c.status !== 'paid').reduce((s, c) => s + debtAmount(c.amount), 0)
@@ -402,7 +405,7 @@ function PagosTab({ client }: { client: AdminClientDetail }) {
               size="sm"
               className="h-8 gap-1.5 bg-[#25D366] px-3 text-[12.5px] text-white hover:bg-[#1faa52]"
             >
-              <a href={debtorWhatsappUrl(client)} target="_blank" rel="noopener noreferrer">
+              <a href={debtorWhatsappUrl(client, signature)} target="_blank" rel="noopener noreferrer">
                 <WhatsAppIcon className="size-4" />
                 Recordar por WhatsApp
               </a>
@@ -452,6 +455,7 @@ function InfoCell({ icon: Icon, label, value }: { icon: LucideIcon; label: strin
 
 export function AseguradoSheet({ clientId, onClose, defaultTab = 'polizas' }: AseguradoSheetProps) {
   const { data: client, isLoading } = useAdminClient(clientId)
+  const { signature } = usePanelBrand()
   const [tab, setTab] = useState<SheetTab>(defaultTab)
   const vigentesCount = client?.policies.filter(p => p.validTo && new Date(p.validTo) >= new Date()).length
   const debt = client ? computeDebt(client.policies) : null
@@ -528,7 +532,7 @@ export function AseguradoSheet({ clientId, onClose, defaultTab = 'polizas' }: As
                     {client.phone && (
                       <ContactButton
                         label={debt && debt.totalDeuda > 0 ? 'Recordar pago por WhatsApp' : 'WhatsApp'}
-                        href={debtorWhatsappUrl(client)}
+                        href={debtorWhatsappUrl(client, signature)}
                         accent
                         external
                       >
