@@ -4,9 +4,19 @@ export interface PhoneNumberCodeRef {
   holderName: string | null
 }
 
+/** The token plan a number is billed on for a month (1 token = 1 message sent). */
+export interface TokenPlan {
+  /** 1,000-token blocks: 1 = Inicial, 2 = Estándar… */
+  blocks: number
+  name: string
+  includedTokens: number
+  priceUsd: number
+}
+
 export interface PhoneNumberUsage {
   period: string
-  pricing: { minimumUsd: number; maximumUsd: number; tokenRatePer1000: number; metaMessageRateUsd: number }
+  /** Every block of tokens costs the same: e.g. USD 50 per 1,000. */
+  pricing: { blockTokens: number; blockPriceUsd: number }
   /** Activity of the number: the client may see its own volume. */
   inputTokens: number
   outputTokens: number
@@ -14,10 +24,13 @@ export interface PhoneNumberUsage {
   metaMessages: number
   metaBillableMessages?: number
   openaiCalls: number
-  /** Full monthly charge for the number. */
+  /** Messages the platform sent this month: one token each. */
+  tokens: number
+  plan: TokenPlan
+  /** True when the Inicial plan was prorated for the number's first month. */
+  prorated: boolean
+  /** What the number is invoiced for the month, billed in arrears. */
   billedUsd: number
-  /** Compatibility alias for the accumulated commercial charge. */
-  accruedUsd: number
   /**
    * Provider cost and margin. Only present for the platform OWNER — the API
    * omits these fields for tenant roles, so the client never sees our cost.

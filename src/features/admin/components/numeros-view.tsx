@@ -187,7 +187,7 @@ function NumberForm({ existing, onDone }: { existing: AdminPhoneNumber | null; o
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label htmlFor="budget">Presupuesto mensual (USD)</Label>
+        <Label htmlFor="budget">Presupuesto mensual de IA (USD)</Label>
         <Input
           id="budget"
           type="number"
@@ -251,7 +251,7 @@ export function NumerosView() {
             Números y costos
           </h1>
           <p className="mt-1.5 text-[14px] text-muted-foreground">
-            Números de WhatsApp, código responsable de facturación y consumo del mes (OpenAI + Meta).
+            Números de WhatsApp, código responsable de facturación y tokens del mes.
           </p>
         </div>
         <Button
@@ -300,15 +300,14 @@ export function NumerosView() {
           />
         </div>
         <p className="text-[13px] text-muted-foreground">
-          Servicio mensual según mensajes y tokens utilizados. El mínimo se prorratea durante el mes.
+          1 token = 1 mensaje enviado por el asistente o desde el panel. Se factura a mes vencido.
         </p>
       </div>
       {numbers?.[0]?.usage.pricing && (
         <p className="mb-4 text-[13px] text-muted-foreground">
-          Tarifa: USD {numbers[0].usage.pricing.tokenRatePer1000.toLocaleString('es-AR', { maximumFractionDigits: 4 })}{' '}
-          por 1.000 tokens y USD{' '}
-          {numbers[0].usage.pricing.metaMessageRateUsd.toLocaleString('es-AR', { maximumFractionDigits: 4 })} por
-          mensaje Meta.
+          Planes: USD {numbers[0].usage.pricing.blockPriceUsd.toLocaleString('es-AR')} cada{' '}
+          {numbers[0].usage.pricing.blockTokens.toLocaleString('es-AR')} tokens (Inicial, Estándar, Profesional…). Si un
+          número supera los tokens de su plan, ese mes se factura el plan siguiente.
         </p>
       )}
       {isError && (
@@ -338,13 +337,15 @@ export function NumerosView() {
                 Responsable
               </TableHead>
               <TableHead className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+                Tokens y plan
+              </TableHead>
+              <TableHead className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
                 Total del mes
               </TableHead>
               <TableHead className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
-                Presupuesto
+                Presupuesto IA
               </TableHead>
-              <TableHead>Mensajes Meta</TableHead>
-              <TableHead>Llamadas OpenAI</TableHead>
+              <TableHead>Llamadas IA</TableHead>
               <TableHead className="w-24 pr-5" />
             </TableRow>
           </TableHeader>
@@ -423,12 +424,20 @@ export function NumerosView() {
                     : '—'}
                 </TableCell>
                 <TableCell className="text-[13px]">
+                  <span className="text-ink">
+                    {n.usage.tokens.toLocaleString('es-AR')} de {n.usage.plan.includedTokens.toLocaleString('es-AR')}
+                  </span>
+                  <div className="text-[11px] text-muted-foreground">
+                    Plan {n.usage.plan.name}
+                    {n.usage.prorated && ' · prorrateado'}
+                  </div>
+                </TableCell>
+                <TableCell className="text-[13px]">
                   <span className="font-medium text-ink">{money(n.usage.billedUsd)}</span>
                 </TableCell>
                 <TableCell className="text-[13px] text-ink-3">
                   {n.monthlyBudgetUsd != null ? money(n.monthlyBudgetUsd) : 'Por defecto'}
                 </TableCell>
-                <TableCell className="text-[13px]">{n.usage.metaMessages.toLocaleString('es-AR')}</TableCell>
                 <TableCell className="text-[13px]">
                   {n.usage.openaiCalls > 0
                     ? n.usage.openaiCalls.toLocaleString('es-AR')
@@ -436,7 +445,7 @@ export function NumerosView() {
                       ? '—'
                       : '0'}
                   <div className="text-[11px] text-muted-foreground">
-                    {(n.usage.inputTokens + n.usage.outputTokens).toLocaleString('es-AR')} tokens
+                    {(n.usage.inputTokens + n.usage.outputTokens).toLocaleString('es-AR')} tokens de IA
                   </div>
                 </TableCell>
                 <TableCell className="pr-5">

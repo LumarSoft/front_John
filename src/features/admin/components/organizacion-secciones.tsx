@@ -41,7 +41,7 @@ export function BillingSummary({ billing }: { billing: OrganizationBilling }) {
   const cards = [
     { label: 'Números activos', value: int(billing.activeNumbers) },
     { label: 'Costo real del mes', value: usd(billing.costUsd), hint: 'OpenAI + Meta' },
-    { label: 'Total estimado del mes', value: usd(billing.billedUsd), hint: 'Tarifa mensual según consumo' },
+    { label: 'Total estimado del mes', value: usd(billing.billedUsd), hint: 'Planes por tokens' },
     { label: 'Ganancia estimada', value: usd(billing.marginUsd), hint: 'Total menos costo de proveedores' },
   ]
 
@@ -79,8 +79,8 @@ export function NumbersSection({ numbers }: { numbers: OrganizationNumber[] }) {
             <TableRow>
               <TableHead>Número</TableHead>
               <TableHead>Código</TableHead>
-              <TableHead className="text-right">Tokens</TableHead>
-              <TableHead className="text-right">Mensajes Meta</TableHead>
+              <TableHead className="text-right">IA</TableHead>
+              <TableHead className="text-right">Tokens · plan</TableHead>
               <TableHead className="text-right">Costo</TableHead>
               <TableHead className="text-right">Total del mes</TableHead>
               <TableHead className="text-right">Ganancia</TableHead>
@@ -88,7 +88,7 @@ export function NumbersSection({ numbers }: { numbers: OrganizationNumber[] }) {
           </TableHeader>
           <TableBody>
             {numbers.map(n => {
-              const tokens = n.usage.openaiInputTokens + n.usage.openaiOutputTokens
+              const llmTokens = n.usage.openaiInputTokens + n.usage.openaiOutputTokens
               return (
                 <TableRow key={n.id}>
                   <TableCell>
@@ -121,10 +121,11 @@ export function NumbersSection({ numbers }: { numbers: OrganizationNumber[] }) {
                     )}
                   </TableCell>
                   <TableCell className="text-right text-[12px] text-muted-foreground">
-                    {int(n.usage.openaiCalls)} llamadas · {int(tokens)} tokens
+                    {int(n.usage.openaiCalls)} llamadas · {int(llmTokens)} tokens de IA
                   </TableCell>
                   <TableCell className="text-right text-[12px] text-muted-foreground">
-                    {int(n.usage.metaMessages)}
+                    {int(n.usage.tokens)} · {n.usage.plan.name}
+                    {n.usage.prorated && ' (prorrateado)'}
                   </TableCell>
                   <TableCell className="text-right text-[12px] text-muted-foreground">
                     {usd(n.usage.totalCostUsd)}
