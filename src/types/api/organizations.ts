@@ -34,8 +34,10 @@ export interface PhoneNumberUsage {
   trialTokens: number
   plan: TokenPlan
   prorated: boolean
-  /** What the number is invoiced for the month. */
+  /** What the platform invoices the organization for the month (the plan's cost). */
   billedUsd: number
+  /** What the organization resells the month for to its productor. */
+  resaleUsd: number
   marginUsd: number
 }
 

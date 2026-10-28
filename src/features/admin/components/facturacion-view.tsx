@@ -29,6 +29,7 @@ import { useRole } from '../hooks/use-role'
 
 const int = (n: number) => n.toLocaleString('es-AR')
 const usd = (n: number) => `USD ${n.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
+const round2 = (n: number) => Math.round(n * 100) / 100
 
 function periodLabel(period: string): string {
   const [year, month] = period.split('-').map(Number)
@@ -83,6 +84,7 @@ function NumberCard({ row, onChangePlan }: { row: BillingNumber; onChangePlan: (
     : row.plan
       ? `${row.plan.name} · ${int(row.plan.tokens)} tokens · ${usd(row.plan.priceUsd)}`
       : 'Sin plan'
+  const showsCost = row.costUsd !== undefined && row.marginUsd !== undefined
   return (
     <Card className="flex flex-col gap-4 border-line-2 p-4 shadow-sm">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -136,7 +138,21 @@ function NumberCard({ row, onChangePlan }: { row: BillingNumber; onChangePlan: (
             </>
           )}
         </span>
-        <span className="font-display text-[16px] font-semibold text-ink">{usd(row.estimatedUsd)}</span>
+        <span className="text-right">
+          <span className="font-display text-[16px] font-semibold text-ink">{usd(row.estimatedUsd)}</span>
+          {showsCost && (
+            <span className="block text-[11px] text-muted-foreground">
+              costo {usd(row.costUsd as number)} · margen{' '}
+              <span
+                className={
+                  (row.marginUsd as number) < 0 ? 'text-destructive' : 'text-emerald-600 dark:text-emerald-400'
+                }
+              >
+                {usd(row.marginUsd as number)}
+              </span>
+            </span>
+          )}
+        </span>
       </div>
     </Card>
   )
@@ -196,8 +212,15 @@ function ChangePlanDialog({
                   <span className="ml-2 text-[12px] text-muted-foreground">{int(plan.tokens)} tokens por mes</span>
                   {plan.id === current && <span className="ml-2 text-[11px] text-ember-2">actual</span>}
                 </span>
-                <span className="flex items-center gap-2 text-[13.5px] font-semibold text-ink">
-                  {usd(plan.priceUsd)}
+                <span className="flex items-center gap-2 text-right text-[13.5px] font-semibold text-ink">
+                  <span>
+                    {usd(plan.priceUsd)}
+                    {plan.costUsd !== undefined && (
+                      <span className="block text-[11px] font-normal text-muted-foreground">
+                        costo {usd(plan.costUsd)}
+                      </span>
+                    )}
+                  </span>
                   {active && <Check className="size-4 text-ember-2" />}
                 </span>
               </button>
@@ -239,21 +262,30 @@ function PlanDialog({
   open: boolean
   unitPriceUsd: number
   pending: boolean
-  onSave: (data: { name: string; tokens: number }) => void
+  onSave: (data: { name: string; tokens: number; priceUsd: number }) => void
   onClose: () => void
 }) {
   const [name, setName] = useState(plan?.name ?? '')
   const [tokens, setTokens] = useState(plan ? String(plan.tokens) : '')
+  const [price, setPrice] = useState(plan ? String(plan.priceUsd) : '')
+  // The price follows the size until the office types one of its own.
+  const [priceTouched, setPriceTouched] = useState(plan !== null)
   const size = Number(tokens)
-  const valid = name.trim().length > 0 && Number.isInteger(size) && size > 0
-  const price = valid ? Math.round(size * unitPriceUsd * 100) / 100 : null
+  const sizeOk = Number.isInteger(size) && size > 0
+  const cost = sizeOk ? round2(size * unitPriceUsd) : null
+  const priceValue = priceTouched && price.trim() !== '' ? Number(price) : cost
+  const priceOk = priceValue !== null && Number.isFinite(priceValue) && cost !== null && priceValue >= cost
+  const belowCost = cost !== null && priceValue !== null && Number.isFinite(priceValue) && priceValue < cost
+  const margin = priceOk && cost !== null ? round2((priceValue as number) - cost) : null
+  const valid = name.trim().length > 0 && sizeOk && priceOk
   return (
     <Dialog open={open} onOpenChange={o => !o && onClose()}>
       <DialogContent className="sm:max-w-sm">
         <DialogHeader>
           <DialogTitle>{plan ? 'Editar plan' : 'Nuevo plan'}</DialogTitle>
           <DialogDescription>
-            El precio sale solo: {usd(unitPriceUsd)} por token, el mismo para todos los planes.
+            Cada token te cuesta {usd(unitPriceUsd)}. El precio es lo que paga el productor y nunca puede quedar por
+            debajo del costo.
           </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-3">
@@ -277,12 +309,42 @@ function PlanDialog({
               step={50}
               value={tokens}
               onChange={e => setTokens(e.target.value)}
-              placeholder="300"
+              placeholder="500"
               className="h-10 border-line-2 text-[13px]"
             />
           </div>
-          <div className="rounded-lg border border-line-2 bg-secondary/40 px-3 py-2 text-[13px] text-ink-3">
-            Precio mensual: <span className="font-semibold text-ink">{price !== null ? usd(price) : '—'}</span>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="plan-price">Precio mensual (USD)</Label>
+            <Input
+              id="plan-price"
+              type="number"
+              min={cost ?? 0}
+              step={0.5}
+              value={priceTouched ? price : cost !== null ? String(cost) : ''}
+              onChange={e => {
+                setPriceTouched(true)
+                setPrice(e.target.value)
+              }}
+              placeholder={cost !== null ? String(cost) : '25'}
+              aria-invalid={belowCost}
+              className={`h-10 border-line-2 text-[13px] ${belowCost ? 'border-destructive' : ''}`}
+            />
+            {belowCost && (
+              <p className="text-[12px] text-destructive">No puede ser menor que el costo ({usd(cost as number)}).</p>
+            )}
+          </div>
+          <div className="grid grid-cols-2 gap-2 rounded-lg border border-line-2 bg-secondary/40 px-3 py-2 text-[12.5px]">
+            <span className="text-muted-foreground">
+              Costo <span className="font-semibold text-ink">{cost !== null ? usd(cost) : '—'}</span>
+            </span>
+            <span className="text-right text-muted-foreground">
+              Margen{' '}
+              <span
+                className={`font-semibold ${margin !== null && margin > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-ink'}`}
+              >
+                {margin !== null ? usd(margin) : '—'}
+              </span>
+            </span>
           </div>
         </div>
         <div className="flex justify-end gap-2">
@@ -292,7 +354,7 @@ function PlanDialog({
           <Button
             type="button"
             disabled={!valid || pending}
-            onClick={() => onSave({ name: name.trim(), tokens: size })}
+            onClick={() => onSave({ name: name.trim(), tokens: size, priceUsd: priceValue as number })}
           >
             {pending && <Loader2 className="size-4 animate-spin" />}
             Guardar
@@ -312,7 +374,7 @@ function PlansTab() {
   const unitPriceUsd = data?.unitPriceUsd ?? 0.05
   const plans = data?.plans ?? []
 
-  const save = (values: { name: string; tokens: number }) => {
+  const save = (values: { name: string; tokens: number; priceUsd: number }) => {
     if (editing) {
       updatePlan.mutate(
         { id: editing.id, data: values },
@@ -350,12 +412,15 @@ function PlansTab() {
     })
   }
 
+  const head = 'text-[11px] uppercase tracking-[0.12em] text-faint'
+
   return (
     <>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <p className="max-w-xl text-[13px] text-muted-foreground">
-          Los planes que tus productores pueden elegir. El precio por token es fijo ({usd(unitPriceUsd)}); vos decidís
-          los tamaños. Pasado el plan más grande, el mes se cobra de 1.000 en 1.000 al mismo precio.
+          Los planes que tus productores pueden elegir. Cada token te cuesta {usd(unitPriceUsd)}; vos decidís los
+          tamaños y el precio, siempre por encima del costo. Pasado el plan más grande, el mes se cobra de 1.000 en
+          1.000.
         </p>
         <Button type="button" size="sm" onClick={() => setCreating(true)} className="h-9 text-[12.5px]">
           <Plus className="size-4" />
@@ -367,37 +432,28 @@ function PlansTab() {
         <Table>
           <TableHeader>
             <TableRow className="border-line-2 hover:bg-transparent">
-              <TableHead className="h-11 pl-5 text-[11px] uppercase tracking-[0.12em] text-faint">Plan</TableHead>
-              <TableHead className="text-right text-[11px] uppercase tracking-[0.12em] text-faint">Tokens</TableHead>
-              <TableHead className="text-right text-[11px] uppercase tracking-[0.12em] text-faint">Precio</TableHead>
-              <TableHead className="hidden text-right text-[11px] uppercase tracking-[0.12em] text-faint sm:table-cell">
-                Números
-              </TableHead>
-              <TableHead className="text-[11px] uppercase tracking-[0.12em] text-faint">Estado</TableHead>
-              <TableHead className="pr-5 text-right text-[11px] uppercase tracking-[0.12em] text-faint">
-                Acciones
-              </TableHead>
+              <TableHead className={`h-11 pl-5 ${head}`}>Plan</TableHead>
+              <TableHead className={`text-right ${head}`}>Tokens</TableHead>
+              <TableHead className={`text-right ${head}`}>Costo</TableHead>
+              <TableHead className={`text-right ${head}`}>Precio</TableHead>
+              <TableHead className={`hidden text-right sm:table-cell ${head}`}>Margen</TableHead>
+              <TableHead className={`hidden text-right sm:table-cell ${head}`}>Números</TableHead>
+              <TableHead className={head}>Estado</TableHead>
+              <TableHead className={`pr-5 text-right ${head}`}>Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading &&
-              Array.from({ length: 3 }).map((_, i) => (
+              Array.from({ length: 2 }).map((_, i) => (
                 <TableRow key={i}>
                   <TableCell className="pl-5">
                     <Skeleton className="h-4 w-28" />
                   </TableCell>
-                  <TableCell>
-                    <Skeleton className="ml-auto h-4 w-12" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="ml-auto h-4 w-16" />
-                  </TableCell>
-                  <TableCell className="hidden sm:table-cell">
-                    <Skeleton className="ml-auto h-4 w-8" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-5 w-16 rounded-full" />
-                  </TableCell>
+                  {Array.from({ length: 6 }).map((_, j) => (
+                    <TableCell key={j}>
+                      <Skeleton className="ml-auto h-4 w-12" />
+                    </TableCell>
+                  ))}
                   <TableCell className="pr-5">
                     <Skeleton className="ml-auto h-8 w-20" />
                   </TableCell>
@@ -405,7 +461,7 @@ function PlansTab() {
               ))}
             {!isLoading && plans.length === 0 && (
               <TableRow>
-                <TableCell colSpan={6} className="py-12 text-center text-[14px] text-muted-foreground">
+                <TableCell colSpan={8} className="py-12 text-center text-[14px] text-muted-foreground">
                   Todavía no hay planes. Creá el primero.
                 </TableCell>
               </TableRow>
@@ -414,7 +470,17 @@ function PlansTab() {
               <TableRow key={plan.id} className={plan.isActive ? '' : 'opacity-60'}>
                 <TableCell className="pl-5 text-[14px] font-medium text-ink">{plan.name}</TableCell>
                 <TableCell className="text-right text-[13px] text-ink-3">{int(plan.tokens)}</TableCell>
+                <TableCell className="text-right text-[13px] text-ink-3">
+                  {plan.costUsd !== undefined ? usd(plan.costUsd) : '—'}
+                </TableCell>
                 <TableCell className="text-right text-[13px] font-semibold text-ink">{usd(plan.priceUsd)}</TableCell>
+                <TableCell
+                  className={`hidden text-right text-[13px] sm:table-cell ${
+                    (plan.marginUsd ?? 0) > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-ink-3'
+                  }`}
+                >
+                  {plan.marginUsd !== undefined ? usd(plan.marginUsd) : '—'}
+                </TableCell>
                 <TableCell className="hidden text-right text-[13px] text-ink-3 sm:table-cell">
                   {int(plan.numbersOnPlan)}
                 </TableCell>
@@ -518,6 +584,7 @@ export function FacturacionView() {
   }
 
   const numbers = data?.numbers ?? []
+  const showsCost = data?.totalCostUsd !== undefined
   const changePlan = (planId: number) => {
     if (!changing) return
     setNumberPlan.mutate(
@@ -540,19 +607,32 @@ export function FacturacionView() {
           <h1 className="mt-2 font-display text-[clamp(26px,3.5vw,36px)] tracking-[-0.035em] text-ink">Facturación</h1>
           <p className="mt-1.5 text-[14px] text-muted-foreground">
             1 token = 1 mensaje que envía el asistente o la oficina por WhatsApp. Se factura a mes vencido
-            {data ? ` · ${usd(data.unitPriceUsd)} por token` : ''}.
+            {showsCost && data ? ` · cada token te cuesta ${usd(data.unitPriceUsd)}` : ''}.
           </p>
         </div>
         {data && tab === 'consumo' && (
           <Card className="flex flex-col gap-0.5 border-line-2 px-4 py-3 shadow-sm">
             <span className="text-[11px] uppercase tracking-[0.12em] text-faint">
-              Estimado de {periodLabel(data.period)}
+              {showsCost ? 'Facturás en' : 'Estimado de'} {periodLabel(data.period)}
             </span>
             <span className="font-display text-[22px] leading-none tracking-tight text-ink">
               {usd(data.totalEstimatedUsd)}
             </span>
             <span className="text-[11.5px] text-muted-foreground">
-              {numbers.length === 1 ? '1 número' : `${numbers.length} números`} · se actualiza solo
+              {showsCost ? (
+                <>
+                  costo {usd(data.totalCostUsd as number)} · margen{' '}
+                  <span
+                    className={
+                      (data.totalMarginUsd ?? 0) < 0 ? 'text-destructive' : 'text-emerald-600 dark:text-emerald-400'
+                    }
+                  >
+                    {usd(data.totalMarginUsd as number)}
+                  </span>
+                </>
+              ) : (
+                `${numbers.length === 1 ? '1 número' : `${numbers.length} números`} · se actualiza solo`
+              )}
             </span>
           </Card>
         )}
