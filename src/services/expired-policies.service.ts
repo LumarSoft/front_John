@@ -4,6 +4,8 @@ import type {
   ExpiredPoliciesQuery,
   HidePolicyRequest,
   HidePolicyResponse,
+  MarkExpiryNoticesResponse,
+  SendExpiryNoticesResponse,
 } from '@/src/types/api/expired-policies'
 
 function buildQuery(params: ExpiredPoliciesQuery): string {
@@ -35,5 +37,21 @@ export const expiredPoliciesService = {
 
   unhide(token: string, id: number): Promise<HidePolicyResponse> {
     return apiRequest<HidePolicyResponse>(`/admin/cobranzas/vencidas/${id}/unhide`, { method: 'PATCH', token })
+  },
+
+  send(token: string, ids: number[]): Promise<SendExpiryNoticesResponse> {
+    return apiRequest<SendExpiryNoticesResponse>('/admin/cobranzas/vencidas/send', {
+      method: 'POST',
+      token,
+      body: { ids },
+    })
+  },
+
+  mark(token: string, ids: number[]): Promise<MarkExpiryNoticesResponse> {
+    return apiRequest<MarkExpiryNoticesResponse>('/admin/cobranzas/vencidas/mark', {
+      method: 'POST',
+      token,
+      body: { ids },
+    })
   },
 }

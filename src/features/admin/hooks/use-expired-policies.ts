@@ -4,7 +4,7 @@ import { QUERY_KEYS } from '@/src/lib/query-keys'
 import type { ExpiredPoliciesQuery } from '@/src/types/api/expired-policies'
 import { useAuth } from '../context/auth-context'
 
-/** The "pólizas vencidas" worklist of the cobranzas screen. */
+/** The "pólizas vencidas" worklist of the cobranzas screen; refreshes every 2 s while notices are going out. */
 export function useExpiredPolicies(params: ExpiredPoliciesQuery) {
   const { token } = useAuth()
 
@@ -13,10 +13,11 @@ export function useExpiredPolicies(params: ExpiredPoliciesQuery) {
     queryFn: () => expiredPoliciesService.list(params, token as string),
     enabled: !!token,
     placeholderData: keepPreviousData,
+    refetchInterval: query => (query.state.data?.data.some(row => row.notice?.status === 'SENDING') ? 2000 : false),
   })
 }
 
-/** Hide a policy that will not be renewed, or bring one back; the list refreshes after either. */
+/** Hide or bring back a policy, send the WhatsApp notice or mark it told by hand; the list refreshes after each. */
 export function useExpiredPolicyActions() {
   const { token } = useAuth()
   const queryClient = useQueryClient()
@@ -35,5 +36,15 @@ export function useExpiredPolicyActions() {
     onSuccess: refresh,
   })
 
-  return { hide, unhide }
+  const send = useMutation({
+    mutationFn: (ids: number[]) => expiredPoliciesService.send(token as string, ids),
+    onSuccess: refresh,
+  })
+
+  const mark = useMutation({
+    mutationFn: (ids: number[]) => expiredPoliciesService.mark(token as string, ids),
+    onSuccess: refresh,
+  })
+
+  return { hide, unhide, send, mark }
 }

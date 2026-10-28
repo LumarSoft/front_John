@@ -1,7 +1,18 @@
 'use client'
 
 import { useState } from 'react'
-import { ChevronLeft, ChevronRight, Eye, EyeOff, Loader2, Phone, RotateCcw } from 'lucide-react'
+import {
+  AlertCircle,
+  CheckCheck,
+  ChevronLeft,
+  ChevronRight,
+  Eye,
+  EyeOff,
+  Loader2,
+  Phone,
+  RotateCcw,
+  Send,
+} from 'lucide-react'
 import { toast } from 'sonner'
 import { Avatar, AvatarFallback } from '@/src/components/ui/avatar'
 import { WhatsAppIcon } from '@/src/components/ui/brand-icons'
@@ -12,8 +23,14 @@ import { Input } from '@/src/components/ui/input'
 import { Skeleton } from '@/src/components/ui/skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/src/components/ui/table'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/src/components/ui/tooltip'
+import { ApiError } from '@/src/lib/api-client'
 import type { CobranzasScopeQuery } from '@/src/types/api/cobranzas'
-import type { ExpiredPolicy, ExpiredPolicySort } from '@/src/types/api/expired-policies'
+import type {
+  ExpiredPolicy,
+  ExpiredPolicySort,
+  ExpiryNoticeSkipReason,
+  SendExpiryNoticesResponse,
+} from '@/src/types/api/expired-policies'
 import { useExpiredPolicies, useExpiredPolicyActions } from '../hooks/use-expired-policies'
 import { useProfile } from '../hooks/use-profile'
 import { formatDate, initials, policyName, RISK_LABELS, RiskIcon } from '../lib/asegurados-ui'
@@ -28,6 +45,12 @@ const SORTS: { value: ExpiredPolicySort; label: string }[] = [
   { value: 'recent', label: 'Vencidas hace poco' },
 ]
 
+const SKIP_LABELS: Record<ExpiryNoticeSkipReason, string> = {
+  NO_PHONE: 'sin teléfono',
+  ALREADY_NOTIFIED: 'ya avisadas este mes',
+  SENDING: 'en envío',
+}
+
 function expiredLabel(days: number): string {
   if (days <= 0) return 'venció hoy'
   if (days === 1) return 'hace 1 día'
@@ -36,15 +59,86 @@ function expiredLabel(days: number): string {
   return `hace ${months} meses`
 }
 
-/** Pre-filled WhatsApp link offering to renew the policy. */
+/** What the policy covered, as the client knows it. */
+function itemOf(policy: ExpiredPolicy): string {
+  return policy.licensePlate ?? policyName({ riskType: policy.riskType, product: policy.product })
+}
+
+/** The notice as the client will read it (the same text as the Meta template). */
+function noticeText(policy: ExpiredPolicy, orgName: string): string {
+  const name = policy.client.firstName.split(/\s+/)[0] || policy.client.firstName
+  return (
+    `Hola ${name}, te escribimos de ${orgName}, tu productor de seguros. ` +
+    `Tu póliza ${policy.certificateNumber} (${itemOf(policy)}) venció el ${formatDate(policy.validTo)}. ` +
+    `Si querés renovarla o cotizar otra opción, respondé este mensaje y te ayudamos.`
+  )
+}
+
+/** Pre-filled WhatsApp link with the same text, for the office's own phone. */
 function renewalWhatsappUrl(policy: ExpiredPolicy, orgName: string): string {
   const digits = (policy.client.phone ?? '').replace(/\D/g, '')
-  const item = policy.licensePlate ? ` (${policy.licensePlate})` : ''
-  const message =
-    `Hola ${policy.client.firstName}, te escribimos de ${orgName}. ` +
-    `Tu póliza ${policy.certificateNumber}${item} venció el ${formatDate(policy.validTo)}. ` +
-    `¿Querés que te pasemos una propuesta para renovarla?`
-  return `https://wa.me/${digits}?text=${encodeURIComponent(message)}`
+  return `https://wa.me/${digits}?text=${encodeURIComponent(noticeText(policy, orgName))}`
+}
+
+/** What a send came back with, in one line for the office. */
+function summarizeSend(result: SendExpiryNoticesResponse): string {
+  const sent = result.sent === 1 ? '1 aviso en camino' : `${result.sent} avisos en camino`
+  if (!result.skipped.length) return sent
+  const reasons = new Map<ExpiryNoticeSkipReason, number>()
+  for (const s of result.skipped) reasons.set(s.reason, (reasons.get(s.reason) ?? 0) + 1)
+  const skipped = [...reasons].map(([reason, n]) => `${n} ${SKIP_LABELS[reason]}`).join(', ')
+  return `${sent}; sin enviar: ${skipped}`
+}
+
+// ─── Notice status ───────────────────────────────────────────────────────────────
+
+function NoticeCell({ policy }: { policy: ExpiredPolicy }) {
+  const notice = policy.notice
+  if (!notice) return <span className="text-[12px] text-muted-foreground">—</span>
+  const when = formatDate(notice.sentAt ?? notice.createdAt)
+  switch (notice.status) {
+    case 'SENDING':
+      return (
+        <span className="inline-flex items-center gap-1 text-[12px] text-muted-foreground">
+          <Loader2 className="size-3.5 animate-spin" />
+          Enviando…
+        </span>
+      )
+    case 'SENT':
+      return (
+        <div className="text-[12px] text-emerald-600 dark:text-emerald-400">
+          <span className="inline-flex items-center gap-1">
+            <WhatsAppIcon className="size-3.5" />
+            Avisado
+          </span>
+          <div className="text-[11px] text-muted-foreground">{when}</div>
+        </div>
+      )
+    case 'MARKED':
+      return (
+        <div className="text-[12px] text-emerald-600 dark:text-emerald-400">
+          <span className="inline-flex items-center gap-1">
+            <CheckCheck className="size-3.5" />
+            Avisado a mano
+          </span>
+          <div className="text-[11px] text-muted-foreground">{when}</div>
+        </div>
+      )
+    case 'FAILED':
+      return (
+        <TooltipProvider delayDuration={150}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="inline-flex cursor-default items-center gap-1 text-[12px] text-destructive">
+                <AlertCircle className="size-3.5" />
+                No se envió
+              </span>
+            </TooltipTrigger>
+            <TooltipContent className="max-w-xs">{notice.error ?? 'No se pudo enviar el aviso.'}</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      )
+  }
 }
 
 // ─── Row ────────────────────────────────────────────────────────────────────────
@@ -53,6 +147,8 @@ function ExpiredPolicyRow({
   policy,
   orgName,
   showingHidden,
+  selected,
+  onToggle,
   onSelect,
   onHide,
   onUnhide,
@@ -61,6 +157,8 @@ function ExpiredPolicyRow({
   policy: ExpiredPolicy
   orgName: string
   showingHidden: boolean
+  selected: boolean
+  onToggle: () => void
   onSelect: () => void
   onHide: () => void
   onUnhide: () => void
@@ -68,12 +166,15 @@ function ExpiredPolicyRow({
 }) {
   const fullName = `${policy.client.lastName}, ${policy.client.firstName}`
   const label = policyName({ riskType: policy.riskType, product: policy.product })
+  const canTick = !showingHidden && policy.notice?.status !== 'SENDING'
   return (
     <TableRow
       role="button"
       tabIndex={0}
       aria-label={`Ver detalle de ${fullName}`}
-      className="group cursor-pointer hover:bg-ember-soft/40 focus-visible:bg-ember-soft/40 focus-visible:outline-none"
+      className={`group cursor-pointer hover:bg-ember-soft/40 focus-visible:bg-ember-soft/40 focus-visible:outline-none ${
+        selected ? 'bg-ember-soft/30' : ''
+      }`}
       onClick={onSelect}
       onKeyDown={e => {
         if (e.key === 'Enter' || e.key === ' ') {
@@ -82,7 +183,20 @@ function ExpiredPolicyRow({
         }
       }}
     >
-      <TableCell className="py-3 pl-5">
+      {!showingHidden && (
+        <TableCell className="w-10 pl-4 pr-0" onClick={e => e.stopPropagation()}>
+          <input
+            type="checkbox"
+            checked={selected}
+            disabled={!canTick}
+            onChange={onToggle}
+            aria-label={`Elegir la póliza ${policy.certificateNumber}`}
+            className="size-4 accent-ember"
+          />
+        </TableCell>
+      )}
+
+      <TableCell className="py-3 pl-3">
         <div className="flex items-center gap-3">
           <Avatar className="size-9 shrink-0">
             <AvatarFallback className="bg-ember-soft text-[12px] font-semibold text-ember-2">
@@ -91,7 +205,10 @@ function ExpiredPolicyRow({
           </Avatar>
           <div className="min-w-0">
             <div className="truncate text-[14px] font-medium text-ink">{fullName}</div>
-            <div className="text-[12px] text-muted-foreground">DNI {policy.client.dni}</div>
+            <div className="text-[12px] text-muted-foreground">
+              DNI {policy.client.dni}
+              {!policy.client.phone && <span className="text-amber-700 dark:text-amber"> · sin teléfono</span>}
+            </div>
           </div>
         </div>
       </TableCell>
@@ -138,6 +255,10 @@ function ExpiredPolicyRow({
         )}
       </TableCell>
 
+      <TableCell className="hidden md:table-cell">
+        <NoticeCell policy={policy} />
+      </TableCell>
+
       <TableCell className="pr-4 text-right">
         <TooltipProvider delayDuration={150}>
           <div className="flex items-center justify-end gap-1" onClick={e => e.stopPropagation()}>
@@ -152,11 +273,11 @@ function ExpiredPolicyRow({
                   >
                     <a href={renewalWhatsappUrl(policy, orgName)} target="_blank" rel="noopener noreferrer">
                       <WhatsAppIcon className="size-4" />
-                      <span className="sr-only">Ofrecer renovación por WhatsApp</span>
+                      <span className="sr-only">Escribir desde tu WhatsApp</span>
                     </a>
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>Ofrecer renovación por WhatsApp</TooltipContent>
+                <TooltipContent>Escribir desde tu WhatsApp</TooltipContent>
               </Tooltip>
             )}
             {policy.client.phone && (
@@ -206,7 +327,7 @@ function ExpiredPolicyRow({
   )
 }
 
-// ─── Hide dialog ─────────────────────────────────────────────────────────────────
+// ─── Dialogs ──────────────────────────────────────────────────────────────────────
 
 function HideDialog({
   policy,
@@ -274,6 +395,52 @@ function HideDialog({
   )
 }
 
+/** "Enviar aviso": how many go out, and the message as the first client will read it. */
+function SendDialog({
+  policies,
+  orgName,
+  pending,
+  onConfirm,
+  onClose,
+}: {
+  policies: ExpiredPolicy[]
+  orgName: string
+  pending: boolean
+  onConfirm: () => void
+  onClose: () => void
+}) {
+  const sample = policies[0]
+  return (
+    <Dialog open={policies.length > 0} onOpenChange={open => !open && onClose()}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>
+            {policies.length === 1 ? 'Enviar 1 aviso por WhatsApp' : `Enviar ${policies.length} avisos por WhatsApp`}
+          </DialogTitle>
+          <DialogDescription>
+            Cada cliente recibe este mensaje con sus datos, desde el número por el que ya habla con la oficina. Lo que
+            responda llega a la bandeja de Whatsapp.
+          </DialogDescription>
+        </DialogHeader>
+        {sample && (
+          <div className="rounded-lg border border-line-2 bg-secondary/40 p-3 text-[13px] leading-relaxed text-ink-3">
+            {noticeText(sample, orgName)}
+          </div>
+        )}
+        <div className="flex justify-end gap-2">
+          <Button type="button" variant="outline" onClick={onClose} className="border-line-2">
+            Cancelar
+          </Button>
+          <Button type="button" disabled={pending} onClick={onConfirm}>
+            {pending ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
+            Enviar
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
 // ─── Tab ─────────────────────────────────────────────────────────────────────────
 
 export function ExpiredPoliciesTab({
@@ -290,6 +457,8 @@ export function ExpiredPoliciesTab({
   const [page, setPage] = useState(1)
   const [toHide, setToHide] = useState<ExpiredPolicy | null>(null)
   const [busyId, setBusyId] = useState<number | null>(null)
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
+  const [confirmSend, setConfirmSend] = useState(false)
   const { data: profile } = useProfile()
   const orgName = profile?.organization?.name ?? 'tu productor de seguros'
 
@@ -301,23 +470,40 @@ export function ExpiredPoliciesTab({
     page,
     pageSize: PAGE_SIZE,
   })
-  const { hide, unhide } = useExpiredPolicyActions()
+  const { hide, unhide, send, mark } = useExpiredPolicyActions()
 
   const rows = data?.data ?? []
   const total = data?.total ?? 0
   const hiddenCount = data?.hiddenCount ?? 0
+  const templateReady = data?.templateReady ?? false
   const totalPages = data?.totalPages ?? 1
   const rangeStart = total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1
   const rangeEnd = Math.min(page * PAGE_SIZE, total)
 
-  const toggleHidden = () => {
-    setShowHidden(v => !v)
+  // Only what is on screen can be acted on: a row that left the page is dropped.
+  const selectable = rows.filter(row => row.notice?.status !== 'SENDING')
+  const selected = selectable.filter(row => selectedIds.has(row.id))
+  const allSelected = selectable.length > 0 && selected.length === selectable.length
+
+  const resetAnd = (change: () => void) => {
+    change()
+    setSelectedIds(new Set())
     setPage(1)
   }
-  const changeSort = (value: ExpiredPolicySort) => {
-    setSort(value)
-    setPage(1)
+  const toggleHidden = () => resetAnd(() => setShowHidden(v => !v))
+  const changeSort = (value: ExpiredPolicySort) => resetAnd(() => setSort(value))
+  const changePage = (next: number) => {
+    setPage(next)
+    setSelectedIds(new Set())
   }
+  const toggle = (id: number) =>
+    setSelectedIds(current => {
+      const ids = new Set(current)
+      if (ids.has(id)) ids.delete(id)
+      else ids.add(id)
+      return ids
+    })
+  const toggleAll = () => setSelectedIds(allSelected ? new Set() : new Set(selectable.map(row => row.id)))
 
   const confirmHide = (reason: string) => {
     if (!toHide) return
@@ -342,15 +528,80 @@ export function ExpiredPoliciesTab({
       onSettled: () => setBusyId(null),
     })
   }
+  const failed = (error: unknown, fallback: string) =>
+    toast.error(error instanceof ApiError && error.status < 500 ? error.message : fallback)
+  const sendSelected = () =>
+    send.mutate(
+      selected.map(row => row.id),
+      {
+        onSuccess: result => {
+          toast.success(summarizeSend(result))
+          setConfirmSend(false)
+          setSelectedIds(new Set())
+        },
+        onError: error => failed(error, 'No se pudieron enviar los avisos'),
+      },
+    )
+  const markSelected = () =>
+    mark.mutate(
+      selected.map(row => row.id),
+      {
+        onSuccess: result => {
+          toast.success(
+            result.marked === 1 ? '1 póliza marcada como avisada' : `${result.marked} pólizas marcadas como avisadas`,
+          )
+          setSelectedIds(new Set())
+        },
+        onError: error => failed(error, 'No se pudieron marcar las pólizas'),
+      },
+    )
+
+  const columns = showingHiddenColumns(showHidden)
 
   return (
     <>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <p className="text-[13px] text-muted-foreground">
+        <p className="max-w-xl text-[13px] text-muted-foreground">
           Pólizas que vencieron en el último año y no se renovaron, sin las anuladas por Triunfo ni las que ya tienen
           otra póliza vigente.
         </p>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {!showHidden && (
+            <>
+              <TooltipProvider delayDuration={150}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span>
+                      <Button
+                        type="button"
+                        size="sm"
+                        disabled={selected.length === 0 || !templateReady || send.isPending}
+                        onClick={() => setConfirmSend(true)}
+                        className="h-9 text-[12.5px]"
+                      >
+                        <Send className="size-4" />
+                        Enviar aviso{selected.length > 0 ? ` (${selected.length})` : ''}
+                      </Button>
+                    </span>
+                  </TooltipTrigger>
+                  {!templateReady && (
+                    <TooltipContent>La plantilla de WhatsApp todavía está en revisión de Meta.</TooltipContent>
+                  )}
+                </Tooltip>
+              </TooltipProvider>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                disabled={selected.length === 0 || mark.isPending}
+                onClick={markSelected}
+                className="h-9 border-line-2 text-[12.5px]"
+              >
+                {mark.isPending ? <Loader2 className="size-4 animate-spin" /> : <CheckCheck className="size-4" />}
+                Avisados a mano{selected.length > 0 ? ` (${selected.length})` : ''}
+              </Button>
+            </>
+          )}
           <select
             value={sort}
             onChange={e => changeSort(e.target.value as ExpiredPolicySort)}
@@ -380,11 +631,26 @@ export function ExpiredPoliciesTab({
         <Table>
           <TableHeader>
             <TableRow className="border-line-2 hover:bg-transparent">
-              <TableHead className="h-11 pl-5 text-[11px] uppercase tracking-[0.12em] text-faint">Asegurado</TableHead>
+              {!showHidden && (
+                <TableHead className="h-11 w-10 pl-4 pr-0">
+                  <input
+                    type="checkbox"
+                    checked={allSelected}
+                    disabled={selectable.length === 0}
+                    onChange={toggleAll}
+                    aria-label="Elegir todas las pólizas de la página"
+                    className="size-4 accent-ember"
+                  />
+                </TableHead>
+              )}
+              <TableHead className="h-11 pl-3 text-[11px] uppercase tracking-[0.12em] text-faint">Asegurado</TableHead>
               <TableHead className="text-[11px] uppercase tracking-[0.12em] text-faint">Póliza</TableHead>
               <TableHead className="text-[11px] uppercase tracking-[0.12em] text-faint">Venció</TableHead>
               <TableHead className="hidden text-[11px] uppercase tracking-[0.12em] text-faint lg:table-cell">
                 Medio de pago
+              </TableHead>
+              <TableHead className="hidden text-[11px] uppercase tracking-[0.12em] text-faint md:table-cell">
+                Aviso
               </TableHead>
               <TableHead className="pr-5 text-right text-[11px] uppercase tracking-[0.12em] text-faint">
                 Acciones
@@ -395,7 +661,8 @@ export function ExpiredPoliciesTab({
             {isLoading &&
               Array.from({ length: 6 }).map((_, i) => (
                 <TableRow key={i}>
-                  <TableCell className="py-3 pl-5">
+                  {!showHidden && <TableCell className="pl-4 pr-0" />}
+                  <TableCell className="py-3 pl-3">
                     <div className="flex items-center gap-3">
                       <Skeleton className="size-9 rounded-full" />
                       <div className="space-y-1.5">
@@ -413,6 +680,9 @@ export function ExpiredPoliciesTab({
                   <TableCell className="hidden lg:table-cell">
                     <Skeleton className="h-5 w-24" />
                   </TableCell>
+                  <TableCell className="hidden md:table-cell">
+                    <Skeleton className="h-5 w-20" />
+                  </TableCell>
                   <TableCell className="pr-5">
                     <Skeleton className="ml-auto h-8 w-24 rounded-full" />
                   </TableCell>
@@ -421,7 +691,7 @@ export function ExpiredPoliciesTab({
 
             {isError && (
               <TableRow>
-                <TableCell colSpan={5} className="py-14 text-center text-[14px] text-destructive">
+                <TableCell colSpan={columns} className="py-14 text-center text-[14px] text-destructive">
                   No se pudieron cargar las pólizas vencidas.
                 </TableCell>
               </TableRow>
@@ -429,7 +699,7 @@ export function ExpiredPoliciesTab({
 
             {!isLoading && !isError && rows.length === 0 && (
               <TableRow>
-                <TableCell colSpan={5} className="py-16 text-center text-[14px] text-muted-foreground">
+                <TableCell colSpan={columns} className="py-16 text-center text-[14px] text-muted-foreground">
                   {showHidden
                     ? 'No hay pólizas ocultas.'
                     : search
@@ -446,7 +716,9 @@ export function ExpiredPoliciesTab({
                   policy={policy}
                   orgName={orgName}
                   showingHidden={showHidden}
+                  selected={selectedIds.has(policy.id)}
                   busy={busyId === policy.id}
+                  onToggle={() => toggle(policy.id)}
                   onSelect={() => onSelectClient(policy.client.id)}
                   onHide={() => setToHide(policy)}
                   onUnhide={() => restore(policy)}
@@ -473,7 +745,7 @@ export function ExpiredPoliciesTab({
                 size="sm"
                 variant="outline"
                 disabled={page <= 1}
-                onClick={() => setPage(p => Math.max(1, p - 1))}
+                onClick={() => changePage(Math.max(1, page - 1))}
                 className="h-8 border-line-2 px-2.5 text-[12.5px]"
               >
                 <ChevronLeft className="size-4" />
@@ -487,7 +759,7 @@ export function ExpiredPoliciesTab({
                 size="sm"
                 variant="outline"
                 disabled={page >= totalPages}
-                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                onClick={() => changePage(Math.min(totalPages, page + 1))}
                 className="h-8 border-line-2 px-2.5 text-[12.5px]"
               >
                 Siguiente
@@ -499,6 +771,18 @@ export function ExpiredPoliciesTab({
       )}
 
       <HideDialog policy={toHide} pending={hide.isPending} onConfirm={confirmHide} onClose={() => setToHide(null)} />
+      <SendDialog
+        policies={confirmSend ? selected : []}
+        orgName={orgName}
+        pending={send.isPending}
+        onConfirm={sendSelected}
+        onClose={() => setConfirmSend(false)}
+      />
     </>
   )
+}
+
+/** How many columns a full-width cell spans: the checkbox column is only there for the visible list. */
+function showingHiddenColumns(showHidden: boolean): number {
+  return showHidden ? 6 : 7
 }
