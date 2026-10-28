@@ -32,6 +32,7 @@ import {
 import type { AdminPhoneNumber } from '@/src/types/api/phone-numbers'
 import { useRole } from '../hooks/use-role'
 import { useProducerCodes } from '../hooks/use-producer-codes'
+import { useOwnProducerCodes } from '../hooks/use-own-producer-codes'
 import { usePhoneNumbers, usePhoneNumberMutations } from '../hooks/use-phone-numbers'
 import { NumberAssistantSheet } from './number-assistant-sheet'
 
@@ -68,6 +69,53 @@ function DisconnectedNotice({ numbers }: { numbers: AdminPhoneNumber[] }) {
           “Conectar” ni “Añadir número” en el Administrador de WhatsApp de Meta: saca el número de la app del celular.
         </p>
       </div>
+    </div>
+  )
+}
+
+/**
+ * An admin connects numbers for their own codes: the API bills the number to the
+ * code they pick here (their only one when they have a single code).
+ */
+function AdminConnect({ reconnect }: { reconnect: boolean }) {
+  const codes = useOwnProducerCodes()
+  const [picked, setPicked] = useState<number | undefined>()
+  const responsible = picked ?? codes[0]?.id
+
+  if (codes.length === 0) {
+    return (
+      <p className="text-[13px] text-muted-foreground">
+        Tu usuario no tiene códigos de productor asignados. Pedile al SuperAdmin que te asigne uno para conectar
+        números.
+      </p>
+    )
+  }
+
+  return (
+    <div className="flex flex-col gap-3">
+      {codes.length > 1 ? (
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="connect-code">Código responsable</Label>
+          <select
+            id="connect-code"
+            value={responsible}
+            onChange={e => setPicked(Number(e.target.value))}
+            className="h-10 w-fit rounded-md border border-line-2 bg-background px-3 text-[13px]"
+          >
+            {codes.map(c => (
+              <option key={c.id} value={c.id}>
+                {c.code}
+                {c.holderName ? ` · ${c.holderName}` : ''}
+              </option>
+            ))}
+          </select>
+        </div>
+      ) : (
+        <p className="text-[13px] text-muted-foreground">
+          El número queda a cargo de tu código <span className="font-medium text-ink">{codes[0].code}</span>.
+        </p>
+      )}
+      <ConectarWhatsapp responsibleProducerCodeId={responsible} label={reconnect ? 'Reconectar número' : undefined} />
     </div>
   )
 }
@@ -241,7 +289,7 @@ export function NumerosView() {
           <p className="mt-1.5 text-[14px] text-muted-foreground">
             {isSuperAdmin
               ? 'Números de WhatsApp, código responsable y consumo del mes: tokens y uso de la IA.'
-              : 'Tokens consumidos en el mes por cada número de WhatsApp.'}
+              : 'Los números de WhatsApp a tu cargo y los tokens que consumieron en el mes.'}
           </p>
         </div>
         {isSuperAdmin && (
@@ -257,10 +305,11 @@ export function NumerosView() {
         )}
       </div>
 
-      {/* Alta por Embedded Signup: el número queda conectado y suscripto a los
-          webhooks sin cargar nada a mano. "Registrar número" queda para los
-          casos en que el número ya existe en Meta y solo hay que darlo de alta acá. */}
-      {isSuperAdmin && (
+      {/* Embedded Signup leaves the number connected and subscribed to the
+          webhooks with nothing typed by hand. "Registrar número" (SuperAdmin) is
+          for numbers that already exist in Meta. An admin connects numbers for
+          their own codes. */}
+      {canView && (
         <Card
           className={`mb-4 p-4 ${disconnected.length > 0 ? 'border-destructive/40 bg-destructive/5' : 'border-line-2'}`}
         >
@@ -275,7 +324,11 @@ export function NumerosView() {
               </p>
             </div>
           )}
-          <ConectarWhatsapp label={disconnected.length > 0 ? 'Reconectar número' : undefined} />
+          {isSuperAdmin ? (
+            <ConectarWhatsapp label={disconnected.length > 0 ? 'Reconectar número' : undefined} />
+          ) : (
+            <AdminConnect reconnect={disconnected.length > 0} />
+          )}
         </Card>
       )}
 
@@ -309,7 +362,9 @@ export function NumerosView() {
         </p>
       )}
       <Card className="mb-4 flex items-center justify-between border-line-2 p-4">
-        <span className="text-[13px] text-muted-foreground">Tokens del mes · {period} (todos los números)</span>
+        <span className="text-[13px] text-muted-foreground">
+          Tokens del mes · {period} ({isSuperAdmin ? 'todos los números' : 'tus números'})
+        </span>
         <span className="font-display text-[20px] text-ink">{numbers && !isError ? int(totalTokens) : '—'}</span>
       </Card>
 
@@ -353,7 +408,9 @@ export function NumerosView() {
                     <div className="flex size-12 items-center justify-center rounded-full bg-secondary text-muted-foreground">
                       <Phone className="size-5" />
                     </div>
-                    <p className="text-[14px] text-muted-foreground">Todavía no hay números registrados.</p>
+                    <p className="text-[14px] text-muted-foreground">
+                      {isSuperAdmin ? 'Todavía no hay números registrados.' : 'Todavía no tenés números a tu cargo.'}
+                    </p>
                   </div>
                 </TableCell>
               </TableRow>
