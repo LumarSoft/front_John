@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, type FormEvent } from 'react'
-import { AlertTriangle, Loader2, Phone, Plus, Trash2 } from 'lucide-react'
+import { AlertTriangle, Bot, Loader2, Phone, Plus, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Card } from '@/src/components/ui/card'
 import { Button } from '@/src/components/ui/button'
@@ -33,6 +33,7 @@ import type { AdminPhoneNumber } from '@/src/types/api/phone-numbers'
 import { useRole } from '../hooks/use-role'
 import { useProducerCodes } from '../hooks/use-producer-codes'
 import { usePhoneNumbers, usePhoneNumberMutations } from '../hooks/use-phone-numbers'
+import { NumberAssistantSheet } from './number-assistant-sheet'
 
 const int = (n: number) => n.toLocaleString('es-AR')
 
@@ -212,6 +213,8 @@ export function NumerosView() {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editing, setEditing] = useState<AdminPhoneNumber | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<AdminPhoneNumber | null>(null)
+  const [assistantId, setAssistantId] = useState<number | null>(null)
+  const [assistantOpen, setAssistantOpen] = useState(false)
 
   if (!roleLoading && !canView) {
     return (
@@ -225,7 +228,7 @@ export function NumerosView() {
   // The client is billed in tokens: the API sends no amounts in USD to tenants.
   const totalTokens = (numbers ?? []).reduce((sum, n) => sum + n.usage.tokens, 0)
   const disconnected = (numbers ?? []).filter(n => n.disconnectedAt)
-  const columns = isSuperAdmin ? 5 : 3
+  const columns = isSuperAdmin ? 5 : 4
 
   return (
     <div className="mx-auto w-full max-w-6xl px-5 py-8 md:px-8 md:py-10">
@@ -324,13 +327,11 @@ export function NumerosView() {
                 Tokens del mes
               </TableHead>
               {isSuperAdmin && (
-                <>
-                  <TableHead className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
-                    Uso de IA (OpenAI)
-                  </TableHead>
-                  <TableHead className="w-24 pr-5" />
-                </>
+                <TableHead className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+                  Uso de IA (OpenAI)
+                </TableHead>
               )}
+              <TableHead className="w-24 pr-5" />
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -388,6 +389,15 @@ export function NumerosView() {
                           {n.servedCodes.length} código(s) servidos
                         </Badge>
                       )}
+                      {n.assistant?.customized && (
+                        <Badge
+                          className="gap-1 bg-ember-soft text-ember-2"
+                          title="Este número tiene su propio asistente"
+                        >
+                          <Bot className="size-3" />
+                          {n.assistant.botName ?? 'Asistente propio'}
+                        </Badge>
+                      )}
                     </div>
                   </div>
                 </TableCell>
@@ -401,18 +411,36 @@ export function NumerosView() {
                   <div className="text-[11px] text-muted-foreground">mensajes enviados</div>
                 </TableCell>
                 {isSuperAdmin && (
-                  <>
-                    <TableCell className="text-[13px]">
-                      <span className="text-ink">
-                        {int((n.usage.inputTokens ?? 0) + (n.usage.outputTokens ?? 0))} tokens de OpenAI
-                      </span>
-                      <div className="text-[11px] text-muted-foreground">
-                        {int(n.usage.openaiCalls ?? 0)} llamadas · {int(n.usage.inputTokens ?? 0)} de entrada ·{' '}
-                        {int(n.usage.outputTokens ?? 0)} de salida
-                      </div>
-                    </TableCell>
-                    <TableCell className="pr-5">
-                      <div className="flex justify-end gap-1">
+                  <TableCell className="text-[13px]">
+                    <span className="text-ink">
+                      {int((n.usage.inputTokens ?? 0) + (n.usage.outputTokens ?? 0))} tokens de OpenAI
+                    </span>
+                    <div className="text-[11px] text-muted-foreground">
+                      {int(n.usage.openaiCalls ?? 0)} llamadas · {int(n.usage.inputTokens ?? 0)} de entrada ·{' '}
+                      {int(n.usage.outputTokens ?? 0)} de salida
+                    </div>
+                  </TableCell>
+                )}
+                <TableCell className="pr-5">
+                  <div className="flex justify-end gap-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 gap-1.5"
+                      title={
+                        n.canConfigureAssistant
+                          ? 'Nombre, personas, horario y datos propios de este número'
+                          : 'Ver el asistente de este número'
+                      }
+                      onClick={() => {
+                        setAssistantId(n.id)
+                        setAssistantOpen(true)
+                      }}
+                    >
+                      <Bot className="size-4" /> Asistente
+                    </Button>
+                    {isSuperAdmin && (
+                      <>
                         <Button
                           variant="ghost"
                           size="sm"
@@ -432,10 +460,10 @@ export function NumerosView() {
                         >
                           <Trash2 className="size-4" />
                         </Button>
-                      </div>
-                    </TableCell>
-                  </>
-                )}
+                      </>
+                    )}
+                  </div>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -459,6 +487,8 @@ export function NumerosView() {
           )}
         </DialogContent>
       </Dialog>
+
+      <NumberAssistantSheet numberId={assistantId} open={assistantOpen} onOpenChange={setAssistantOpen} />
 
       <AlertDialog open={!!deleteTarget} onOpenChange={open => !open && setDeleteTarget(null)}>
         <AlertDialogContent>

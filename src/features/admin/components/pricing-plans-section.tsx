@@ -34,6 +34,7 @@ import type { CreatePlanRequest, FixedProductType, ProductPlan } from '@/src/typ
 import { useAuth } from '../context/auth-context'
 import { usePricingPlans } from '../hooks/use-pricing-plans'
 import { usePricingPlansActions } from '../hooks/use-pricing-plans-actions'
+import { SuperAdminOnlyNote } from './super-admin-only-note'
 
 const FIXED_PRODUCTS: { value: FixedProductType; label: string }[] = [
   { value: 'bolso', label: 'Bolso protegido' },
@@ -109,7 +110,7 @@ function planToForm(plan: ProductPlan): FormState {
   }
 }
 
-export function PricingPlansSection() {
+export function PricingPlansSection({ canEdit }: { canEdit: boolean }) {
   const { token } = useAuth()
   const queryClient = useQueryClient()
   const { data: plans, isLoading } = usePricingPlans()
@@ -278,198 +279,201 @@ export function PricingPlansSection() {
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-8">
-        {isLoading ? (
-          <div className="flex flex-col gap-3">
-            <Skeleton className="h-16 w-full" />
-            <Skeleton className="h-16 w-full" />
-          </div>
-        ) : (
-          FIXED_PRODUCTS.map(product => {
-            const productPlans = (plans ?? []).filter(p => p.productType === product.value)
-            const coverageTypes = getProductCoverageTypes(productPlans)
-            const isEditingCoverage = coverageEditing[product.value] ?? false
-            const draft = coverageDraft[product.value] ?? []
-            const isSyncing = coverageSyncing[product.value] ?? false
+        {!canEdit && <SuperAdminOnlyNote />}
+        <fieldset disabled={!canEdit} className="contents">
+          {isLoading ? (
+            <div className="flex flex-col gap-3">
+              <Skeleton className="h-16 w-full" />
+              <Skeleton className="h-16 w-full" />
+            </div>
+          ) : (
+            FIXED_PRODUCTS.map(product => {
+              const productPlans = (plans ?? []).filter(p => p.productType === product.value)
+              const coverageTypes = getProductCoverageTypes(productPlans)
+              const isEditingCoverage = coverageEditing[product.value] ?? false
+              const draft = coverageDraft[product.value] ?? []
+              const isSyncing = coverageSyncing[product.value] ?? false
 
-            return (
-              <div key={product.value} className="flex flex-col gap-3">
-                <h3 className="text-[14px] font-semibold text-ink">{product.label}</h3>
+              return (
+                <div key={product.value} className="flex flex-col gap-3">
+                  <h3 className="text-[14px] font-semibold text-ink">{product.label}</h3>
 
-                {/* Coverage types section */}
-                <div className="rounded-lg border border-line-2 bg-canvas-2 px-3 py-3">
-                  <div className="mb-2.5 flex items-center justify-between">
-                    <span className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-faint">
-                      Coberturas del producto
-                    </span>
-                    {!isEditingCoverage && (
-                      <button
-                        type="button"
-                        onClick={() => startCoverageEdit(product.value, coverageTypes)}
-                        className="flex items-center gap-1 text-[11.5px] text-ink-3 hover:text-ink"
-                      >
-                        <Pencil className="size-3" />
-                        {coverageTypes.length > 0 ? 'Editar' : 'Definir'}
-                      </button>
+                  {/* Coverage types section */}
+                  <div className="rounded-lg border border-line-2 bg-canvas-2 px-3 py-3">
+                    <div className="mb-2.5 flex items-center justify-between">
+                      <span className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-faint">
+                        Coberturas del producto
+                      </span>
+                      {!isEditingCoverage && (
+                        <button
+                          type="button"
+                          onClick={() => startCoverageEdit(product.value, coverageTypes)}
+                          className="flex items-center gap-1 text-[11.5px] text-ink-3 hover:text-ink"
+                        >
+                          <Pencil className="size-3" />
+                          {coverageTypes.length > 0 ? 'Editar' : 'Definir'}
+                        </button>
+                      )}
+                    </div>
+
+                    {isEditingCoverage ? (
+                      <div className="flex flex-col gap-2">
+                        <div className="grid grid-cols-[1fr_minmax(80px,0.6fr)_auto] gap-2 px-1 text-[10px] uppercase tracking-[0.12em] text-faint">
+                          <span>Nombre</span>
+                          <span>Rubro</span>
+                          <span />
+                        </div>
+                        {draft.map((ct, i) => (
+                          <div key={i} className="grid grid-cols-[1fr_minmax(80px,0.6fr)_auto] items-center gap-2">
+                            <Input
+                              value={ct.label}
+                              onChange={e => updateCoverageType(product.value, i, 'label', e.target.value)}
+                              placeholder="Incendio"
+                              className="h-9"
+                            />
+                            <Input
+                              value={ct.category}
+                              onChange={e => updateCoverageType(product.value, i, 'category', e.target.value)}
+                              placeholder="EDIFICIO"
+                              className="h-9"
+                            />
+                            <Button
+                              type="button"
+                              size="icon"
+                              variant="ghost"
+                              className="size-9 text-destructive"
+                              onClick={() => removeCoverageType(product.value, i)}
+                              disabled={draft.length === 1}
+                            >
+                              <Trash2 className="size-4" />
+                            </Button>
+                          </div>
+                        ))}
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          className="mt-1 h-8 w-fit gap-1.5 border-line-2 text-[12.5px]"
+                          onClick={() => addCoverageType(product.value)}
+                        >
+                          <Plus className="size-3.5" />
+                          Agregar cobertura
+                        </Button>
+                        <div className="mt-1 flex gap-2">
+                          <Button
+                            type="button"
+                            size="sm"
+                            className="h-8 gap-1.5 text-[12.5px]"
+                            onClick={() => void syncCoverages(product.value)}
+                            disabled={isSyncing}
+                          >
+                            {isSyncing ? <Loader2 className="size-3.5 animate-spin" /> : <Save className="size-3.5" />}
+                            {productPlans.length > 0 ? 'Guardar y sincronizar en todos los planes' : 'Guardar'}
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            className="h-8 text-[12.5px]"
+                            onClick={() => cancelCoverageEdit(product.value)}
+                            disabled={isSyncing}
+                          >
+                            Cancelar
+                          </Button>
+                        </div>
+                      </div>
+                    ) : coverageTypes.length === 0 ? (
+                      <p className="text-[12.5px] text-faint">Sin coberturas definidas todavía.</p>
+                    ) : (
+                      <ul className="flex flex-col gap-1.5">
+                        {coverageTypes.map(ct => (
+                          <li
+                            key={coverageKey(ct.label, ct.category)}
+                            className="flex items-center gap-2 text-[12.5px] text-ink-3"
+                          >
+                            <span className="size-1 shrink-0 rounded-full bg-faint" />
+                            {ct.label}
+                            {ct.category && <span className="text-[10.5px] text-faint">· {ct.category}</span>}
+                          </li>
+                        ))}
+                      </ul>
                     )}
                   </div>
 
-                  {isEditingCoverage ? (
+                  {/* Plans list */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-faint">Planes</span>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="h-8 gap-1.5 border-line-2 text-[12.5px]"
+                      onClick={() => openCreate(product.value)}
+                    >
+                      <Plus className="size-3.5" />
+                      Nuevo plan
+                    </Button>
+                  </div>
+
+                  {productPlans.length === 0 ? (
+                    <p className="rounded-lg border border-dashed border-line-2 px-3 py-4 text-center text-[12.5px] text-muted-foreground">
+                      Sin planes todavía.
+                    </p>
+                  ) : (
                     <div className="flex flex-col gap-2">
-                      <div className="grid grid-cols-[1fr_minmax(80px,0.6fr)_auto] gap-2 px-1 text-[10px] uppercase tracking-[0.12em] text-faint">
-                        <span>Nombre</span>
-                        <span>Rubro</span>
-                        <span />
-                      </div>
-                      {draft.map((ct, i) => (
-                        <div key={i} className="grid grid-cols-[1fr_minmax(80px,0.6fr)_auto] items-center gap-2">
-                          <Input
-                            value={ct.label}
-                            onChange={e => updateCoverageType(product.value, i, 'label', e.target.value)}
-                            placeholder="Incendio"
-                            className="h-9"
-                          />
-                          <Input
-                            value={ct.category}
-                            onChange={e => updateCoverageType(product.value, i, 'category', e.target.value)}
-                            placeholder="EDIFICIO"
-                            className="h-9"
-                          />
+                      {productPlans.map(plan => (
+                        <div
+                          key={plan.id}
+                          className="flex items-center gap-3 rounded-lg border border-line-2 px-3 py-2.5"
+                        >
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="truncate text-[13.5px] font-medium text-ink">{plan.name}</span>
+                              {!plan.isActive && (
+                                <Badge variant="outline" className="h-5 px-1.5 text-[10px]">
+                                  Inactivo
+                                </Badge>
+                              )}
+                            </div>
+                            <span className="text-[12px] text-muted-foreground">{money(plan.monthlyPrice)} / mes</span>
+                          </div>
                           <Button
                             type="button"
                             size="icon"
                             variant="ghost"
-                            className="size-9 text-destructive"
-                            onClick={() => removeCoverageType(product.value, i)}
-                            disabled={draft.length === 1}
+                            className="size-8 text-ink-3"
+                            onClick={() => openEdit(plan)}
                           >
-                            <Trash2 className="size-4" />
+                            <Pencil className="size-4" />
                           </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button type="button" size="icon" variant="ghost" className="size-8 text-destructive">
+                                <Trash2 className="size-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>¿Eliminar el plan &quot;{plan.name}&quot;?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Dejará de aparecer en el cotizador. Esta acción no se puede deshacer.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleDelete(plan)}>Eliminar</AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         </div>
                       ))}
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        className="mt-1 h-8 w-fit gap-1.5 border-line-2 text-[12.5px]"
-                        onClick={() => addCoverageType(product.value)}
-                      >
-                        <Plus className="size-3.5" />
-                        Agregar cobertura
-                      </Button>
-                      <div className="mt-1 flex gap-2">
-                        <Button
-                          type="button"
-                          size="sm"
-                          className="h-8 gap-1.5 text-[12.5px]"
-                          onClick={() => void syncCoverages(product.value)}
-                          disabled={isSyncing}
-                        >
-                          {isSyncing ? <Loader2 className="size-3.5 animate-spin" /> : <Save className="size-3.5" />}
-                          {productPlans.length > 0 ? 'Guardar y sincronizar en todos los planes' : 'Guardar'}
-                        </Button>
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="ghost"
-                          className="h-8 text-[12.5px]"
-                          onClick={() => cancelCoverageEdit(product.value)}
-                          disabled={isSyncing}
-                        >
-                          Cancelar
-                        </Button>
-                      </div>
                     </div>
-                  ) : coverageTypes.length === 0 ? (
-                    <p className="text-[12.5px] text-faint">Sin coberturas definidas todavía.</p>
-                  ) : (
-                    <ul className="flex flex-col gap-1.5">
-                      {coverageTypes.map(ct => (
-                        <li
-                          key={coverageKey(ct.label, ct.category)}
-                          className="flex items-center gap-2 text-[12.5px] text-ink-3"
-                        >
-                          <span className="size-1 shrink-0 rounded-full bg-faint" />
-                          {ct.label}
-                          {ct.category && <span className="text-[10.5px] text-faint">· {ct.category}</span>}
-                        </li>
-                      ))}
-                    </ul>
                   )}
                 </div>
-
-                {/* Plans list */}
-                <div className="flex items-center justify-between">
-                  <span className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-faint">Planes</span>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    className="h-8 gap-1.5 border-line-2 text-[12.5px]"
-                    onClick={() => openCreate(product.value)}
-                  >
-                    <Plus className="size-3.5" />
-                    Nuevo plan
-                  </Button>
-                </div>
-
-                {productPlans.length === 0 ? (
-                  <p className="rounded-lg border border-dashed border-line-2 px-3 py-4 text-center text-[12.5px] text-muted-foreground">
-                    Sin planes todavía.
-                  </p>
-                ) : (
-                  <div className="flex flex-col gap-2">
-                    {productPlans.map(plan => (
-                      <div
-                        key={plan.id}
-                        className="flex items-center gap-3 rounded-lg border border-line-2 px-3 py-2.5"
-                      >
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2">
-                            <span className="truncate text-[13.5px] font-medium text-ink">{plan.name}</span>
-                            {!plan.isActive && (
-                              <Badge variant="outline" className="h-5 px-1.5 text-[10px]">
-                                Inactivo
-                              </Badge>
-                            )}
-                          </div>
-                          <span className="text-[12px] text-muted-foreground">{money(plan.monthlyPrice)} / mes</span>
-                        </div>
-                        <Button
-                          type="button"
-                          size="icon"
-                          variant="ghost"
-                          className="size-8 text-ink-3"
-                          onClick={() => openEdit(plan)}
-                        >
-                          <Pencil className="size-4" />
-                        </Button>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button type="button" size="icon" variant="ghost" className="size-8 text-destructive">
-                              <Trash2 className="size-4" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>¿Eliminar el plan &quot;{plan.name}&quot;?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Dejará de aparecer en el cotizador. Esta acción no se puede deshacer.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleDelete(plan)}>Eliminar</AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )
-          })
-        )}
+              )
+            })
+          )}
+        </fieldset>
       </CardContent>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

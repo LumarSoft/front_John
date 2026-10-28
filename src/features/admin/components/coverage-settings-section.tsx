@@ -19,6 +19,7 @@ import { Label } from '@/src/components/ui/label'
 import { Skeleton } from '@/src/components/ui/skeleton'
 import type { CoverageSetting, UpdateCoverageSettingRequest } from '@/src/types/api/coverage-settings'
 import { useCoverageSettings, useCoverageSettingsActions } from '../hooks/use-coverage-settings'
+import { SuperAdminOnlyNote } from './super-admin-only-note'
 
 const rangeLabel = (from: number | null, to: number | null): string | null => {
   if (from === null && to === null) return null
@@ -236,7 +237,7 @@ function EditCoverageDialog({ coverage, saving, onClose, onSave }: Readonly<Edit
   )
 }
 
-export function CoverageSettingsSection() {
+export function CoverageSettingsSection({ canEdit }: { canEdit: boolean }) {
   const { data: coverages, isLoading } = useCoverageSettings()
   const { update, reorder } = useCoverageSettingsActions()
   const [editing, setEditing] = useState<CoverageSetting | null>(null)
@@ -294,94 +295,97 @@ export function CoverageSettingsSection() {
       </CardHeader>
 
       <CardContent className="flex flex-col gap-2">
-        {isLoading && (
-          <>
-            <Skeleton className="h-16 w-full" />
-            <Skeleton className="h-16 w-full" />
-            <Skeleton className="h-16 w-full" />
-          </>
-        )}
+        {!canEdit && <SuperAdminOnlyNote />}
+        <fieldset disabled={!canEdit} className="contents">
+          {isLoading && (
+            <>
+              <Skeleton className="h-16 w-full" />
+              <Skeleton className="h-16 w-full" />
+              <Skeleton className="h-16 w-full" />
+            </>
+          )}
 
-        {!isLoading && coverages?.length === 0 && (
-          <p className="text-muted-foreground py-6 text-center text-sm">
-            Todavía no se registró ninguna cobertura. Van a aparecer acá en cuanto se haga la primera cotización.
-          </p>
-        )}
+          {!isLoading && coverages?.length === 0 && (
+            <p className="text-muted-foreground py-6 text-center text-sm">
+              Todavía no se registró ninguna cobertura. Van a aparecer acá en cuanto se haga la primera cotización.
+            </p>
+          )}
 
-        {coverages?.map((coverage, index) => (
-          <div
-            key={coverage.id}
-            className={`flex items-center gap-3 rounded-xl border px-3.5 py-3 ${
-              coverage.isActive && !coverage.needsReview ? 'bg-card' : 'bg-muted/40 opacity-70'
-            }`}
-          >
-            <div className="flex flex-col gap-0.5">
-              <Button
-                size="icon"
-                variant="ghost"
-                className="size-6"
-                disabled={index === 0 || reorder.isPending}
-                onClick={() => move(index, -1)}
-                aria-label="Subir"
-              >
-                <ArrowUp className="size-3.5" />
-              </Button>
-              <Button
-                size="icon"
-                variant="ghost"
-                className="size-6"
-                disabled={index === (coverages?.length ?? 0) - 1 || reorder.isPending}
-                onClick={() => move(index, 1)}
-                aria-label="Bajar"
-              >
-                <ArrowDown className="size-3.5" />
-              </Button>
-            </div>
-
-            <Badge variant="outline" className="font-mono">
-              {coverage.code}
-            </Badge>
-
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-1.5">
-                <span className="truncate text-sm font-medium">{coverage.name}</span>
-                {coverage.highlighted && (
-                  <Badge variant="secondary" className="gap-1">
-                    <Star className="size-3 fill-current" />
-                    {recommendedLabel(coverage)}
-                  </Badge>
-                )}
-                {coverage.needsReview ? (
-                  <Badge
-                    variant="outline"
-                    className="border-amber-300 text-amber-800 dark:border-amber-800 dark:text-amber-300"
-                  >
-                    Falta cargar qué cubre · no se ofrece
-                  </Badge>
-                ) : (
-                  !coverage.isConfigured && <Badge variant="outline">Sin configurar</Badge>
-                )}
-                {yearLabel(coverage) && <Badge variant="outline">{yearLabel(coverage)}</Badge>}
-                {!coverage.isActive && <Badge variant="outline">Oculta</Badge>}
-              </div>
-              {coverage.tagline && <p className="text-muted-foreground truncate text-xs">{coverage.tagline}</p>}
-            </div>
-
-            <Button
-              size="icon"
-              variant="ghost"
-              onClick={() => toggleActive(coverage)}
-              disabled={update.isPending}
-              aria-label={coverage.isActive ? 'Ocultar' : 'Mostrar'}
+          {coverages?.map((coverage, index) => (
+            <div
+              key={coverage.id}
+              className={`flex items-center gap-3 rounded-xl border px-3.5 py-3 ${
+                coverage.isActive && !coverage.needsReview ? 'bg-card' : 'bg-muted/40 opacity-70'
+              }`}
             >
-              {coverage.isActive ? <Eye className="size-4" /> : <EyeOff className="size-4" />}
-            </Button>
+              <div className="flex flex-col gap-0.5">
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="size-6"
+                  disabled={index === 0 || reorder.isPending}
+                  onClick={() => move(index, -1)}
+                  aria-label="Subir"
+                >
+                  <ArrowUp className="size-3.5" />
+                </Button>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="size-6"
+                  disabled={index === (coverages?.length ?? 0) - 1 || reorder.isPending}
+                  onClick={() => move(index, 1)}
+                  aria-label="Bajar"
+                >
+                  <ArrowDown className="size-3.5" />
+                </Button>
+              </div>
 
-            <Button size="icon" variant="ghost" onClick={() => setEditing(coverage)} aria-label="Editar">
-              <Pencil className="size-4" />
-            </Button>
-          </div>
-        ))}
+              <Badge variant="outline" className="font-mono">
+                {coverage.code}
+              </Badge>
+
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="truncate text-sm font-medium">{coverage.name}</span>
+                  {coverage.highlighted && (
+                    <Badge variant="secondary" className="gap-1">
+                      <Star className="size-3 fill-current" />
+                      {recommendedLabel(coverage)}
+                    </Badge>
+                  )}
+                  {coverage.needsReview ? (
+                    <Badge
+                      variant="outline"
+                      className="border-amber-300 text-amber-800 dark:border-amber-800 dark:text-amber-300"
+                    >
+                      Falta cargar qué cubre · no se ofrece
+                    </Badge>
+                  ) : (
+                    !coverage.isConfigured && <Badge variant="outline">Sin configurar</Badge>
+                  )}
+                  {yearLabel(coverage) && <Badge variant="outline">{yearLabel(coverage)}</Badge>}
+                  {!coverage.isActive && <Badge variant="outline">Oculta</Badge>}
+                </div>
+                {coverage.tagline && <p className="text-muted-foreground truncate text-xs">{coverage.tagline}</p>}
+              </div>
+
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={() => toggleActive(coverage)}
+                disabled={update.isPending}
+                aria-label={coverage.isActive ? 'Ocultar' : 'Mostrar'}
+              >
+                {coverage.isActive ? <Eye className="size-4" /> : <EyeOff className="size-4" />}
+              </Button>
+
+              <Button size="icon" variant="ghost" onClick={() => setEditing(coverage)} aria-label="Editar">
+                <Pencil className="size-4" />
+              </Button>
+            </div>
+          ))}
+        </fieldset>
       </CardContent>
 
       {editing && (

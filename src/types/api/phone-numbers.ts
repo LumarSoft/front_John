@@ -1,3 +1,6 @@
+import type { WeeklySchedule } from './business-hours'
+import type { BotProfile, UpdateBotProfileRequest } from './config'
+
 export interface PhoneNumberCodeRef {
   id: number
   code: string
@@ -59,6 +62,38 @@ export interface AdminPhoneNumber {
   responsibleCode: PhoneNumberCodeRef | null
   servedCodes: PhoneNumberCodeRef[]
   usage: PhoneNumberUsage
+  /** The number's own assistant name (null = the organization's) and whether it changes any setting. */
+  assistant: { botName: string | null; customized: boolean }
+  /** Whether the user may change this number's assistant: the SuperAdmin always, an admin on their codes' numbers. */
+  canConfigureAssistant: boolean
+}
+
+/** Assistant settings as the organization has them, or as a number overrides them. */
+export interface AssistantSettings {
+  botName: string | null
+  staffNames: string[]
+  businessHours: WeeklySchedule | null
+  botProfile: BotProfile
+}
+
+/**
+ * A number's own assistant next to its organization's (GET /admin/phone-numbers/:id/assistant).
+ * Whatever the number leaves empty is the organization's.
+ */
+export interface NumberAssistant {
+  id: number
+  number: string
+  canEdit: boolean
+  own: AssistantSettings
+  organization: AssistantSettings & { name: string; businessHours: WeeklySchedule }
+}
+
+/** Only the fields sent change; clearing one gives the number the organization's value back. */
+export interface UpdateNumberAssistantRequest {
+  botName?: string
+  staffNames?: string[]
+  businessHours?: WeeklySchedule | null
+  botProfile?: UpdateBotProfileRequest
 }
 
 export interface CreatePhoneNumberRequest {
