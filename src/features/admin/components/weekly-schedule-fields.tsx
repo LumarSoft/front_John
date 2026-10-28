@@ -1,9 +1,10 @@
 'use client'
 
-import { Plus, Trash2 } from 'lucide-react'
+import { CopyCheck, Plus, Trash2 } from 'lucide-react'
 import { Button } from '@/src/components/ui/button'
 import { Input } from '@/src/components/ui/input'
 import { WEEKDAYS, WEEKDAY_LABEL, type WeeklySchedule } from '@/src/types/api/business-hours'
+import { copyDayToOpenDays, sameShiftsOnOpenDays } from '../lib/weekly-schedule'
 
 /** Monday to Sunday, each closed or with one or more shifts. */
 export function WeeklyScheduleFields({
@@ -18,6 +19,9 @@ export function WeeklyScheduleFields({
 
   const toggleDay = (day: keyof WeeklySchedule) =>
     setDay(day, value[day].length ? [] : [{ from: '09:00', to: '18:00' }])
+
+  const linkClass =
+    'inline-flex w-fit items-center gap-1 text-[12.5px] font-semibold hover:underline disabled:pointer-events-none disabled:opacity-50'
 
   return (
     <div className="flex flex-col gap-3">
@@ -82,13 +86,26 @@ export function WeeklyScheduleFields({
                   </Button>
                 </div>
               ))}
-              <button
-                type="button"
-                onClick={() => setDay(day, [...ranges, { from: '09:00', to: '13:00' }])}
-                className="inline-flex w-fit items-center gap-1 text-[12.5px] font-semibold text-ember hover:underline disabled:pointer-events-none disabled:opacity-50"
-              >
-                <Plus className="size-3.5" /> Agregar turno
-              </button>
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+                <button
+                  type="button"
+                  onClick={() => setDay(day, [...ranges, { from: '09:00', to: '13:00' }])}
+                  className={`${linkClass} text-ember`}
+                >
+                  <Plus className="size-3.5" /> Agregar turno
+                </button>
+                {open && (
+                  <button
+                    type="button"
+                    onClick={() => onChange(copyDayToOpenDays(value, day))}
+                    disabled={sameShiftsOnOpenDays(value, day)}
+                    title={`Deja los demás días abiertos con el horario del ${WEEKDAY_LABEL[day].toLowerCase()}; los cerrados siguen cerrados`}
+                    className={`${linkClass} text-ink-3 hover:text-ember`}
+                  >
+                    <CopyCheck className="size-3.5" /> Copiar a los demás días abiertos
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         )
