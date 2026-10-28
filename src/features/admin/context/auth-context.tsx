@@ -1,7 +1,18 @@
 'use client'
 
-import { createContext, useContext, useEffect, useRef, useSyncExternalStore, type ReactNode } from 'react'
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useEffectEvent,
+  useRef,
+  useSyncExternalStore,
+  type ReactNode,
+} from 'react'
 import { useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
+import { ApiError, onUnauthorized } from '@/src/lib/api-client'
+import { adminAuthService } from '@/src/services/admin-auth.service'
 
 const TOKEN_STORAGE_KEY = 'admin_token'
 
@@ -76,6 +87,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     sessionTokenRef.current = token
     void queryClient.resetQueries()
   }, [hydrated, token, queryClient])
+
+  const expireSession = useEffectEvent((rejected: string) => {
+    if (rejected !== getTokenSnapshot()) return
+    toast.info('Tu sesión venció. Volvé a ingresar.')
+    switchSession(null)
+  })
+
+  // An expired or removed user's token gets a 401 on every call, and the panel
+  // stayed half-loaded instead of going back to the login. A 401 can also come
+  // from a provider behind the API (Triunfo), so the session ends only once the
+  // API rejects the token itself on /users/me.
+  useEffect(() => {
+    let checking = false
+    return onUnauthorized(async rejected => {
+      if (checking || rejected !== getTokenSnapshot()) return
+      checking = true
+      try {
+        await adminAuthService.getProfile(rejected)
+      } catch (error) {
+        if (error instanceof ApiError && error.status === 401) expireSession(rejected)
+      } finally {
+        checking = false
+      }
+    })
+  }, [])
 
   const value: AuthContextValue = {
     token,
