@@ -23,7 +23,6 @@ import {
   Wallet,
   type LucideIcon,
 } from 'lucide-react'
-import { BrandMark } from '@/src/components/brand-mark'
 import {
   Sidebar,
   SidebarContent,
@@ -137,13 +136,9 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon" variant="inset">
       <SidebarHeader>
-        <div className="flex items-center gap-2.5 px-1 py-1 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
-          <BrandMark size={32} className="rounded-lg shadow-sm" />
-          <div className="grid flex-1 leading-tight group-data-[collapsible=icon]:hidden">
-            <span className="truncate font-display text-[13.5px] text-sidebar-foreground">John Pellegrini</span>
-            <span className="truncate text-[11px] text-muted-foreground">Panel admin</span>
-          </div>
-        </div>
+        <span className="flex h-10 items-center truncate px-2 font-display text-[14px] tracking-[-0.01em] text-sidebar-foreground group-data-[collapsible=icon]:hidden">
+          Panel de administración
+        </span>
       </SidebarHeader>
 
       <SidebarContent>
