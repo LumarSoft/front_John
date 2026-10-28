@@ -373,7 +373,7 @@ function BotStatusControl({ botEnabled, canManage }: { botEnabled: boolean; canM
               </Button>
             )
           ) : (
-            <p className="text-[12px] text-muted-foreground">Sólo un SuperAdmin puede cambiar este estado.</p>
+            <p className="text-[12px] text-muted-foreground">Sólo un administrador puede cambiar este estado.</p>
           )}
         </CardFooter>
       </Card>
@@ -407,7 +407,7 @@ function FormSkeleton() {
 export function SettingsView() {
   const { data: profile, isLoading, isError } = useProfile()
   const { data: config } = useProducerConfig()
-  const { isSuperAdmin } = useRole()
+  const { isSuperAdmin, isAdmin } = useRole()
 
   return (
     <div className="mx-auto w-full max-w-5xl px-5 py-8 md:px-8 md:py-10">
@@ -439,7 +439,8 @@ export function SettingsView() {
           {config ? (
             <div className="space-y-5">
               {!isSuperAdmin && <OwnNumberHint />}
-              <BotStatusControl botEnabled={config.botEnabled} canManage={isSuperAdmin} />
+              {/* Stopping the bot is an emergency action: every admin may do it, not only the SuperAdmin. */}
+              <BotStatusControl botEnabled={config.botEnabled} canManage={isSuperAdmin || isAdmin} />
               <BotConfigForm
                 key={`${config.botName ?? ''}|${(config.staffNames ?? []).join(',')}`}
                 initialName={config.botName ?? ''}
