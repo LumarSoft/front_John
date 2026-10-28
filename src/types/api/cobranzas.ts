@@ -10,6 +10,8 @@ export interface CobranzaCliente {
   email: string | null
   phone: string | null
   riskTypes: RiskType[]
+  /** Medios de pago of the policies counted, as Triunfo names them ("Plan De Pago", "Convenio"…). */
+  paymentMethods: string[]
   licensePlate: string | null
   pendingCount: number
   overdueCount: number
@@ -36,14 +38,22 @@ export interface CobranzasStats {
   rejectedInstallments: number
   pendingInstallments: number
   totalDebt: string
+  /** The medios de pago found on the policies in scope, for the filter. */
+  paymentMethods: string[]
 }
 
-export interface CobranzasQuery {
-  search?: string
-  status?: CobranzaEstadoFilter
-  // SuperAdmin section filter: by producer code OR by phone number/sucursal.
+/** The filters the list and its stats share, so the KPIs follow the list. */
+export interface CobranzasScopeQuery {
+  // Section filter: by producer code OR by phone number/sucursal.
   producerCodeId?: number
   phoneNumberId?: number
+  /** One of `CobranzasStats.paymentMethods`. */
+  paymentMethod?: string
+}
+
+export interface CobranzasQuery extends CobranzasScopeQuery {
+  search?: string
+  status?: CobranzaEstadoFilter
   page?: number
   pageSize?: number
 }
