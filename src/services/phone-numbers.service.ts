@@ -2,6 +2,8 @@ import { apiRequest } from '@/src/lib/api-client'
 import type {
   AdminPhoneNumber,
   CreatePhoneNumberRequest,
+  NumberAssistant,
+  UpdateNumberAssistantRequest,
   UpdatePhoneNumberRequest,
 } from '@/src/types/api/phone-numbers'
 
@@ -19,4 +21,10 @@ export const phoneNumbersService = {
 
   remove: (token: string, id: number): Promise<{ id: number }> =>
     apiRequest<{ id: number }>(`/admin/phone-numbers/${id}`, { method: 'DELETE', token }),
+
+  getAssistant: (token: string, id: number): Promise<NumberAssistant> =>
+    apiRequest<NumberAssistant>(`/admin/phone-numbers/${id}/assistant`, { token }),
+
+  updateAssistant: (token: string, id: number, data: UpdateNumberAssistantRequest): Promise<NumberAssistant> =>
+    apiRequest<NumberAssistant>(`/admin/phone-numbers/${id}/assistant`, { method: 'PATCH', token, body: data }),
 }

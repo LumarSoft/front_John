@@ -14,7 +14,7 @@ import { useBotProfile, useUpdateBotProfile } from '../hooks/use-bot-profile'
 
 type FieldKey = keyof BotProfile
 
-interface FieldSpec {
+export interface FieldSpec {
   key: FieldKey
   label: string
   placeholder: string
@@ -23,13 +23,14 @@ interface FieldSpec {
   type?: 'text' | 'email'
 }
 
-interface FieldGroup {
+export interface FieldGroup {
   title: string
   description: string
   fields: FieldSpec[]
 }
 
-const GROUPS: FieldGroup[] = [
+/** The organization's profile fields, also used for a number's own data. */
+export const BOT_PROFILE_GROUPS: FieldGroup[] = [
   {
     title: 'Cómo se presenta',
     description: 'El nombre de la productora con el que el asistente saluda y responde.',
@@ -103,7 +104,7 @@ const GROUPS: FieldGroup[] = [
   },
 ]
 
-const ALL_FIELDS = GROUPS.flatMap(g => g.fields.map(f => f.key))
+const ALL_FIELDS = BOT_PROFILE_GROUPS.flatMap(g => g.fields.map(f => f.key))
 
 function toDraft(profile: BotProfile): Record<FieldKey, string> {
   return Object.fromEntries(ALL_FIELDS.map(key => [key, profile[key] ?? ''])) as Record<FieldKey, string>
@@ -147,7 +148,7 @@ function BotProfileForm({ profile, canEdit }: { profile: BotProfile; canEdit: bo
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-7">
-          {GROUPS.map(group => (
+          {BOT_PROFILE_GROUPS.map(group => (
             <fieldset key={group.title} className="flex flex-col gap-4" disabled={!canEdit}>
               <div>
                 <legend className="text-[13.5px] font-semibold text-ink">{group.title}</legend>

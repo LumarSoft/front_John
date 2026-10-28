@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, type FormEvent } from 'react'
+import Link from 'next/link'
 import {
   Bot,
   Clock,
@@ -11,6 +12,7 @@ import {
   PowerOff,
   ShieldAlert,
   ShieldCheck,
+  Smartphone,
   Tags,
   UserRound,
 } from 'lucide-react'
@@ -44,6 +46,8 @@ import { BotProfileSection } from './bot-profile-section'
 import { PricingPlansSection } from './pricing-plans-section'
 import { BusinessHoursSection } from './business-hours-section'
 import { CoverageSettingsSection } from './coverage-settings-section'
+import { SuperAdminOnlyNote } from './super-admin-only-note'
+import { splitNames } from '../lib/number-assistant-form'
 
 function SettingsForm({ initialEmail, initialName }: { initialEmail: string; initialName: string }) {
   const updateProfile = useUpdateProfile()
@@ -152,27 +156,39 @@ function SettingsForm({ initialEmail, initialName }: { initialEmail: string; ini
 }
 
 /** "Mili, Milagros" → ["Mili", "Milagros"]. */
-function splitNames(value: string): string[] {
-  return value
-    .split(',')
-    .map(name => name.trim())
-    .filter(Boolean)
-}
-
 /** How the bot names the organization: "John Pellegrini Management Group (JPMG)". */
 interface OrgNaming {
   name: string
   shortName: string | null
 }
 
+/** For an admin: the organization's assistant is read-only, their own number's is in Números. */
+function OwnNumberHint() {
+  return (
+    <div className="flex max-w-xl gap-3 rounded-xl border border-ember-ring bg-ember-soft px-4 py-3 text-[13px] text-ink-3">
+      <Smartphone className="mt-0.5 size-4 shrink-0 text-ember-2" />
+      <p>
+        Esto es de toda la organización y lo cambia un SuperAdmin. Si tenés un número a tu cargo, podés darle su propio
+        nombre, personas, horario y datos en{' '}
+        <Link href="/admin/numeros" className="font-medium text-ember-2 underline-offset-2 hover:underline">
+          Números → Asistente
+        </Link>
+        .
+      </p>
+    </div>
+  )
+}
+
 function BotConfigForm({
   initialName,
   initialStaff,
   org,
+  canEdit,
 }: {
   initialName: string
   initialStaff: string[]
   org: OrgNaming
+  canEdit: boolean
 }) {
   const updateConfig = useUpdateProducerConfig()
   const [botName, setBotName] = useState(initialName)
@@ -209,55 +225,61 @@ function BotConfigForm({
           <CardTitle className="font-display text-[18px]">Asistente de WhatsApp</CardTitle>
           <CardDescription>
             Elegí el nombre con el que el bot se presenta. Si lo dejás vacío, se presenta como “el asistente de{' '}
-            {org.shortName ?? org.name}”.
+            {org.shortName ?? org.name}”. Vale para todos los números que no tengan uno propio (Números → Asistente).
           </CardDescription>
         </CardHeader>
-        <CardContent className="flex flex-col gap-5">
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="bot-name">Nombre del asistente</Label>
-            <div className="relative">
-              <Bot className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                id="bot-name"
-                type="text"
-                maxLength={60}
-                placeholder="Ej: NICO (dejá vacío para no usar nombre)"
-                className="h-10 pl-9"
-                value={botName}
-                onChange={e => setBotName(e.target.value)}
-              />
+        <CardContent>
+          <fieldset disabled={!canEdit} className="flex flex-col gap-5">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="bot-name">Nombre del asistente</Label>
+              <div className="relative">
+                <Bot className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  id="bot-name"
+                  type="text"
+                  maxLength={60}
+                  placeholder="Ej: NICO (dejá vacío para no usar nombre)"
+                  className="h-10 pl-9"
+                  value={botName}
+                  onChange={e => setBotName(e.target.value)}
+                />
+              </div>
+              <p className="text-[12.5px] text-muted-foreground">
+                Vista previa: <span className="text-ink">{preview}</span>
+              </p>
             </div>
-            <p className="text-[12.5px] text-muted-foreground">
-              Vista previa: <span className="text-ink">{preview}</span>
-            </p>
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="staff-names">Personas de la oficina</Label>
-            <Input
-              id="staff-names"
-              type="text"
-              maxLength={200}
-              placeholder="Ej: Mili, Milagros"
-              className="h-10"
-              value={staff}
-              onChange={e => setStaff(e.target.value)}
-            />
-            <p className="text-[12.5px] text-muted-foreground">
-              Separados por coma. Si un cliente le escribe a alguien por su nombre (“Hola Mili”), el bot le avisa a esa
-              persona en Asuntos pendientes y sigue atendiendo al cliente.
-            </p>
-          </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="staff-names">Personas de la oficina</Label>
+              <Input
+                id="staff-names"
+                type="text"
+                maxLength={200}
+                placeholder="Ej: Mili, Milagros"
+                className="h-10"
+                value={staff}
+                onChange={e => setStaff(e.target.value)}
+              />
+              <p className="text-[12.5px] text-muted-foreground">
+                Separados por coma. Si un cliente le escribe a alguien por su nombre (“Hola Mili”), el bot le avisa a
+                esa persona en Asuntos pendientes y sigue atendiendo al cliente.
+              </p>
+            </div>
+          </fieldset>
         </CardContent>
         <CardFooter>
-          <Button type="submit" disabled={!hasChanges || updateConfig.isPending} className="h-10">
-            {updateConfig.isPending ? (
-              <>
-                <Loader2 className="size-4 animate-spin" /> Guardando…
-              </>
-            ) : (
-              'Guardar cambios'
-            )}
-          </Button>
+          {canEdit ? (
+            <Button type="submit" disabled={!hasChanges || updateConfig.isPending} className="h-10">
+              {updateConfig.isPending ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" /> Guardando…
+                </>
+              ) : (
+                'Guardar cambios'
+              )}
+            </Button>
+          ) : (
+            <SuperAdminOnlyNote />
+          )}
         </CardFooter>
       </form>
     </Card>
@@ -415,6 +437,7 @@ export function SettingsView() {
         <TabsContent value="asistente" className="mt-6">
           {config ? (
             <div className="space-y-5">
+              {!isSuperAdmin && <OwnNumberHint />}
               <BotStatusControl botEnabled={config.botEnabled} canManage={isSuperAdmin} />
               <BotConfigForm
                 key={`${config.botName ?? ''}|${(config.staffNames ?? []).join(',')}`}
@@ -424,6 +447,7 @@ export function SettingsView() {
                   name: profile?.organization?.displayName ?? 'tu productora',
                   shortName: profile?.organization?.shortName ?? null,
                 }}
+                canEdit={isSuperAdmin}
               />
               <BotProfileSection canEdit={isSuperAdmin} />
             </div>
@@ -433,15 +457,15 @@ export function SettingsView() {
         </TabsContent>
 
         <TabsContent value="horarios" className="mt-6">
-          <BusinessHoursSection />
+          <BusinessHoursSection canEdit={isSuperAdmin} />
         </TabsContent>
 
         <TabsContent value="coberturas" className="mt-6">
-          <CoverageSettingsSection />
+          <CoverageSettingsSection canEdit={isSuperAdmin} />
         </TabsContent>
 
         <TabsContent value="precios" className="mt-6">
-          <PricingPlansSection />
+          <PricingPlansSection canEdit={isSuperAdmin} />
         </TabsContent>
       </Tabs>
     </div>
