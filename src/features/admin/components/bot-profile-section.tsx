@@ -197,7 +197,7 @@ function BotProfileForm({ profile, canEdit }: { profile: BotProfile; canEdit: bo
               )}
             </Button>
           ) : (
-            <p className="text-[12px] text-muted-foreground">Sólo un SuperAdmin puede cambiar estos datos.</p>
+            <p className="text-[12px] text-muted-foreground">Sólo un administrador puede cambiar estos datos.</p>
           )}
         </CardFooter>
       </form>
