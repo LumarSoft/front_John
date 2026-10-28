@@ -38,6 +38,8 @@ export interface BotProfile {
   transferBank: string | null
   /** Who gets the e-mail of each new claim. */
   claimsEmail: string | null
+  /** The line the bot adds at the end of every quote it gives. Null → the quote ends as is. */
+  quoteClosingNote: string | null
 }
 
 /** Only the fields sent change; an empty string clears one. */
