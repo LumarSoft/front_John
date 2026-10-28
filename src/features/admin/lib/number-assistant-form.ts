@@ -1,8 +1,20 @@
 import type { WeeklySchedule } from '@/src/types/api/business-hours'
 import type { BotProfile } from '@/src/types/api/config'
-import type { NumberAssistant, UpdateNumberAssistantRequest } from '@/src/types/api/phone-numbers'
+import type { CoverageOverride, NumberAssistant, UpdateNumberAssistantRequest } from '@/src/types/api/phone-numbers'
 
 type ProfileField = keyof BotProfile
+
+/** A yes/no the number may leave to the organization (''). */
+export type Choice = '' | 'yes' | 'no'
+
+/** How the number offers one of the organization's coverages; '' = as the organization. */
+export interface CoverageDraft {
+  isActive: Choice
+  highlighted: Choice
+  sortOrder: string
+}
+
+export const EMPTY_COVERAGE_DRAFT: CoverageDraft = { isActive: '', highlighted: '', sortOrder: '' }
 
 /** What the form edits. Empty text means "the organization's". */
 export interface NumberAssistantDraft {
@@ -11,6 +23,40 @@ export interface NumberAssistantDraft {
   ownHours: boolean
   weekly: WeeklySchedule
   profile: Record<ProfileField, string>
+  /** One entry per organization coverage, keyed by code. */
+  coverages: Record<string, CoverageDraft>
+}
+
+const choiceOf = (value: boolean | null | undefined): Choice => (value == null ? '' : value ? 'yes' : 'no')
+const boolOf = (choice: Choice): boolean | null => (choice === '' ? null : choice === 'yes')
+
+function coverageDrafts({ own, organization }: NumberAssistant): Record<string, CoverageDraft> {
+  return Object.fromEntries(
+    (organization.coverages ?? []).map(coverage => {
+      const stored = own.coverageSettings?.[coverage.code]
+      return [
+        coverage.code,
+        {
+          isActive: choiceOf(stored?.isActive),
+          highlighted: choiceOf(stored?.highlighted),
+          sortOrder: stored?.sortOrder == null ? '' : String(stored.sortOrder),
+        },
+      ]
+    }),
+  )
+}
+
+/** Only the codes and fields the number sets, as the API takes them. */
+export function coverageOverridesOf(
+  coverages: Record<string, CoverageDraft>,
+): Record<string, Partial<CoverageOverride>> {
+  const overrides: Record<string, Partial<CoverageOverride>> = {}
+  for (const [code, row] of Object.entries(coverages)) {
+    const sortOrder = row.sortOrder.trim() === '' ? null : Number(row.sortOrder)
+    const value = { isActive: boolOf(row.isActive), highlighted: boolOf(row.highlighted), sortOrder }
+    if (value.isActive !== null || value.highlighted !== null || value.sortOrder !== null) overrides[code] = value
+  }
+  return overrides
 }
 
 export const splitNames = (value: string): string[] =>
@@ -29,6 +75,7 @@ export function toNumberAssistantDraft({ own, organization }: NumberAssistant): 
     profile: Object.fromEntries(
       (Object.keys(own.botProfile) as ProfileField[]).map(key => [key, own.botProfile[key] ?? '']),
     ) as Record<ProfileField, string>,
+    coverages: coverageDrafts({ own, organization } as NumberAssistant),
   }
 }
 
@@ -41,6 +88,7 @@ export function emptyNumberAssistantDraft(assistant: NumberAssistant): NumberAss
     ownHours: false,
     weekly: assistant.organization.businessHours,
     profile: Object.fromEntries(Object.keys(draft.profile).map(key => [key, ''])) as Record<ProfileField, string>,
+    coverages: Object.fromEntries(Object.keys(draft.coverages).map(code => [code, EMPTY_COVERAGE_DRAFT])),
   }
 }
 
@@ -63,5 +111,10 @@ export function numberAssistantChanges(
     key => draft.profile[key].trim() !== initial.profile[key].trim(),
   )
   if (profile.length) changes.botProfile = Object.fromEntries(profile.map(key => [key, draft.profile[key].trim()]))
+
+  const overrides = coverageOverridesOf(draft.coverages)
+  if (JSON.stringify(overrides) !== JSON.stringify(coverageOverridesOf(initial.coverages))) {
+    changes.coverageSettings = Object.keys(overrides).length ? overrides : null
+  }
   return changes
 }

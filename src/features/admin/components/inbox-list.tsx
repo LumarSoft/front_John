@@ -58,7 +58,7 @@ export function InboxList({ conversations, selectedId, onSelect, onDelete }: Pro
         const name = contactDisplayName(conv)
         const isSelected = selectedId === conv.id
         const isUnread = conv.unreadCount > 0
-        const taken = conv.botPaused || conv.globalBotDisabled
+        const taken = conv.botPaused || conv.globalBotDisabled || !!conv.numberBotDisabled
 
         return (
           <li key={conv.id} className="group relative">
