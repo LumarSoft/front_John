@@ -10,7 +10,8 @@ import { cn } from '@/src/lib/utils'
 import { useDebouncedValue } from '@/src/hooks/use-debounced-value'
 import type { SolicitudListItem, SolicitudKind, SolicitudStatus } from '@/src/types/api/solicitudes'
 import { useSolicitudes } from '../hooks/use-solicitudes'
-import { ScopeFilter, type ScopeFilterValue } from './scope-filter'
+import { ScopeFilter } from './scope-filter'
+import { useScopeFilterState } from '../hooks/use-scope-filter-state'
 import { SolicitudDialog } from './solicitud-dialog'
 import { StatusPill } from './solicitud-status-pill'
 import { PRODUCT_LABELS, productLabel, timeAgo } from '../lib/solicitudes-ui'
@@ -110,7 +111,8 @@ export function SolicitudesView() {
   const [kind, setKind] = useState<SolicitudKind | ''>('')
   const [searchInput, setSearchInput] = useState('')
   const search = useDebouncedValue(searchInput, 350)
-  const [scope, setScope] = useState<ScopeFilterValue>({})
+  // Opens on the office line for a SuperAdmin; see useScopeFilterState.
+  const [scope, setScope] = useScopeFilterState()
   const [target, setTarget] = useState<{ kind: SolicitudKind; id: number } | null>(() =>
     (linkedKind === 'lead' || linkedKind === 'cotizacion') && Number.isInteger(linkedId) && linkedId > 0
       ? { kind: linkedKind, id: linkedId }

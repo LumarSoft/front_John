@@ -11,6 +11,11 @@ export interface AdminOrganization {
   /** The name the bot uses for it ("John Pellegrini Management Group"), or `name`. */
   displayName: string
   shortName: string | null
+  /**
+   * The office line (the active number billed to the master code): the SuperAdmin's
+   * sections open filtered by it. Absent on older APIs.
+   */
+  defaultPhoneNumber?: { id: number; number: string } | null
 }
 
 export interface AdminUser {

@@ -31,7 +31,8 @@ import { useInboxConversations } from '../hooks/use-inbox-conversations'
 import { InboxList } from './inbox-list'
 import { InboxThread } from './inbox-thread'
 import { AseguradoSheet } from './asegurado-sheet'
-import { ScopeFilter, type ScopeFilterValue } from './scope-filter'
+import { ScopeFilter } from './scope-filter'
+import { useScopeFilterState } from '../hooks/use-scope-filter-state'
 import type { InboxConversation } from '@/src/types/api/inbox'
 import { contactDisplayName } from '../lib/inbox-contact'
 
@@ -95,7 +96,8 @@ export function InboxView() {
   const [selectedClientId, setSelectedClientId] = useState<number | null>(null)
   const [searchInput, setSearchInput] = useState('')
   const [filter, setFilter] = useState<InboxFilter>('all')
-  const [scope, setScope] = useState<ScopeFilterValue>({})
+  // Opens on the office line for a SuperAdmin; see useScopeFilterState.
+  const [scope, setScope] = useScopeFilterState()
   const search = useDebouncedValue(searchInput, 350)
 
   const { data: conversations = [], isLoading } = useInboxConversations(undefined, search, scope)

@@ -1,6 +1,5 @@
 'use client'
 
-import { useState } from 'react'
 import dynamic from 'next/dynamic'
 import { motion } from 'framer-motion'
 import { AlertTriangle, FileText, ShieldAlert, Users, Wallet, type LucideIcon } from 'lucide-react'
@@ -8,7 +7,8 @@ import { Card, CardContent } from '@/src/components/ui/card'
 import { Skeleton } from '@/src/components/ui/skeleton'
 import { formatCurrency } from '@/src/features/admin/lib/asegurados-ui'
 import { useDashboard } from '../hooks/use-dashboard'
-import { ScopeFilter, type ScopeFilterValue } from './scope-filter'
+import { ScopeFilter } from './scope-filter'
+import { useScopeFilterState } from '../hooks/use-scope-filter-state'
 import type { DashboardData } from '@/src/types/api/dashboard'
 
 // Recharts is heavy and never needed on first paint — load it lazily.
@@ -128,7 +128,8 @@ function DashboardSkeleton() {
 }
 
 export function DashboardHome() {
-  const [scope, setScope] = useState<ScopeFilterValue>({})
+  // Opens on the office line for a SuperAdmin; see useScopeFilterState.
+  const [scope, setScope] = useScopeFilterState()
   const { data, isLoading, isError, refetch } = useDashboard(scope)
 
   return (

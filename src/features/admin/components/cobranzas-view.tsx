@@ -28,6 +28,7 @@ import type { CobranzaCliente, CobranzaEstadoFilter, CobranzasStats } from '@/sr
 import { useCobranzas } from '../hooks/use-cobranzas'
 import { useCobranzasStats } from '../hooks/use-cobranzas-stats'
 import { ScopeFilter, type ScopeFilterValue } from './scope-filter'
+import { useScopeFilterState } from '../hooks/use-scope-filter-state'
 import {
   buildCobranzaWhatsappUrl,
   formatCurrency,
@@ -340,7 +341,8 @@ export function CobranzasView() {
   const [searchInput, setSearchInput] = useState('')
   const search = useDebouncedValue(searchInput, 350)
   const [filter, setFilter] = useState<CobranzaEstadoFilter>('vencidas')
-  const [scope, setScope] = useState<ScopeFilterValue>({})
+  // Opens on the office line for a SuperAdmin; see useScopeFilterState.
+  const [scope, setScope] = useScopeFilterState()
   const [page, setPage] = useState(1)
   const [selectedId, setSelectedId] = useState<number | null>(null)
 
