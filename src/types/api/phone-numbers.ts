@@ -66,6 +66,43 @@ export interface AdminPhoneNumber {
   assistant: { botName: string | null; customized: boolean }
   /** Whether the user may change this number's assistant: the SuperAdmin always, an admin on their codes' numbers. */
   canConfigureAssistant: boolean
+  /** The number's own bot switch (absent on older APIs). */
+  botEnabled?: boolean
+}
+
+/** What a number changes about one of the organization's coverages; null = the organization's. */
+export interface CoverageOverride {
+  isActive: boolean | null
+  highlighted: boolean | null
+  sortOrder: number | null
+}
+
+/** Keyed by Triunfo coverage code. */
+export type CoverageOverrides = Record<string, CoverageOverride>
+
+/** A coverage as the organization offers it, which a number's own settings start from. */
+export interface OrganizationCoverage {
+  id: number
+  code: string
+  name: string
+  isActive: boolean
+  highlighted: boolean
+  sortOrder: number
+  /** Nobody wrote what it includes: quotes hide it whatever the number says. */
+  needsReview: boolean
+}
+
+export interface BotStatusChangeInfo {
+  botEnabled: boolean
+  at: string
+  by: string | null
+}
+
+/** A number's own bot switch after flipping it (PATCH /admin/phone-numbers/:id/bot-status). */
+export interface NumberBotStatus {
+  id: number
+  botEnabled: boolean
+  lastBotStatusChange: BotStatusChangeInfo | null
 }
 
 /** Assistant settings as the organization has them, or as a number overrides them. */
@@ -84,8 +121,20 @@ export interface NumberAssistant {
   id: number
   number: string
   canEdit: boolean
-  own: AssistantSettings
-  organization: AssistantSettings & { name: string; businessHours: WeeklySchedule }
+  own: AssistantSettings & {
+    /** The number's own bot switch (absent on older APIs). */
+    botEnabled?: boolean
+    /** How this number offers the organization's coverages (absent on older APIs). */
+    coverageSettings?: CoverageOverrides
+  }
+  organization: AssistantSettings & {
+    name: string
+    businessHours: WeeklySchedule
+    botEnabled?: boolean
+    coverages?: OrganizationCoverage[]
+  }
+  /** Who last flipped the number's own switch (absent on older APIs). */
+  lastBotStatusChange?: BotStatusChangeInfo | null
 }
 
 /** Only the fields sent change; clearing one gives the number the organization's value back. */
@@ -94,6 +143,8 @@ export interface UpdateNumberAssistantRequest {
   staffNames?: string[]
   businessHours?: WeeklySchedule | null
   botProfile?: UpdateBotProfileRequest
+  /** Only the codes and fields the number changes; null = every coverage as the organization's. */
+  coverageSettings?: Record<string, Partial<CoverageOverride>> | null
 }
 
 export interface CreatePhoneNumberRequest {
