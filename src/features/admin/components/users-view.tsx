@@ -31,6 +31,7 @@ import { useProfile } from '../hooks/use-profile'
 import { useRole } from '../hooks/use-role'
 import { useDeleteUser } from '../hooks/use-delete-user'
 import { UserFormDialog } from './user-form-dialog'
+import { BranchOnboardingDialog } from './branch-onboarding-dialog'
 
 function formatDate(value: string): string {
   return new Date(value).toLocaleDateString('es-AR', { day: '2-digit', month: 'short', year: 'numeric' })
@@ -43,6 +44,7 @@ export function UsersView() {
   const deleteUser = useDeleteUser()
 
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [branchOpen, setBranchOpen] = useState(false)
   const [editing, setEditing] = useState<AdminUser | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<AdminUser | null>(null)
 
@@ -237,7 +239,13 @@ export function UsersView() {
         </Table>
       </Card>
 
-      <UserFormDialog user={editing} open={dialogOpen} onOpenChange={setDialogOpen} />
+      <UserFormDialog
+        user={editing}
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        onStartBranch={() => setBranchOpen(true)}
+      />
+      <BranchOnboardingDialog open={branchOpen} onOpenChange={setBranchOpen} />
 
       <AlertDialog open={!!deleteTarget} onOpenChange={open => !open && setDeleteTarget(null)}>
         <AlertDialogContent>

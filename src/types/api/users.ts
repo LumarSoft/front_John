@@ -16,6 +16,12 @@ export interface UpdateUserRequest {
   producerCodeIds?: number[]
 }
 
+/** A new branch's Triunfo code (POST /users/producer-codes). */
+export interface CreateProducerCodeRequest {
+  code: string
+  holderName?: string
+}
+
 /** A producer code option for the user-assignment UI (GET /users/producer-codes). */
 export interface ProducerCodeOption {
   id: number

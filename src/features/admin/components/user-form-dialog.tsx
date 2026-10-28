@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, type FormEvent } from 'react'
-import { KeyRound, Loader2, Mail } from 'lucide-react'
+import { Building2, KeyRound, Loader2, Mail, UserPlus } from 'lucide-react'
 import { toast } from 'sonner'
 import {
   Dialog,
@@ -24,6 +24,8 @@ interface UserFormDialogProps {
   user: AdminUser | null
   open: boolean
   onOpenChange: (open: boolean) => void
+  /** Hands over to the new-branch onboarding (code, user, number, assistant, plan). */
+  onStartBranch?: () => void
 }
 
 function onMutationError(error: unknown) {
@@ -207,21 +209,74 @@ function UserForm({ user, onDone }: { user: AdminUser | null; onDone: () => void
   )
 }
 
-export function UserFormDialog({ user, open, onOpenChange }: UserFormDialogProps) {
+/** The first question for a new user: a branch that already exists, or a new one that gets its own onboarding. */
+function BranchChoice({ onExisting, onNew }: { onExisting: () => void; onNew: () => void }) {
+  const option =
+    'flex flex-col items-start gap-1.5 rounded-lg border border-line-2 p-4 text-left transition-colors hover:border-ember-2 hover:bg-ember-soft/40'
+  return (
+    <div className="grid gap-3 py-5 sm:grid-cols-2">
+      <button type="button" onClick={onExisting} className={option}>
+        <UserPlus className="size-5 text-ember-2" />
+        <span className="text-[14px] font-medium text-ink">Sucursal existente</span>
+        <span className="text-[12px] text-muted-foreground">
+          Un usuario más para una sucursal que ya tiene su código y su número.
+        </span>
+      </button>
+      <button type="button" onClick={onNew} className={option}>
+        <Building2 className="size-5 text-ember-2" />
+        <span className="text-[14px] font-medium text-ink">Sucursal nueva</span>
+        <span className="text-[12px] text-muted-foreground">
+          Independiente de las demás: su código, su administrador, su número de WhatsApp, cómo atiende el bot y su plan.
+        </span>
+      </button>
+    </div>
+  )
+}
+
+export function UserFormDialog({ user, open, onOpenChange, onStartBranch }: UserFormDialogProps) {
   const isEdit = !!user
+  const [choice, setChoice] = useState<'ask' | 'existing'>('ask')
+  const asking = !isEdit && choice === 'ask' && !!onStartBranch
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[440px]">
+    <Dialog
+      open={open}
+      onOpenChange={o => {
+        if (!o) setChoice('ask')
+        onOpenChange(o)
+      }}
+    >
+      <DialogContent className={asking ? 'sm:max-w-[560px]' : 'sm:max-w-[440px]'}>
         <DialogHeader>
           <DialogTitle className="font-display text-[20px]">{isEdit ? 'Editar usuario' : 'Nuevo usuario'}</DialogTitle>
           <DialogDescription>
             {isEdit
               ? 'Actualizá el correo o la contraseña del administrador.'
-              : 'Creá un nuevo administrador de la plataforma.'}
+              : asking
+                ? '¿Para qué sucursal es este usuario?'
+                : 'Creá un nuevo administrador de la plataforma.'}
           </DialogDescription>
         </DialogHeader>
-        {open && <UserForm key={user?.id ?? 'new'} user={user} onDone={() => onOpenChange(false)} />}
+        {open && asking && (
+          <BranchChoice
+            onExisting={() => setChoice('existing')}
+            onNew={() => {
+              setChoice('ask')
+              onOpenChange(false)
+              onStartBranch?.()
+            }}
+          />
+        )}
+        {open && !asking && (
+          <UserForm
+            key={user?.id ?? 'new'}
+            user={user}
+            onDone={() => {
+              setChoice('ask')
+              onOpenChange(false)
+            }}
+          />
+        )}
       </DialogContent>
     </Dialog>
   )

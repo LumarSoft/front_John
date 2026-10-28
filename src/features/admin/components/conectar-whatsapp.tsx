@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState, type RefObject } from 'react'
+import type { OnboardWhatsappResponse } from '@/src/types/api/whatsapp-onboarding'
 import { Button } from '@/src/components/ui/button'
 import { useEmbeddedSignupConfig, useOnboardWhatsapp } from '../hooks/use-whatsapp-onboarding'
 
@@ -58,7 +59,8 @@ interface Props {
   /** Six digits. Ignored by Meta when the number is already registered. */
   pin?: string
   responsibleProducerCodeId?: number
-  onConnected?: (metaPhoneNumberId: string) => void
+  /** The number as the API created or revived it (its internal id, Meta id, Coexistence state). */
+  onConnected?: (result: OnboardWhatsappResponse) => void
   /** Button text; "Reconectar número" when Meta dropped a number. */
   label?: string
 }
@@ -209,7 +211,7 @@ export function ConectarWhatsapp({
               responsibleProducerCodeId,
             },
             {
-              onSuccess: result => onConnected?.(result.metaPhoneNumberId),
+              onSuccess: result => onConnected?.(result),
               onError: (err: Error) => setError(err.message),
             },
           )
