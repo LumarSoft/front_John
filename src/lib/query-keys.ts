@@ -1,6 +1,7 @@
 import type { AdminClientsQuery } from '@/src/types/api/clients'
 import type { CobranzasQuery } from '@/src/types/api/cobranzas'
 import type { VehicleType } from '@/src/types/api/cotizador'
+import type { ExpiredPoliciesQuery } from '@/src/types/api/expired-policies'
 import type {
   ImprovementsQuery,
   OwnerImprovementsQuery,
@@ -36,6 +37,9 @@ export const QUERY_KEYS = {
     cobranzas: (params?: CobranzasQuery) => ['admin', 'cobranzas', 'list', params ?? {}] as const,
     cobranzasStats: (params?: Pick<CobranzasQuery, 'producerCodeId' | 'phoneNumberId' | 'paymentMethod'>) =>
       ['admin', 'cobranzas', 'stats', params ?? {}] as const,
+    expiredPoliciesAll: ['admin', 'cobranzas', 'vencidas'] as const,
+    expiredPolicies: (params?: ExpiredPoliciesQuery) =>
+      ['admin', 'cobranzas', 'vencidas', 'list', params ?? {}] as const,
     novedades: (params?: NovedadesQuery) => ['admin', 'novedades', 'list', params ?? {}] as const,
     novedadesStats: ['admin', 'novedades', 'stats'] as const,
     siniestros: (params?: AdminSiniestrosQuery) => ['admin', 'siniestros', 'list', params ?? {}] as const,
