@@ -1,4 +1,5 @@
 import { apiRequest } from '@/src/lib/api-client'
+import type { InboxMessage } from '@/src/types/api/inbox'
 import type {
   SolicitudDetail,
   SolicitudesPage,
@@ -27,6 +28,10 @@ export const solicitudesService = {
 
   get: (kind: SolicitudKind, id: number, token: string) =>
     apiRequest<SolicitudDetail>(`/admin/solicitudes/${kind}/${id}`, { token }),
+
+  /** The chat behind the solicitud, read-only (does not mark it as read in the inbox). */
+  messages: (kind: SolicitudKind, id: number, token: string) =>
+    apiRequest<InboxMessage[]>(`/admin/solicitudes/${kind}/${id}/messages`, { token }),
 
   update: (kind: SolicitudKind, id: number, data: UpdateSolicitudRequest, token: string) =>
     apiRequest<{ ok: boolean }>(`/admin/solicitudes/${kind}/${id}`, { method: 'PATCH', token, body: data }),

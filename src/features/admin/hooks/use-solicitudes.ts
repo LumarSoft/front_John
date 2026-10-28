@@ -37,3 +37,15 @@ export function useSolicitud(kind: SolicitudKind | null, id: number | null) {
     enabled: !!token && !!kind && !!id,
   })
 }
+
+/** The WhatsApp chat behind a solicitud, polled while the "Chat" tab is open. */
+export function useSolicitudMessages(kind: SolicitudKind, id: number, enabled: boolean) {
+  const { token } = useAuth()
+
+  return useQuery({
+    queryKey: QUERY_KEYS.admin.solicitudMessages(kind, id),
+    queryFn: () => solicitudesService.messages(kind, id, token as string),
+    enabled: !!token && enabled,
+    refetchInterval: 5_000,
+  })
+}

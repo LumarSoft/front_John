@@ -34,6 +34,13 @@ export interface SolicitudesPage {
   totalPages: number
 }
 
+/** The WhatsApp chat a bot lead came from, shown in the solicitud's "Chat" tab. */
+export interface SolicitudConversation {
+  id: number
+  status: 'open' | 'pending' | 'closed'
+  contactName: string | null
+}
+
 export interface LeadDetail {
   kind: 'lead'
   id: number
@@ -47,6 +54,8 @@ export interface LeadDetail {
   notes: string | null
   createdAt: string
   selectedPlan: { id: number; name: string; monthlyPrice: number; productType: string } | null
+  /** Null for a web lead, or when the chat was deleted from the inbox. */
+  conversation: SolicitudConversation | null
 }
 
 export interface CotizacionPaymentOption {
@@ -81,6 +90,8 @@ export interface CotizacionDetail {
   paymentMethod: string
   createdAt: string
   quote: { quoteNumber: number; vehicleType: string; manufactureYear: number; postalCode: number }
+  /** Online quotes come from the web form: never a chat behind them. */
+  conversation: null
 }
 
 export type SolicitudDetail = LeadDetail | CotizacionDetail

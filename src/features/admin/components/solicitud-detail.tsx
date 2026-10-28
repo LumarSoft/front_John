@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { FileText, Loader2 } from 'lucide-react'
+import { FileText, Loader2, MessageCircle, ClipboardList } from 'lucide-react'
+import { cn } from '@/src/lib/utils'
 import { toast } from 'sonner'
 import { Button } from '@/src/components/ui/button'
 import { Skeleton } from '@/src/components/ui/skeleton'
@@ -18,18 +19,28 @@ import { useSolicitud } from '../hooks/use-solicitudes'
 import { useSolicitudActions } from '../hooks/use-solicitud-actions'
 import { buildSolicitudWhatsappUrl, productLabel, STATUS_LABELS, STATUS_ORDER, timeAgo } from '../lib/solicitudes-ui'
 import { StatusPill } from './solicitud-status-pill'
+import { SolicitudChat } from './solicitud-chat'
 
 interface SolicitudDetailViewProps {
   target: { kind: SolicitudKind; id: number } | null
   onClose: () => void
 }
 
+type DetailTab = 'datos' | 'chat'
+
+const TABS: { value: DetailTab; label: string; icon: typeof ClipboardList }[] = [
+  { value: 'datos', label: 'Datos', icon: ClipboardList },
+  { value: 'chat', label: 'Chat', icon: MessageCircle },
+]
+
 /**
- * The full solicitud detail: header (product + status), data grid, status
- * selector and internal notes. Rendered inside the dialog modal.
+ * The full solicitud detail: header (product + status) and two tabs — the data
+ * grid with status selector and internal notes, and the WhatsApp chat the
+ * request came from. Rendered inside the dialog modal.
  */
 export function SolicitudDetailView({ target, onClose }: Readonly<SolicitudDetailViewProps>) {
   const { data, isLoading } = useSolicitud(target?.kind ?? null, target?.id ?? null)
+  const [tab, setTab] = useState<DetailTab>('datos')
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -47,19 +58,40 @@ export function SolicitudDetailView({ target, onClose }: Readonly<SolicitudDetai
         {data && <StatusPill status={data.status} className="mt-0.5" />}
       </header>
 
-      <div className="min-h-0 flex-1 overflow-y-auto">
-        {isLoading || !data || !target ? (
-          <div className="flex flex-col gap-4 p-5">
-            <Skeleton className="h-5 w-40" />
-            <Skeleton className="h-5 w-56" />
-            <Skeleton className="h-20 w-full" />
-          </div>
-        ) : (
-          // Keyed by id so the editor remounts with fresh state per solicitud,
-          // initializing from the loaded data without a syncing effect.
-          <SolicitudEditor key={`${target.kind}-${target.id}`} data={data} target={target} onClose={onClose} />
-        )}
+      <div role="tablist" className="grid shrink-0 grid-cols-2 gap-1 border-b border-line-2 bg-secondary/40 px-5 py-2">
+        {TABS.map(t => (
+          <button
+            key={t.value}
+            type="button"
+            role="tab"
+            aria-selected={tab === t.value}
+            onClick={() => setTab(t.value)}
+            className={cn(
+              'flex items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-[12.5px] font-medium transition-colors',
+              tab === t.value ? 'bg-card text-ink shadow-sm dark:bg-canvas-3' : 'text-muted-foreground hover:text-ink',
+            )}
+          >
+            <t.icon className="size-3.5" />
+            {t.label}
+          </button>
+        ))}
       </div>
+
+      {isLoading || !data || !target ? (
+        <div className="flex flex-col gap-4 p-5">
+          <Skeleton className="h-5 w-40" />
+          <Skeleton className="h-5 w-56" />
+          <Skeleton className="h-20 w-full" />
+        </div>
+      ) : tab === 'chat' ? (
+        <SolicitudChat data={data} active />
+      ) : (
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          {/* Keyed by id so the editor remounts with fresh state per solicitud,
+              initializing from the loaded data without a syncing effect. */}
+          <SolicitudEditor key={`${target.kind}-${target.id}`} data={data} target={target} onClose={onClose} />
+        </div>
+      )}
     </div>
   )
 }

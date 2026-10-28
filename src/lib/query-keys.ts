@@ -42,6 +42,7 @@ export const QUERY_KEYS = {
     siniestro: (id: number) => ['admin', 'siniestros', id] as const,
     solicitudes: (params?: SolicitudesQuery) => ['admin', 'solicitudes', 'list', params ?? {}] as const,
     solicitud: (kind: string, id: number) => ['admin', 'solicitudes', kind, id] as const,
+    solicitudMessages: (kind: string, id: number) => ['admin', 'solicitudes', kind, id, 'messages'] as const,
     pricingPlans: ['admin', 'pricing'] as const,
     businessHours: ['admin', 'business-hours'] as const,
     coverageSettings: ['admin', 'coverage-settings'] as const,
