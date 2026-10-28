@@ -29,6 +29,18 @@ export interface ExpiredPolicy {
   unpaidInstallments: number
   hiddenAt: string | null
   hiddenReason: string | null
+  /** The last WhatsApp notice tried for this policy, or null. */
+  notice: ExpiryNotice | null
+}
+
+export type ExpiryNoticeStatus = 'SENDING' | 'SENT' | 'FAILED' | 'MARKED'
+
+export interface ExpiryNotice {
+  id: number
+  status: ExpiryNoticeStatus
+  sentAt: string | null
+  createdAt: string
+  error: string | null
 }
 
 export interface ExpiredPoliciesPage {
@@ -36,9 +48,23 @@ export interface ExpiredPoliciesPage {
   total: number
   /** Hidden policies in scope, whatever `hidden` asked for. */
   hiddenCount: number
+  /** Whether the Meta template is configured: without it notices can only be marked. */
+  templateReady: boolean
   page: number
   pageSize: number
   totalPages: number
+}
+
+/** Why a chosen policy was not sent a notice. */
+export type ExpiryNoticeSkipReason = 'NO_PHONE' | 'ALREADY_NOTIFIED' | 'SENDING'
+
+export interface SendExpiryNoticesResponse {
+  sent: number
+  skipped: { policyId: number; reason: ExpiryNoticeSkipReason }[]
+}
+
+export interface MarkExpiryNoticesResponse {
+  marked: number
 }
 
 export interface ExpiredPoliciesQuery extends CobranzasScopeQuery {
