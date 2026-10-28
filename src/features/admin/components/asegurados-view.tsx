@@ -13,6 +13,7 @@ import { useDebouncedValue } from '@/src/hooks/use-debounced-value'
 import type { AdminClientSummary, ClientEstadoFilter, ClientSort, RiskType } from '@/src/types/api/clients'
 import { useAdminClients } from '../hooks/use-admin-clients'
 import { ScopeFilter, type ScopeFilterValue } from './scope-filter'
+import { useScopeFilterState } from '../hooks/use-scope-filter-state'
 import {
   clientStatus,
   cuotaPaymentStatus,
@@ -153,7 +154,8 @@ export function AseguradosView() {
   const [riskType, setRiskType] = useState<RiskType | undefined>()
   const [estado, setEstado] = useState<ClientEstadoFilter | undefined>()
   const [sort, setSort] = useState<ClientSort>('nombre_asc')
-  const [scope, setScope] = useState<ScopeFilterValue>({})
+  // Opens on the office line for a SuperAdmin; see useScopeFilterState.
+  const [scope, setScope] = useScopeFilterState()
   const [page, setPage] = useState(1)
   const [selectedId, setSelectedId] = useState<number | null>(null)
 

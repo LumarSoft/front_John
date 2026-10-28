@@ -26,6 +26,7 @@ import { useAdminSiniestros } from '../hooks/use-admin-siniestros'
 import { useAdminSiniestrosStats } from '../hooks/use-admin-siniestros-stats'
 import { SiniestroSheet } from './siniestro-sheet'
 import { ScopeFilter, type ScopeFilterValue } from './scope-filter'
+import { useScopeFilterState } from '../hooks/use-scope-filter-state'
 
 const PAGE_SIZE = 25
 
@@ -205,7 +206,8 @@ export function SiniestrosView() {
   const [searchInput, setSearchInput] = useState('')
   const search = useDebouncedValue(searchInput, 350)
   const [filter, setFilter] = useState<SiniestroEstadoFilter>('pending')
-  const [scope, setScope] = useState<ScopeFilterValue>({})
+  // Opens on the office line for a SuperAdmin; see useScopeFilterState.
+  const [scope, setScope] = useScopeFilterState()
   const [page, setPage] = useState(1)
   const [selectedId, setSelectedId] = useState<number | null>(null)
 

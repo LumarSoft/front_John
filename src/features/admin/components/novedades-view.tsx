@@ -30,7 +30,8 @@ import { formatDate } from '../lib/asegurados-ui'
 import { useNovedades } from '../hooks/use-novedades'
 import { useNovedadesStats } from '../hooks/use-novedades-stats'
 import { useNovedadesActions } from '../hooks/use-novedades-actions'
-import { ScopeFilter, type ScopeFilterValue } from './scope-filter'
+import { ScopeFilter } from './scope-filter'
+import { useScopeFilterState } from '../hooks/use-scope-filter-state'
 import { SiniestroSheet } from './siniestro-sheet'
 import { AseguradoSheet } from './asegurado-sheet'
 import { inboxConversationHref } from './inbox-view'
@@ -52,7 +53,8 @@ export function NovedadesView() {
   const [selectedClientId, setSelectedClientId] = useState<number | null>(null)
   const [searchInput, setSearchInput] = useState('')
   const search = useDebouncedValue(searchInput, 350)
-  const [scope, setScope] = useState<ScopeFilterValue>({})
+  // Opens on the office line for a SuperAdmin; see useScopeFilterState.
+  const [scope, setScope] = useScopeFilterState()
   const {
     data: page,
     isLoading,
