@@ -3,6 +3,7 @@ import type {
   AdminPhoneNumber,
   CreatePhoneNumberRequest,
   NumberAssistant,
+  NumberBotStatus,
   UpdateNumberAssistantRequest,
   UpdatePhoneNumberRequest,
 } from '@/src/types/api/phone-numbers'
@@ -27,4 +28,8 @@ export const phoneNumbersService = {
 
   updateAssistant: (token: string, id: number, data: UpdateNumberAssistantRequest): Promise<NumberAssistant> =>
     apiRequest<NumberAssistant>(`/admin/phone-numbers/${id}/assistant`, { method: 'PATCH', token, body: data }),
+
+  /** The number's own bot switch; the admin of the number may flip it. */
+  setBotStatus: (token: string, id: number, data: { botEnabled: boolean }): Promise<NumberBotStatus> =>
+    apiRequest<NumberBotStatus>(`/admin/phone-numbers/${id}/bot-status`, { method: 'PATCH', token, body: data }),
 }

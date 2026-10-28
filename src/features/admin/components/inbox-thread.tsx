@@ -139,7 +139,7 @@ export function InboxThread({ conversation, onOpenClient, onBack }: Props) {
     el.style.height = `${Math.min(el.scrollHeight, 132)}px`
   }, [text])
 
-  const humanAttention = conversation.botPaused || conversation.globalBotDisabled
+  const humanAttention = conversation.botPaused || conversation.globalBotDisabled || !!conversation.numberBotDisabled
   const canSend = humanAttention && !windowExpired
   const isSending = sendMessage.isPending
 
@@ -232,9 +232,11 @@ export function InboxThread({ conversation, onOpenClient, onBack }: Props) {
   const consulted = consultedClientLabel(conversation)
   const status = conversation.globalBotDisabled
     ? 'Atención humana global'
-    : conversation.botPaused
-      ? `Atendido por ${conversation.assignedTo?.email ?? 'una persona'}`
-      : 'Atiende el bot'
+    : conversation.numberBotDisabled
+      ? 'Bot apagado en este número'
+      : conversation.botPaused
+        ? `Atendido por ${conversation.assignedTo?.email ?? 'una persona'}`
+        : 'Atiende el bot'
   const subtitle = [status, consulted, hasContactName(conversation) ? formatPhone(conversation.waId) : null]
     .filter(Boolean)
     .join(' · ')
@@ -402,6 +404,11 @@ export function InboxThread({ conversation, onOpenClient, onBack }: Props) {
             {conversation.globalBotDisabled && (
               <p className="px-5 pt-2 text-center text-[12.5px] text-(--wa-text-2)">
                 La atención humana global está activa: podés responder sin tomar este chat.
+              </p>
+            )}
+            {!conversation.globalBotDisabled && conversation.numberBotDisabled && (
+              <p className="px-5 pt-2 text-center text-[12.5px] text-(--wa-text-2)">
+                El bot está apagado en este número: podés responder sin tomar este chat.
               </p>
             )}
             <div className="flex min-h-[62px] items-end gap-2 px-4 py-[10px]">
