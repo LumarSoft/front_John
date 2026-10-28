@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, type FormEvent } from 'react'
-import { AlertTriangle, Bot, Loader2, Phone, Plus, Trash2 } from 'lucide-react'
+import { AlertTriangle, Bot, Loader2, Phone, Plus, PowerOff, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Card } from '@/src/components/ui/card'
 import { Button } from '@/src/components/ui/button'
@@ -453,6 +453,15 @@ export function NumerosView() {
                         >
                           <Bot className="size-3" />
                           {n.assistant.botName ?? 'Asistente propio'}
+                        </Badge>
+                      )}
+                      {n.botEnabled === false && (
+                        <Badge
+                          className="gap-1 bg-destructive/10 text-destructive"
+                          title="El bot está apagado en este número: la oficina responde sus chats"
+                        >
+                          <PowerOff className="size-3" />
+                          Bot apagado
                         </Badge>
                       )}
                     </div>

@@ -316,7 +316,8 @@ function BotStatusControl({ botEnabled, canManage }: { botEnabled: boolean; canM
                 Atención humana global
               </CardTitle>
               <CardDescription className="mt-1.5">
-                Este control afecta todos los chats de WhatsApp de la organización.
+                Este control afecta todos los chats de WhatsApp de la organización. Para apagar el bot en un solo
+                número: Números → Asistente.
               </CardDescription>
             </div>
             <span
