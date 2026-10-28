@@ -129,7 +129,7 @@ export function NumbersSection({ numbers }: { numbers: OrganizationNumber[] }) {
                   </TableCell>
                   <TableCell className="text-right text-[12px] text-muted-foreground">
                     {int(n.usage.tokens)} · <span className="text-ink">{n.usage.plan.name}</span> (USD{' '}
-                    {int(n.usage.plan.priceUsd)}){n.usage.prorated && ' · prorrateado'}
+                    {int(n.usage.plan.costUsd ?? n.usage.plan.priceUsd)}){n.usage.prorated && ' · prorrateado'}
                   </TableCell>
                   <TableCell className="text-right text-[12px] text-muted-foreground">
                     {usd(n.usage.totalCostUsd)}

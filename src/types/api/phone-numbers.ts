@@ -13,7 +13,10 @@ export interface TokenPlan {
   id: number | null
   name: string
   includedTokens: number
+  /** The organization's price to its productor. */
   priceUsd: number
+  /** The platform's charge to the organization: SuperAdmin and owner only. */
+  costUsd?: number
   /** The free first-month plan of a new account. */
   trial: boolean
   /** Blocks of 1,000 the plan spans. */
@@ -35,6 +38,8 @@ export interface PhoneNumberUsage {
   plan?: TokenPlan
   prorated?: boolean
   billedUsd?: number
+  /** SuperAdmin and owner: what the organization pays the platform for the number this month. */
+  costUsd?: number
   /** SuperAdmin and owner: messages sent and the OpenAI calls and tokens. */
   metaMessages?: number
   metaConversations?: number
