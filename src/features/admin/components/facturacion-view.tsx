@@ -31,15 +31,6 @@ const int = (n: number) => n.toLocaleString('es-AR')
 const usd = (n: number) => `USD ${n.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
 const round2 = (n: number) => Math.round(n * 100) / 100
 
-function periodLabel(period: string): string {
-  const [year, month] = period.split('-').map(Number)
-  return new Date(Date.UTC(year, month - 1, 1)).toLocaleDateString('es-AR', {
-    month: 'long',
-    year: 'numeric',
-    timeZone: 'UTC',
-  })
-}
-
 function failed(error: unknown, fallback: string) {
   toast.error(error instanceof ApiError && error.status < 500 ? error.message : fallback)
 }
@@ -84,7 +75,6 @@ function NumberCard({ row, onChangePlan }: { row: BillingNumber; onChangePlan: (
     : row.plan
       ? `${row.plan.name} · ${int(row.plan.tokens)} tokens · ${usd(row.plan.priceUsd)}`
       : 'Sin plan'
-  const showsCost = row.costUsd !== undefined && row.marginUsd !== undefined
   return (
     <Card className="flex flex-col gap-4 border-line-2 p-4 shadow-sm">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -122,37 +112,19 @@ function NumberCard({ row, onChangePlan }: { row: BillingNumber; onChangePlan: (
 
       <ConsumptionBar row={row} />
 
-      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-line-2 pt-3 text-[12.5px]">
-        <span className="text-muted-foreground">
-          {row.exceeded ? (
-            <>
-              Este mes se factura en <span className="font-medium text-ink">{row.billedPlan.name}</span> (
-              {int(row.billedPlan.includedTokens)} tokens)
-            </>
-          ) : row.billedPlan.trial ? (
-            'Los primeros tokens del mes no se cobran'
-          ) : (
-            <>
-              Plan <span className="font-medium text-ink">{row.billedPlan.name}</span>
-              {row.prorated && ' · prorrateado por el primer mes'}
-            </>
-          )}
-        </span>
-        <span className="text-right">
-          <span className="font-display text-[16px] font-semibold text-ink">{usd(row.estimatedUsd)}</span>
-          {showsCost && (
-            <span className="block text-[11px] text-muted-foreground">
-              costo {usd(row.costUsd as number)} · margen{' '}
-              <span
-                className={
-                  (row.marginUsd as number) < 0 ? 'text-destructive' : 'text-emerald-600 dark:text-emerald-400'
-                }
-              >
-                {usd(row.marginUsd as number)}
-              </span>
-            </span>
-          )}
-        </span>
+      <div className="border-t border-line-2 pt-3 text-[12.5px] text-muted-foreground">
+        {row.exceeded ? (
+          <>
+            Este mes pasa al plan <span className="font-medium text-ink">{row.billedPlan.name}</span> (
+            {int(row.billedPlan.includedTokens)} tokens)
+          </>
+        ) : row.billedPlan.trial ? (
+          'Los primeros tokens del mes no se cobran'
+        ) : (
+          <>
+            Plan <span className="font-medium text-ink">{row.billedPlan.name}</span>
+          </>
+        )}
       </div>
     </Card>
   )
@@ -610,32 +582,6 @@ export function FacturacionView() {
             {showsCost && data ? ` · cada token te cuesta ${usd(data.unitPriceUsd)}` : ''}.
           </p>
         </div>
-        {data && tab === 'consumo' && (
-          <Card className="flex flex-col gap-0.5 border-line-2 px-4 py-3 shadow-sm">
-            <span className="text-[11px] uppercase tracking-[0.12em] text-faint">
-              {showsCost ? 'Facturás en' : 'Estimado de'} {periodLabel(data.period)}
-            </span>
-            <span className="font-display text-[22px] leading-none tracking-tight text-ink">
-              {usd(data.totalEstimatedUsd)}
-            </span>
-            <span className="text-[11.5px] text-muted-foreground">
-              {showsCost ? (
-                <>
-                  costo {usd(data.totalCostUsd as number)} · margen{' '}
-                  <span
-                    className={
-                      (data.totalMarginUsd ?? 0) < 0 ? 'text-destructive' : 'text-emerald-600 dark:text-emerald-400'
-                    }
-                  >
-                    {usd(data.totalMarginUsd as number)}
-                  </span>
-                </>
-              ) : (
-                `${numbers.length === 1 ? '1 número' : `${numbers.length} números`} · se actualiza solo`
-              )}
-            </span>
-          </Card>
-        )}
       </div>
 
       {isSuperAdmin && (

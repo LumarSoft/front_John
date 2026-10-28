@@ -460,7 +460,7 @@ export function ExpiredPoliciesTab({
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
   const [confirmSend, setConfirmSend] = useState(false)
   const { data: profile } = useProfile()
-  const orgName = profile?.organization?.name ?? 'tu productor de seguros'
+  const orgName = profile?.organization?.displayName ?? profile?.organization?.name ?? 'tu productor de seguros'
 
   const { data, isLoading, isError, isFetching } = useExpiredPolicies({
     ...scope,
