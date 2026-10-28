@@ -11,8 +11,8 @@ export function InboxAvatar({ className }: { className?: string }) {
       aria-hidden
     >
       <svg viewBox="0 0 40 40" className="size-full">
-        <circle cx="20" cy="15.5" r="7" fill="#fff" />
-        <path d="M6.5 35.5c1.6-7 7-11 13.5-11s11.9 4 13.5 11a19.9 19.9 0 0 1-27 0z" fill="#fff" />
+        <circle cx="20" cy="15.5" r="7" fill="var(--wa-avatar-fg)" />
+        <path d="M6.5 35.5c1.6-7 7-11 13.5-11s11.9 4 13.5 11a19.9 19.9 0 0 1-27 0z" fill="var(--wa-avatar-fg)" />
       </svg>
     </span>
   )

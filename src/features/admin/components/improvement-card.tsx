@@ -106,7 +106,7 @@ export function ImprovementCard({ improvement, isNew, meta, actions }: Improveme
         </span>
         {date && <span className="text-faint">{date}</span>}
         {isNew && (
-          <span className="rounded-full bg-ember-2 px-2 py-0.5 text-[11px] font-semibold text-on-dark">Nueva</span>
+          <span className="rounded-full bg-ember-2 px-2 py-0.5 text-[11px] font-semibold text-on-ember">Nueva</span>
         )}
         {meta}
       </div>

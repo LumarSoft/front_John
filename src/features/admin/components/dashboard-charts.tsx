@@ -7,7 +7,7 @@ import type { DashboardData, RenewalPoint } from '@/src/types/api/dashboard'
 
 // Brand-aligned, semantically intuitive palette: green = healthy, amber = warning, red = problem.
 const COLORS = {
-  ember: '#e8a820',
+  ember: 'var(--color-ember)',
   emerald: '#10b981',
   amber: '#f5c060',
   red: '#ef4444',
@@ -157,7 +157,7 @@ function Bars({ data, empty }: { data: Slice[]; empty: string }) {
           width={36}
           tick={{ fontSize: 12, fill: 'var(--color-muted-foreground)' }}
         />
-        <Tooltip cursor={{ fill: 'var(--color-amber-subtle)' }} content={<ChartTooltip />} />
+        <Tooltip cursor={{ fill: 'var(--color-ember-soft)' }} content={<ChartTooltip />} />
         <Bar dataKey="value" name="Cantidad" radius={[6, 6, 0, 0]} maxBarSize={64}>
           {data.map(slice => (
             <Cell key={slice.name} fill={slice.color} />
@@ -218,7 +218,7 @@ export function DashboardCharts({ data }: { data: DashboardData }) {
                   width={36}
                   tick={{ fontSize: 12, fill: 'var(--color-muted-foreground)' }}
                 />
-                <Tooltip cursor={{ fill: 'var(--color-amber-subtle)' }} content={<RenovacionesTooltip />} />
+                <Tooltip cursor={{ fill: 'var(--color-ember-soft)' }} content={<RenovacionesTooltip />} />
                 <Bar dataKey="total" name="Pólizas" radius={[6, 6, 0, 0]} maxBarSize={72}>
                   {timeline.map((point, i) => (
                     // The current month is the most urgent renewal window — flag it red.

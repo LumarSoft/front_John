@@ -54,7 +54,7 @@ export function InboxAudio({ src, transcript, highlight }: Props) {
                   key={i}
                   className={cn(
                     'w-[3px] flex-1 rounded-full',
-                    (i + 0.5) / bars.length <= progress ? 'bg-(--wa-icon)' : 'bg-[#b4bcc1]',
+                    (i + 0.5) / bars.length <= progress ? 'bg-(--wa-icon)' : 'bg-(--wa-wave)',
                   )}
                   style={{ height: `${Math.round(height * 100)}%` }}
                 />
@@ -86,7 +86,7 @@ export function InboxAudio({ src, transcript, highlight }: Props) {
         </div>
       )}
       {transcript && (
-        <span className="border-l-2 border-black/10 pl-2 text-[13.5px] italic leading-[19px] text-(--wa-text-2)">
+        <span className="border-l-2 border-(--wa-tint-strong) pl-2 text-[13.5px] italic leading-[19px] text-(--wa-text-2)">
           <InboxMessageText text={transcript} highlight={highlight} />
         </span>
       )}

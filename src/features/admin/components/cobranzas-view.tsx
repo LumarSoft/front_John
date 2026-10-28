@@ -421,7 +421,7 @@ export function CobranzasView() {
               aria-pressed={active}
               onClick={() => handleFilter(option.value)}
               className={`flex h-9 items-center justify-center gap-1.5 rounded-md text-[12.5px] font-medium transition-colors ${
-                active ? 'bg-background text-ink shadow-sm' : 'text-muted-foreground hover:text-ink'
+                active ? 'bg-background text-ink shadow-sm dark:bg-canvas-3' : 'text-muted-foreground hover:text-ink'
               }`}
             >
               {option.label}

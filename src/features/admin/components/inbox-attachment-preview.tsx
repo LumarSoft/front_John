@@ -37,7 +37,7 @@ export function InboxAttachmentPreview({ file, sending, onCancel, onSend }: Prop
           onClick={onCancel}
           disabled={sending}
           aria-label="Cancelar envío"
-          className="rounded-full p-1.5 text-(--wa-icon) hover:bg-black/5 disabled:opacity-40"
+          className="rounded-full p-1.5 text-(--wa-icon) hover:bg-(--wa-tint) disabled:opacity-40"
         >
           <X className="size-6" />
         </button>
@@ -79,7 +79,7 @@ export function InboxAttachmentPreview({ file, sending, onCancel, onSend }: Prop
           onClick={() => onSend(caption)}
           disabled={sending}
           aria-label="Enviar archivo"
-          className="flex size-[52px] shrink-0 items-center justify-center rounded-full bg-(--wa-green) text-white shadow-md hover:bg-(--wa-green-dark) disabled:opacity-60"
+          className="flex size-[52px] shrink-0 items-center justify-center rounded-full bg-(--wa-green) text-(--wa-on-green) shadow-md hover:bg-(--wa-green-dark) disabled:opacity-60"
         >
           {sending ? <Loader2 className="size-6 animate-spin" /> : <SendHorizontal className="size-6" />}
         </button>

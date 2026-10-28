@@ -48,7 +48,7 @@ export function LoginForm() {
 
   return (
     <div className="relative flex min-h-svh items-center justify-center overflow-hidden bg-canvas px-5 py-16">
-      <div className="pointer-events-none absolute -top-24 left-1/2 h-[420px] w-[820px] -translate-x-1/2 rounded-full bg-[radial-gradient(closed,_var(--tw-gradient-stops))] from-amber-subtle to-transparent blur-3xl" />
+      <div className="pointer-events-none absolute -top-24 left-1/2 h-[420px] w-[820px] -translate-x-1/2 rounded-full bg-[radial-gradient(closed,_var(--tw-gradient-stops))] from-ember-soft to-transparent blur-3xl" />
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-ember/40 to-transparent" />
 
       <motion.div

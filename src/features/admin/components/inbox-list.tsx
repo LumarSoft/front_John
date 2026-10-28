@@ -88,7 +88,7 @@ export function InboxList({ conversations, selectedId, onSelect, onDelete }: Pro
                       </Headset>
                     ) : (
                       conv.status === 'pending' && (
-                        <Clock className="size-3.5 text-amber-600" aria-label="Pendiente">
+                        <Clock className="size-3.5 text-amber-600 dark:text-amber-400" aria-label="Pendiente">
                           <title>Pendiente</title>
                         </Clock>
                       )
@@ -120,7 +120,7 @@ export function InboxList({ conversations, selectedId, onSelect, onDelete }: Pro
 
                   <span className="flex shrink-0 items-center gap-1.5">
                     {isUnread && (
-                      <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-(--wa-unread) px-1.5 text-[12px] font-semibold text-white">
+                      <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-(--wa-unread) px-1.5 text-[12px] font-semibold text-(--wa-on-green)">
                         {conv.unreadCount}
                       </span>
                     )}

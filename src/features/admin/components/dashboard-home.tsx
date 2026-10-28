@@ -29,7 +29,7 @@ interface Kpi {
 }
 
 const TONES: Record<KpiTone, string> = {
-  ember: 'border-amber-border bg-ember-soft text-ember-2',
+  ember: 'border-ember-ring bg-ember-soft text-ember-2',
   emerald: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400',
   red: 'bg-red-50 text-red-600 dark:bg-red-950/40 dark:text-red-400',
   amber: 'bg-amber/15 text-amber-700 dark:text-amber',
@@ -167,7 +167,7 @@ export function DashboardHome() {
             </div>
             <button
               onClick={() => refetch()}
-              className="rounded-lg border border-amber-border bg-ember-soft px-4 py-2 text-[13px] font-medium text-ember-2 transition-colors hover:bg-amber-subtle"
+              className="rounded-lg border border-ember-ring bg-ember-soft px-4 py-2 text-[13px] font-medium text-ember-2 transition-colors hover:bg-ember/15"
             >
               Reintentar
             </button>

@@ -27,7 +27,7 @@ export function InboxSearchPanel({ messages, query, onQueryChange, onSelect, onC
           type="button"
           onClick={onClose}
           aria-label="Cerrar búsqueda"
-          className="rounded-full p-1 text-(--wa-icon) hover:bg-black/5"
+          className="rounded-full p-1 text-(--wa-icon) hover:bg-(--wa-tint)"
         >
           <X className="size-5" />
         </button>

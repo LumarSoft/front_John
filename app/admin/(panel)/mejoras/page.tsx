@@ -35,7 +35,7 @@ export default function MejorasPage() {
           <TabsTrigger value="propuestas" className="gap-1.5 px-3 py-1.5 text-[13.5px]">
             <Lightbulb className="size-4" /> Propuestas
             {isOwner && !!newProposals?.count && (
-              <span className="rounded-full bg-ember-2 px-1.5 text-[10.5px] font-semibold text-on-dark">
+              <span className="rounded-full bg-ember-2 px-1.5 text-[10.5px] font-semibold text-on-ember">
                 {newProposals.count}
               </span>
             )}

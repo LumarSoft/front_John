@@ -252,7 +252,9 @@ export function NovedadesView() {
                         DNI {matter.client.dni}
                       </button>
                     )}
-                    {matter.status === 'resolved' && <span className="text-emerald-700">Resuelto</span>}
+                    {matter.status === 'resolved' && (
+                      <span className="text-emerald-700 dark:text-emerald-400">Resuelto</span>
+                    )}
                   </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">

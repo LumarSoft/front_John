@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
@@ -13,6 +14,7 @@ import {
   LayoutDashboard,
   LogOut,
   MessageSquare,
+  Palette,
   Phone,
   ShieldCheck,
   Sparkles,
@@ -51,6 +53,7 @@ import { useNewSolicitudesCount } from '../hooks/use-solicitudes'
 import { useImprovementsUnseenCount } from '../hooks/use-improvements'
 import { useNewProposalsCount } from '../hooks/use-proposals'
 import { useTaskStats } from '../hooks/use-tasks'
+import { AppearanceDialog } from './appearance-dialog'
 
 interface NavItem {
   label: string
@@ -106,6 +109,7 @@ export function AppSidebar() {
   // "Mejoras" badge: unseen improvements for the office, new proposals for the OWNER.
   const { data: improvementsUnseen } = useImprovementsUnseenCount(!!profile && !isOwner)
   const { data: newProposals } = useNewProposalsCount(isOwner)
+  const [appearanceOpen, setAppearanceOpen] = useState(false)
 
   // Count of items needing the advisor's attention, per sidebar section.
   const alertCount = (href: string): number => {
@@ -164,7 +168,7 @@ export function AppSidebar() {
                         // from any section so a pending item isn't missed.
                         <span className="relative ml-auto flex items-center justify-center group-data-[collapsible=icon]:hidden">
                           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-ember-2 opacity-60" />
-                          <span className="relative flex h-5 min-w-5 items-center justify-center rounded-full bg-ember-2 px-1.5 text-[10.5px] font-semibold text-on-dark">
+                          <span className="relative flex h-5 min-w-5 items-center justify-center rounded-full bg-ember-2 px-1.5 text-[10.5px] font-semibold text-on-ember">
                             {unread}
                           </span>
                         </span>
@@ -221,6 +225,11 @@ export function AppSidebar() {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={() => setAppearanceOpen(true)}>
+                  <Palette />
+                  Apariencia
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem variant="destructive" onClick={handleLogout}>
                   <LogOut />
                   Cerrar sesión
@@ -229,6 +238,7 @@ export function AppSidebar() {
             </DropdownMenu>
           </SidebarMenuItem>
         </SidebarMenu>
+        <AppearanceDialog open={appearanceOpen} onOpenChange={setAppearanceOpen} />
       </SidebarFooter>
     </Sidebar>
   )

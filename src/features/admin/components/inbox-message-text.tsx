@@ -22,7 +22,7 @@ function marked(text: string, query: string, keyPrefix: string): ReactNode[] {
   if (!query) return [text]
   return splitByQuery(text, query).map((part, i) =>
     part.match ? (
-      <mark key={`${keyPrefix}-m${i}`} className="rounded-[2px] bg-[#fff08a] text-inherit">
+      <mark key={`${keyPrefix}-m${i}`} className="rounded-[2px] bg-(--wa-highlight) text-inherit">
         {part.text}
       </mark>
     ) : (
@@ -49,7 +49,13 @@ function format(text: string, keyPrefix: string, query: string): ReactNode[] {
       const trailing = token.match(URL_TRAILING_PUNCTUATION)?.[0] ?? ''
       token = token.slice(0, token.length - trailing.length)
       nodes.push(
-        <a key={key} href={token} target="_blank" rel="noreferrer" className="break-all text-[#027eb5] hover:underline">
+        <a
+          key={key}
+          href={token}
+          target="_blank"
+          rel="noreferrer"
+          className="break-all text-(--wa-link) hover:underline"
+        >
           {token}
         </a>,
       )

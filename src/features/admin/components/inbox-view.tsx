@@ -142,7 +142,7 @@ export function InboxView() {
         )}
       >
         <div className="flex h-[59px] shrink-0 items-center gap-2 pl-3 pr-3">
-          <SidebarTrigger className="text-(--wa-icon) hover:bg-black/5" />
+          <SidebarTrigger className="text-(--wa-icon) hover:bg-(--wa-tint)" />
           <h2 className="text-[22px] font-bold text-(--wa-text)">Chats</h2>
           <div className="ml-auto flex min-w-0 items-center gap-1">
             <ScopeFilter
@@ -159,7 +159,7 @@ export function InboxView() {
             <DropdownMenu>
               <DropdownMenuTrigger
                 aria-label="Más opciones"
-                className="ml-auto rounded-full p-2 text-(--wa-icon) outline-none hover:bg-black/5 data-[state=open]:bg-black/10 [:is(select)+&]:ml-0"
+                className="ml-auto rounded-full p-2 text-(--wa-icon) outline-none hover:bg-(--wa-tint) data-[state=open]:bg-(--wa-tint-strong) [:is(select)+&]:ml-0"
               >
                 <MoreVertical className="size-5" />
               </DropdownMenuTrigger>
@@ -193,7 +193,7 @@ export function InboxView() {
                   'flex h-8 shrink-0 items-center gap-1 rounded-full px-2 text-[13.5px] transition-colors',
                   filter === f.key
                     ? 'bg-(--wa-green-soft) text-(--wa-green-dark)'
-                    : 'bg-(--wa-panel) text-(--wa-text-2) hover:bg-[#e9edef]',
+                    : 'bg-(--wa-panel) text-(--wa-text-2) hover:bg-(--wa-chip-hover)',
                 )}
               >
                 {f.label}

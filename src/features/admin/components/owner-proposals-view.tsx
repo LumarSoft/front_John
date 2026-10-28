@@ -21,7 +21,7 @@ import { ProposalCard } from './proposal-card'
 const PAGE_SIZE = 10
 
 const fieldClass =
-  'rounded-xl border border-line-2 bg-paper px-3 py-2 text-[13px] text-ink outline-none focus:border-ember focus:shadow-[0_0_0_3px_rgba(232,168,32,0.12)]'
+  'rounded-xl border border-line-2 bg-paper px-3 py-2 text-[13px] text-ink outline-none focus:border-ember focus:shadow-[0_0_0_3px_var(--color-ember-soft)]'
 
 function ProposalAnswer({ proposal }: { proposal: OwnerProposal }) {
   const update = useUpdateProposal()

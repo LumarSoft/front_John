@@ -66,6 +66,7 @@
   --color-ember-2: #c48a0a;
   --color-ember-soft: rgba(232, 168, 32, 0.1);
   --color-ember-ring: rgba(232, 168, 32, 0.24);
+  --color-on-ember: #fafaf6;
 
   --color-amber: #f5c060;
   --color-amber-2: #e8a820;
@@ -445,6 +446,17 @@
   --wa-chat-bg: #efeae2;
   --wa-notice: #ffeecd;
   --wa-avatar: #dfe5e7;
+  --wa-avatar-fg: #ffffff;
+  --wa-on-green: #ffffff;
+  --wa-chip-hover: #e9edef;
+  --wa-tint: rgba(11, 20, 26, 0.05);
+  --wa-tint-strong: rgba(11, 20, 26, 0.1);
+  --wa-band: rgba(255, 255, 255, 0.35);
+  --wa-wave: #b4bcc1;
+  --wa-link: #027eb5;
+  --wa-highlight: #fff08a;
+  --wa-author-assistant: #1f7aa8;
+  --wa-author-agent: #b4532a;
   font-family:
     'Segoe UI', 'Helvetica Neue', Helvetica, 'Lucida Grande', Arial, Ubuntu, Cantarell, 'Fira Sans', sans-serif;
   color: var(--wa-text);
@@ -469,4 +481,375 @@
 .wa ::-webkit-scrollbar-thumb {
   background: rgba(11, 20, 26, 0.2);
   border-radius: 3px;
+}
+
+/*
+ * Admin panel themes (src/features/admin/lib/panel-theme.ts).
+ *
+ * The panel puts data-palette="<id>" on <html>, plus the "dark" class in dark
+ * mode. Nothing outside /admin gets them, so the public site keeps its colours.
+ * The palette previews in "Apariencia" reuse these rules: any element with
+ * data-palette takes that palette, following the mode of the page.
+ *
+ * Each palette = a family of neutrals (warm, cool or zinc) + an accent. The
+ * accent is the "ember" family of brand tokens: ember (fills, icons), ember-2
+ * (text and strong fills), ember-soft / ember-ring (tints and borders) and
+ * on-ember (text on an ember fill). Warning amber, success emerald and the
+ * other status colours stay the same in every palette.
+ *
+ * Kept at the end of this file: the light rules tie in specificity with the
+ * :root tokens above and must come after them.
+ */
+
+/* shadcn tokens follow the brand tokens in every palette and mode. */
+[data-palette] {
+  --foreground: var(--color-ink);
+  --card: var(--color-paper);
+  --card-foreground: var(--color-ink);
+  --popover: var(--color-paper);
+  --popover-foreground: var(--color-ink);
+  --primary: var(--color-ember);
+  --secondary: var(--color-canvas-2);
+  --secondary-foreground: var(--color-ink-2);
+  --muted: var(--color-canvas-2);
+  --muted-foreground: var(--color-faint);
+  --accent-foreground: var(--color-ink-2);
+  --input: var(--color-line-2);
+  --ring: var(--color-ember);
+  --chart-1: var(--color-ember);
+  --chart-2: var(--color-ember-2);
+  --chart-4: var(--color-faint-2);
+  --chart-5: var(--color-ink-3);
+  --sidebar-foreground: var(--color-ink-3);
+  --sidebar-primary: var(--color-ember);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent-foreground: var(--color-ink);
+  --sidebar-ring: var(--color-ember);
+  --destructive: #dc2626;
+}
+
+/* ── Neutrals, light ─────────────────────────────────────────────── */
+
+/* Warm: the panel's original white + sand. */
+[data-palette='dorado'] {
+  --color-canvas: #fafaf6;
+  --color-canvas-2: #f3f1ea;
+  --color-canvas-3: #e9e6dc;
+  --color-ink: #0f0d0a;
+  --color-ink-2: #1f1c16;
+  --color-ink-3: #3d382e;
+  --color-faint: #6b6558;
+  --color-faint-2: #8f897b;
+  --color-paper: #ffffff;
+  --color-paper-2: #fafaf6;
+  --color-line: rgba(15, 13, 10, 0.07);
+  --color-line-2: rgba(15, 13, 10, 0.12);
+  --color-line-strong: rgba(15, 13, 10, 0.22);
+  --color-dark: #0a0907;
+  --color-dark-2: #14110c;
+  --color-dark-3: #1c1812;
+  --color-on-dark: #fafaf6;
+  --color-on-dark-muted: #9c9685;
+  --background: #ffffff;
+  --border: rgba(15, 13, 10, 0.1);
+  --sidebar: #efece3;
+  --sidebar-accent: #e4dfd1;
+  --sidebar-border: rgba(15, 13, 10, 0.08);
+}
+
+/* Cool: slate greys. */
+:is([data-palette='azul'], [data-palette='turquesa'], [data-palette='violeta']) {
+  --color-canvas: #f8fafc;
+  --color-canvas-2: #f1f5f9;
+  --color-canvas-3: #e2e8f0;
+  --color-ink: #0f172a;
+  --color-ink-2: #1e293b;
+  --color-ink-3: #334155;
+  --color-faint: #64748b;
+  --color-faint-2: #94a3b8;
+  --color-paper: #ffffff;
+  --color-paper-2: #f8fafc;
+  --color-line: rgba(15, 23, 42, 0.07);
+  --color-line-2: rgba(15, 23, 42, 0.12);
+  --color-line-strong: rgba(15, 23, 42, 0.22);
+  --color-dark: #0b1120;
+  --color-dark-2: #111827;
+  --color-dark-3: #1e293b;
+  --color-on-dark: #f8fafc;
+  --color-on-dark-muted: #94a3b8;
+  --background: #ffffff;
+  --border: rgba(15, 23, 42, 0.1);
+  --sidebar: #eef2f7;
+  --sidebar-accent: #e2e8f0;
+  --sidebar-border: rgba(15, 23, 42, 0.08);
+}
+
+/* Zinc: pure greys. */
+:is([data-palette='rosa'], [data-palette='grafito']) {
+  --color-canvas: #fafafa;
+  --color-canvas-2: #f4f4f5;
+  --color-canvas-3: #e4e4e7;
+  --color-ink: #09090b;
+  --color-ink-2: #18181b;
+  --color-ink-3: #3f3f46;
+  --color-faint: #71717a;
+  --color-faint-2: #a1a1aa;
+  --color-paper: #ffffff;
+  --color-paper-2: #fafafa;
+  --color-line: rgba(9, 9, 11, 0.07);
+  --color-line-2: rgba(9, 9, 11, 0.12);
+  --color-line-strong: rgba(9, 9, 11, 0.22);
+  --color-dark: #09090b;
+  --color-dark-2: #18181b;
+  --color-dark-3: #27272a;
+  --color-on-dark: #fafafa;
+  --color-on-dark-muted: #a1a1aa;
+  --background: #ffffff;
+  --border: rgba(9, 9, 11, 0.1);
+  --sidebar: #f0f0f2;
+  --sidebar-accent: #e4e4e7;
+  --sidebar-border: rgba(9, 9, 11, 0.08);
+}
+
+/* ── Neutrals, dark ──────────────────────────────────────────────── */
+/* The sidebar frame is the darkest layer, then the page, then cards. */
+
+:is(.dark, .dark *)[data-palette] {
+  --destructive: #ef4444;
+}
+
+:is(.dark, .dark *)[data-palette='dorado'] {
+  --color-canvas: #0f0d0a;
+  --color-canvas-2: #1c1914;
+  --color-canvas-3: #27231c;
+  --color-ink: #f5f3ec;
+  --color-ink-2: #e6e2d6;
+  --color-ink-3: #bdb7a6;
+  --color-faint: #9a9484;
+  --color-faint-2: #6f6a5d;
+  --color-paper: #181510;
+  --color-paper-2: #1f1b15;
+  --color-line: rgba(250, 246, 235, 0.07);
+  --color-line-2: rgba(250, 246, 235, 0.12);
+  --color-line-strong: rgba(250, 246, 235, 0.2);
+  --background: #110f0b;
+  --border: rgba(250, 246, 235, 0.1);
+  --sidebar: #0a0907;
+  --sidebar-accent: #1f1b15;
+  --sidebar-border: rgba(250, 246, 235, 0.07);
+}
+
+:is(.dark, .dark *):is([data-palette='azul'], [data-palette='turquesa'], [data-palette='violeta']) {
+  --color-canvas: #0c111b;
+  --color-canvas-2: #182133;
+  --color-canvas-3: #212c40;
+  --color-ink: #f1f5f9;
+  --color-ink-2: #e2e8f0;
+  --color-ink-3: #b8c3d3;
+  --color-faint: #8f9cb0;
+  --color-faint-2: #64748b;
+  --color-paper: #131a28;
+  --color-paper-2: #1a2334;
+  --color-line: rgba(226, 232, 240, 0.07);
+  --color-line-2: rgba(226, 232, 240, 0.12);
+  --color-line-strong: rgba(226, 232, 240, 0.2);
+  --background: #0e1420;
+  --border: rgba(226, 232, 240, 0.1);
+  --sidebar: #080c14;
+  --sidebar-accent: #1a2334;
+  --sidebar-border: rgba(226, 232, 240, 0.07);
+}
+
+:is(.dark, .dark *):is([data-palette='rosa'], [data-palette='grafito']) {
+  --color-canvas: #0c0c0e;
+  --color-canvas-2: #1d1d21;
+  --color-canvas-3: #28282d;
+  --color-ink: #fafafa;
+  --color-ink-2: #e4e4e7;
+  --color-ink-3: #c4c4cc;
+  --color-faint: #a1a1aa;
+  --color-faint-2: #71717a;
+  --color-paper: #18181b;
+  --color-paper-2: #1f1f23;
+  --color-line: rgba(250, 250, 250, 0.07);
+  --color-line-2: rgba(250, 250, 250, 0.12);
+  --color-line-strong: rgba(250, 250, 250, 0.2);
+  --background: #111113;
+  --border: rgba(250, 250, 250, 0.1);
+  --sidebar: #09090b;
+  --sidebar-accent: #222226;
+  --sidebar-border: rgba(250, 250, 250, 0.07);
+}
+
+/* ── Accents ─────────────────────────────────────────────────────── */
+
+/* The original gold, unchanged in light mode. */
+[data-palette='dorado'] {
+  --color-ember: #e8a820;
+  --color-ember-2: #c48a0a;
+  --color-ember-soft: rgba(232, 168, 32, 0.1);
+  --color-ember-ring: rgba(232, 168, 32, 0.24);
+  --color-on-ember: #fafaf6;
+  --primary-foreground: #1a1206;
+  --accent: #f6f1e4;
+  --chart-3: #f5c060;
+}
+
+:is(.dark, .dark *)[data-palette='dorado'] {
+  --color-ember: #e8a820;
+  --color-ember-2: #f0b93a;
+  --color-ember-soft: rgba(232, 168, 32, 0.14);
+  --color-ember-ring: rgba(232, 168, 32, 0.32);
+  --color-on-ember: #1a1206;
+  --accent: #262017;
+}
+
+[data-palette='azul'] {
+  --color-ember: #2563eb;
+  --color-ember-2: #1d4ed8;
+  --color-ember-soft: rgba(37, 99, 235, 0.09);
+  --color-ember-ring: rgba(37, 99, 235, 0.24);
+  --color-on-ember: #ffffff;
+  --primary-foreground: #ffffff;
+  --accent: #eef3fd;
+  --chart-3: #93c5fd;
+}
+
+:is(.dark, .dark *)[data-palette='azul'] {
+  --color-ember: #3b82f6;
+  --color-ember-2: #60a5fa;
+  --color-ember-soft: rgba(59, 130, 246, 0.16);
+  --color-ember-ring: rgba(59, 130, 246, 0.36);
+  --color-on-ember: #0b1120;
+  --accent: #18243a;
+}
+
+[data-palette='turquesa'] {
+  --color-ember: #0d9488;
+  --color-ember-2: #0f766e;
+  --color-ember-soft: rgba(13, 148, 136, 0.09);
+  --color-ember-ring: rgba(13, 148, 136, 0.24);
+  --color-on-ember: #ffffff;
+  --primary-foreground: #ffffff;
+  --accent: #ecf6f5;
+  --chart-3: #5eead4;
+}
+
+:is(.dark, .dark *)[data-palette='turquesa'] {
+  --color-ember: #14b8a6;
+  --color-ember-2: #2dd4bf;
+  --color-ember-soft: rgba(20, 184, 166, 0.15);
+  --color-ember-ring: rgba(20, 184, 166, 0.34);
+  --color-on-ember: #042f2e;
+  --primary-foreground: #042f2e;
+  --accent: #13282d;
+  --chart-3: #99f6e4;
+}
+
+[data-palette='violeta'] {
+  --color-ember: #7c3aed;
+  --color-ember-2: #6d28d9;
+  --color-ember-soft: rgba(124, 58, 237, 0.09);
+  --color-ember-ring: rgba(124, 58, 237, 0.24);
+  --color-on-ember: #ffffff;
+  --primary-foreground: #ffffff;
+  --accent: #f3effd;
+  --chart-3: #c4b5fd;
+}
+
+:is(.dark, .dark *)[data-palette='violeta'] {
+  --color-ember: #8b5cf6;
+  --color-ember-2: #a78bfa;
+  --color-ember-soft: rgba(139, 92, 246, 0.17);
+  --color-ember-ring: rgba(139, 92, 246, 0.38);
+  --color-on-ember: #1e1038;
+  --accent: #211c38;
+}
+
+[data-palette='rosa'] {
+  --color-ember: #db2777;
+  --color-ember-2: #be185d;
+  --color-ember-soft: rgba(219, 39, 119, 0.08);
+  --color-ember-ring: rgba(219, 39, 119, 0.22);
+  --color-on-ember: #ffffff;
+  --primary-foreground: #ffffff;
+  --accent: #fdf0f6;
+  --chart-3: #f9a8d4;
+}
+
+:is(.dark, .dark *)[data-palette='rosa'] {
+  --color-ember: #ec4899;
+  --color-ember-2: #f472b6;
+  --color-ember-soft: rgba(236, 72, 153, 0.15);
+  --color-ember-ring: rgba(236, 72, 153, 0.36);
+  --color-on-ember: #3b0a20;
+  --accent: #2a1a22;
+}
+
+/* No colour: the accent is the ink itself. */
+[data-palette='grafito'] {
+  --color-ember: #18181b;
+  --color-ember-2: #27272a;
+  --color-ember-soft: rgba(24, 24, 27, 0.07);
+  --color-ember-ring: rgba(24, 24, 27, 0.2);
+  --color-on-ember: #fafafa;
+  --primary-foreground: #fafafa;
+  --accent: #f4f4f5;
+  --chart-3: #a1a1aa;
+}
+
+:is(.dark, .dark *)[data-palette='grafito'] {
+  --color-ember: #e4e4e7;
+  --color-ember-2: #f4f4f5;
+  --color-ember-soft: rgba(250, 250, 250, 0.1);
+  --color-ember-ring: rgba(250, 250, 250, 0.26);
+  --color-on-ember: #18181b;
+  --primary-foreground: #18181b;
+  --accent: #27272a;
+  --chart-3: #71717a;
+}
+
+/* ── Whatsapp section in dark mode: WhatsApp Web's own dark palette ── */
+
+.dark .wa {
+  --wa-panel: #202c33;
+  --wa-surface: #111b21;
+  --wa-hover: #202c33;
+  --wa-selected: #2a3942;
+  --wa-line: #26343c;
+  --wa-text: #e9edef;
+  --wa-text-2: #8696a0;
+  --wa-icon: #aebac1;
+  --wa-green: #00a884;
+  --wa-green-dark: #06cf9c;
+  --wa-green-soft: #0a332c;
+  --wa-on-green: #111b21;
+  --wa-unread: #00a884;
+  --wa-bubble-in: #202c33;
+  --wa-bubble-out: #005c4b;
+  --wa-chat-bg: #0b141a;
+  --wa-notice: #182229;
+  --wa-avatar: #6a7175;
+  --wa-avatar-fg: #cfd4d6;
+  --wa-chip-hover: #2a3942;
+  --wa-tint: rgba(233, 237, 239, 0.08);
+  --wa-tint-strong: rgba(233, 237, 239, 0.14);
+  --wa-band: rgba(11, 20, 26, 0.35);
+  --wa-wave: #5c6c75;
+  --wa-link: #53bdeb;
+  --wa-highlight: #6b5d10;
+  --wa-author-assistant: #53bdeb;
+  --wa-author-agent: #f0a27c;
+}
+
+.dark .wa-wallpaper {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' fill='none' stroke='%23fff' stroke-opacity='.035' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 22h22a6 6 0 0 1 6 6v12a6 6 0 0 1-6 6H28l-8 6v-6h-2a6 6 0 0 1-6-6V28a6 6 0 0 1 6-6z'/%3E%3Cpath d='M112 14l14 5v10c0 9-6 15-14 18-8-3-14-9-14-18V19z'/%3E%3Cpath d='M66 92h28l6 10v8H60v-8z'/%3E%3Ccircle cx='70' cy='112' r='4'/%3E%3Ccircle cx='90' cy='112' r='4'/%3E%3Cpath d='M128 96l3 7 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z'/%3E%3Cpath d='M22 120a10 10 0 1 0 20 0 10 10 0 1 0-20 0M32 114v6l4 3'/%3E%3Cpath d='M70 40c3-6 13-6 13 2 0 6-13 13-13 13S57 48 57 42c0-8 10-8 13-2z'/%3E%3Cpath d='M118 62h16M126 54v16'/%3E%3Cpath d='M20 80h10M25 75v10'/%3E%3C/svg%3E");
+}
+
+.dark .wa * {
+  scrollbar-color: rgba(233, 237, 239, 0.16) transparent;
+}
+
+.dark .wa ::-webkit-scrollbar-thumb {
+  background: rgba(233, 237, 239, 0.16);
 }

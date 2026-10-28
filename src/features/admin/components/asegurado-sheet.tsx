@@ -131,7 +131,7 @@ function PolizaCard({ poliza }: { poliza: AdminPolizaDetail }) {
     <div className="overflow-hidden rounded-xl border border-line-2 bg-card">
       <div className="flex items-start justify-between gap-3 p-4 pb-3">
         <div className="flex items-center gap-2.5">
-          <div className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-amber-border bg-ember-soft text-ember-2">
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-ember-ring bg-ember-soft text-ember-2">
             <RiskIcon type={poliza.riskType} className="size-4.5" />
           </div>
           <div>
@@ -158,7 +158,7 @@ function PolizaCard({ poliza }: { poliza: AdminPolizaDetail }) {
             </div>
           </div>
           {poliza.vehicle.licensePlate && (
-            <span className="shrink-0 rounded-md border border-line-strong/40 bg-ink px-2.5 py-1 font-mono text-[12px] font-bold tracking-widest text-on-dark">
+            <span className="shrink-0 rounded-md border border-line-strong/40 bg-ink px-2.5 py-1 font-mono text-[12px] font-bold tracking-widest text-paper">
               {poliza.vehicle.licensePlate}
             </span>
           )}
@@ -265,7 +265,7 @@ function PolizaPagosCard({ poliza }: { poliza: AdminPolizaDetail }) {
   return (
     <div className="overflow-hidden rounded-xl border border-line-2">
       <div className="flex items-center gap-2.5 border-b border-line-2 bg-secondary/40 px-4 py-3">
-        <div className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-amber-border bg-ember-soft text-ember-2">
+        <div className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-ember-ring bg-ember-soft text-ember-2">
           <RiskIcon type={poliza.riskType} className="size-4" />
         </div>
         <div className="min-w-0 flex-1">

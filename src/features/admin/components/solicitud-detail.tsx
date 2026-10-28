@@ -173,7 +173,7 @@ function SolicitudEditor({
           rows={4}
           maxLength={2000}
           placeholder="Anotá el seguimiento de esta solicitud…"
-          className="w-full rounded-xl border border-line-2 bg-paper px-3.5 py-3 text-[13.5px] text-ink outline-none transition-[border-color,box-shadow] focus:border-ember focus:shadow-[0_0_0_3px_rgba(232,168,32,0.12)]"
+          className="w-full rounded-xl border border-line-2 bg-paper px-3.5 py-3 text-[13.5px] text-ink outline-none transition-[border-color,box-shadow] focus:border-ember focus:shadow-[0_0_0_3px_var(--color-ember-soft)]"
         />
       </section>
 
