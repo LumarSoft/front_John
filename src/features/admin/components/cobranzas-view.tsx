@@ -156,6 +156,9 @@ function CobranzaRow({ client, onSelect }: { client: CobranzaCliente; onSelect: 
             <span className="font-mono text-[12px] font-medium tracking-wider text-ink-3">{client.licensePlate}</span>
           )}
         </div>
+        {client.paymentMethods.length > 0 && (
+          <div className="mt-1 text-[11px] text-muted-foreground">{client.paymentMethods.join(' · ')}</div>
+        )}
       </TableCell>
 
       <TableCell>
@@ -335,6 +338,37 @@ function filterCount(stats: CobranzasStats | undefined, value: CobranzaEstadoFil
   }
 }
 
+// ─── Medio de pago filter ──────────────────────────────────────────────────────
+
+/** Triunfo's medios de pago found in scope ("Plan De Pago", "Convenio"…): the office works one at a time. */
+function PaymentMethodFilter({
+  value,
+  options,
+  onChange,
+}: {
+  value: string
+  options: string[]
+  onChange: (value: string) => void
+}) {
+  // Keep the chosen one listed while the stats of another scope load.
+  const choices = value && !options.includes(value) ? [value, ...options] : options
+  return (
+    <select
+      value={value}
+      onChange={e => onChange(e.target.value)}
+      className="h-10 w-full rounded-md border border-line-2 bg-background px-3 text-[13px] text-ink-3"
+      aria-label="Filtrar por medio de pago"
+    >
+      <option value="">Todos los medios de pago</option>
+      {choices.map(method => (
+        <option key={method} value={method}>
+          {method}
+        </option>
+      ))}
+    </select>
+  )
+}
+
 // ─── Main view ────────────────────────────────────────────────────────────────
 
 export function CobranzasView() {
@@ -343,6 +377,7 @@ export function CobranzasView() {
   const [filter, setFilter] = useState<CobranzaEstadoFilter>('vencidas')
   // Opens on the office line for a SuperAdmin; see useScopeFilterState.
   const [scope, setScope] = useScopeFilterState()
+  const [paymentMethod, setPaymentMethod] = useState('')
   const [page, setPage] = useState(1)
   const [selectedId, setSelectedId] = useState<number | null>(null)
 
@@ -358,15 +393,20 @@ export function CobranzasView() {
     setScope(value)
     setPage(1)
   }
+  const handlePaymentMethod = (value: string) => {
+    setPaymentMethod(value)
+    setPage(1)
+  }
 
   const { data, isLoading, isError, isFetching } = useCobranzas({
     search,
     status: filter,
     ...scope,
+    paymentMethod: paymentMethod || undefined,
     page,
     pageSize: PAGE_SIZE,
   })
-  const { data: stats } = useCobranzasStats()
+  const { data: stats } = useCobranzasStats({ ...scope, paymentMethod: paymentMethod || undefined })
 
   const rows = data?.data ?? []
   const total = data?.total ?? 0
@@ -386,6 +426,11 @@ export function CobranzasView() {
         </div>
         <div className="flex w-full max-w-xs flex-col gap-2">
           <ScopeFilter value={scope} onChange={handleScope} className="w-full" />
+          <PaymentMethodFilter
+            value={paymentMethod}
+            options={stats?.paymentMethods ?? []}
+            onChange={handlePaymentMethod}
+          />
           <div className="relative w-full">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -500,7 +545,9 @@ export function CobranzasView() {
                     <p className="text-[14px] text-muted-foreground">
                       {search
                         ? 'No se encontraron asegurados con deuda para esa búsqueda.'
-                        : 'No hay cuotas en este estado. Tu cartera está al día.'}
+                        : paymentMethod
+                          ? `No hay cuotas en este estado con ${paymentMethod}.`
+                          : 'No hay cuotas en este estado. Tu cartera está al día.'}
                     </p>
                   </div>
                 </TableCell>

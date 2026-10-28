@@ -34,7 +34,8 @@ export const QUERY_KEYS = {
     clientPolizaDocumentos: (clientId: number, polizaId: number) =>
       ['admin', 'clients', clientId, 'polizas', polizaId, 'documentos'] as const,
     cobranzas: (params?: CobranzasQuery) => ['admin', 'cobranzas', 'list', params ?? {}] as const,
-    cobranzasStats: ['admin', 'cobranzas', 'stats'] as const,
+    cobranzasStats: (params?: Pick<CobranzasQuery, 'producerCodeId' | 'phoneNumberId' | 'paymentMethod'>) =>
+      ['admin', 'cobranzas', 'stats', params ?? {}] as const,
     novedades: (params?: NovedadesQuery) => ['admin', 'novedades', 'list', params ?? {}] as const,
     novedadesStats: ['admin', 'novedades', 'stats'] as const,
     siniestros: (params?: AdminSiniestrosQuery) => ['admin', 'siniestros', 'list', params ?? {}] as const,
