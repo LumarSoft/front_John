@@ -12,6 +12,11 @@ export function useSolicitudes(params: SolicitudesQuery) {
     queryFn: () => solicitudesService.list(params, token as string),
     enabled: !!token,
     placeholderData: keepPreviousData,
+    // A solicitud the bot just created shows up without reloading: the list is
+    // re-read on every visit (the global 5-min staleTime would hide it) and
+    // every 20 s while open, in step with the sidebar counter.
+    staleTime: 0,
+    refetchInterval: 20_000,
   })
 }
 
