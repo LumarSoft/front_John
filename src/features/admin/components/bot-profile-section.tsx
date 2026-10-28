@@ -102,6 +102,19 @@ export const BOT_PROFILE_GROUPS: FieldGroup[] = [
       { key: 'transferBank', label: 'Banco', placeholder: 'Ej: Banco Macro', maxLength: 80 },
     ],
   },
+  {
+    title: 'Cotizaciones',
+    description: 'Lo que el asistente agrega al final de cada cotización que manda por WhatsApp.',
+    fields: [
+      {
+        key: 'quoteClosingNote',
+        label: 'Mensaje con el que cierra cada cotización',
+        placeholder: 'Ej: Un asesor seguro te va a poder mejorar el precio con una bonificación',
+        maxLength: 300,
+        hint: 'Va como última línea, tal cual lo escribas. Vacío: la cotización termina sin mensaje extra.',
+      },
+    ],
+  },
 ]
 
 const ALL_FIELDS = BOT_PROFILE_GROUPS.flatMap(g => g.fields.map(f => f.key))
