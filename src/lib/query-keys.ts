@@ -38,6 +38,9 @@ export const QUERY_KEYS = {
     cobranzasStats: (params?: Pick<CobranzasQuery, 'producerCodeId' | 'phoneNumberId' | 'paymentMethod'>) =>
       ['admin', 'cobranzas', 'stats', params ?? {}] as const,
     expiredPoliciesAll: ['admin', 'cobranzas', 'vencidas'] as const,
+    billingAll: ['admin', 'billing'] as const,
+    billing: (period?: string) => ['admin', 'billing', 'overview', period ?? 'current'] as const,
+    billingPlans: ['admin', 'billing', 'plans'] as const,
     expiredPolicies: (params?: ExpiredPoliciesQuery) =>
       ['admin', 'cobranzas', 'vencidas', 'list', params ?? {}] as const,
     novedades: (params?: NovedadesQuery) => ['admin', 'novedades', 'list', params ?? {}] as const,

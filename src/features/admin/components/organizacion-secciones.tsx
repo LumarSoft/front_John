@@ -44,7 +44,7 @@ export function BillingSummary({ billing }: { billing: OrganizationBilling }) {
     {
       label: 'Total estimado del mes',
       value: usd(billing.billedUsd),
-      hint: `Planes de USD ${int(billing.pricing.blockPriceUsd)} cada ${int(billing.pricing.blockTokens)} tokens`,
+      hint: `USD ${billing.pricing.unitPriceUsd} por token · bloques de ${int(billing.pricing.blockTokens)}`,
     },
     { label: 'Ganancia estimada', value: usd(billing.marginUsd), hint: 'Total menos costo de proveedores' },
   ]
