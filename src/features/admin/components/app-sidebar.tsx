@@ -22,6 +22,7 @@ import {
   Users,
   Wallet,
   type LucideIcon,
+  CreditCard,
 } from 'lucide-react'
 import {
   Sidebar,
@@ -79,6 +80,8 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Usuarios', href: '/admin/usuarios', icon: Users, superAdminOnly: true },
   // Admins see each number's tokens; managing numbers stays with the SuperAdmin.
   { label: 'Números', href: '/admin/numeros', icon: Phone },
+  // Each admin's numbers, their token plan and the month's consumption; the SuperAdmin also edits the catalog.
+  { label: 'Facturación', href: '/admin/facturacion', icon: CreditCard },
   { label: 'Organizaciones', href: '/admin/organizaciones', icon: Building2, ownerOnly: true },
   { label: 'Mejoras', href: '/admin/mejoras', icon: Sparkles, everyone: true },
   { label: 'Configuración', href: '/admin/configuracion', icon: UserCog },

@@ -7,36 +7,42 @@ export interface PhoneNumberCodeRef {
   holderName: string | null
 }
 
-/** The token plan a number is billed on for a month (1 token = 1 message sent). */
+/** The token plan a number's month is billed on (1 token = 1 message sent). */
 export interface TokenPlan {
-  /** 1,000-token blocks: 1 = Inicial, 2 = Estándar… */
-  blocks: number
+  /** The catalog plan, or null for the trial and for a size past the catalog. */
+  id: number | null
   name: string
   includedTokens: number
   priceUsd: number
+  /** The free first-month plan of a new account. */
+  trial: boolean
+  /** Blocks of 1,000 the plan spans. */
+  blocks: number
 }
 
 /**
  * A number's month. The API sends each role its own part: every role gets the
- * tokens, the SuperAdmin also the activity, and only the OWNER the plan and USD.
+ * tokens, the plan and what the month adds up to, the SuperAdmin also the
+ * activity, and only the OWNER the provider cost and the margin.
  */
 export interface PhoneNumberUsage {
   period: string
   /** Messages the platform sent this month: one token each. */
   tokens: number
+  /** Free tokens applied this month (a new account's first month). */
+  trialTokens?: number
+  /** The plan the month is billed on, and what it adds up to at the catalog's prices. */
+  plan?: TokenPlan
+  prorated?: boolean
+  billedUsd?: number
   /** SuperAdmin and owner: messages sent and the OpenAI calls and tokens. */
   metaMessages?: number
   metaConversations?: number
   openaiCalls?: number
   inputTokens?: number
   outputTokens?: number
-  /** Owner only: every block of tokens costs the same, e.g. USD 60 per 1,000. */
-  pricing?: { blockTokens: number; blockPriceUsd: number }
-  plan?: TokenPlan
-  /** True when the Inicial plan was prorated for the number's first month. */
-  prorated?: boolean
-  /** What the number is invoiced for the month, billed in arrears. */
-  billedUsd?: number
+  /** Owner only: the fixed price per token and the block past the largest plan. */
+  pricing?: { unitPriceUsd: number; blockTokens: number; blockPriceUsd: number; trialTokens: number }
   metaBillableMessages?: number
   openaiCostUsd?: number
   metaCostUsd?: number

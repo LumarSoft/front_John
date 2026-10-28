@@ -30,6 +30,8 @@ export interface PhoneNumberUsage {
   totalCostUsd: number
   /** Messages the platform sent this month: one token each. */
   tokens: number
+  /** Free tokens applied this month (a new account's first month). */
+  trialTokens: number
   plan: TokenPlan
   prorated: boolean
   /** What the number is invoiced for the month. */
@@ -50,8 +52,8 @@ export interface OrganizationNumber {
 
 export interface OrganizationBilling {
   period: string
-  /** Every block of tokens costs the same, e.g. USD 60 per 1,000. */
-  pricing: { blockTokens: number; blockPriceUsd: number }
+  /** The fixed price per token (USD 0.05) and the block past the largest plan. */
+  pricing: { unitPriceUsd: number; blockTokens: number; blockPriceUsd: number; trialTokens: number }
   activeNumbers: number
   costUsd: number
   billedUsd: number
