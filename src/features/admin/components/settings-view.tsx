@@ -162,14 +162,14 @@ interface OrgNaming {
   shortName: string | null
 }
 
-/** For an admin: the organization's assistant is read-only, their own number's is in Números. */
+/** Reminds an admin that this is the whole organization's; their own number's assistant is in Números. */
 function OwnNumberHint() {
   return (
     <div className="flex max-w-xl gap-3 rounded-xl border border-ember-ring bg-ember-soft px-4 py-3 text-[13px] text-ink-3">
       <Smartphone className="mt-0.5 size-4 shrink-0 text-ember-2" />
       <p>
-        Esto es de toda la organización y lo cambia un SuperAdmin. Si tenés un número a tu cargo, podés darle su propio
-        nombre, personas, horario y datos en{' '}
+        Esto es de toda la organización. Si tenés un número a tu cargo, podés darle su propio nombre, personas, horario
+        y datos en{' '}
         <Link href="/admin/numeros" className="font-medium text-ember-2 underline-offset-2 hover:underline">
           Números → Asistente
         </Link>
@@ -408,6 +408,8 @@ export function SettingsView() {
   const { data: profile, isLoading, isError } = useProfile()
   const { data: config } = useProducerConfig()
   const { isSuperAdmin, isAdmin } = useRole()
+  // Since 28/10 every admin changes the organization settings, not only the SuperAdmin.
+  const canEditOrg = isSuperAdmin || isAdmin
 
   return (
     <div className="mx-auto w-full max-w-5xl px-5 py-8 md:px-8 md:py-10">
@@ -439,8 +441,7 @@ export function SettingsView() {
           {config ? (
             <div className="space-y-5">
               {!isSuperAdmin && <OwnNumberHint />}
-              {/* Stopping the bot is an emergency action: every admin may do it, not only the SuperAdmin. */}
-              <BotStatusControl botEnabled={config.botEnabled} canManage={isSuperAdmin || isAdmin} />
+              <BotStatusControl botEnabled={config.botEnabled} canManage={canEditOrg} />
               <BotConfigForm
                 key={`${config.botName ?? ''}|${(config.staffNames ?? []).join(',')}`}
                 initialName={config.botName ?? ''}
@@ -449,9 +450,9 @@ export function SettingsView() {
                   name: profile?.organization?.displayName ?? 'tu productora',
                   shortName: profile?.organization?.shortName ?? null,
                 }}
-                canEdit={isSuperAdmin}
+                canEdit={canEditOrg}
               />
-              <BotProfileSection canEdit={isSuperAdmin} />
+              <BotProfileSection canEdit={canEditOrg} />
             </div>
           ) : (
             <FormSkeleton />
@@ -459,15 +460,15 @@ export function SettingsView() {
         </TabsContent>
 
         <TabsContent value="horarios" className="mt-6">
-          <BusinessHoursSection canEdit={isSuperAdmin} />
+          <BusinessHoursSection canEdit={canEditOrg} />
         </TabsContent>
 
         <TabsContent value="coberturas" className="mt-6">
-          <CoverageSettingsSection canEdit={isSuperAdmin} />
+          <CoverageSettingsSection canEdit={canEditOrg} />
         </TabsContent>
 
         <TabsContent value="precios" className="mt-6">
-          <PricingPlansSection canEdit={isSuperAdmin} />
+          <PricingPlansSection canEdit={canEditOrg} />
         </TabsContent>
       </Tabs>
     </div>
