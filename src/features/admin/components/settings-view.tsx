@@ -287,7 +287,7 @@ function BotStatusControl({ botEnabled, canManage }: { botEnabled: boolean; canM
             <div>
               <CardTitle className="flex items-center gap-2 font-display text-[18px]">
                 {botEnabled ? (
-                  <Power className="size-4 text-emerald-600" />
+                  <Power className="size-4 text-emerald-600 dark:text-emerald-400" />
                 ) : (
                   <PowerOff className="size-4 text-destructive" />
                 )}

@@ -87,6 +87,15 @@ Flat config only (`eslint.config.mjs`). No `.eslintrc.*` files.
 - Organizaciones → detalle → "Integración con Triunfo" sets the organization's own Triunfo credentials (owner only, validated by Triunfo before they are saved).
 - Panel branding per organization is not here: the admin panel is moving to its own SaaS app (see `PLAN-SAAS.md` at the repo root); the work is parked on branch `feat/panel-brand`.
 
+## Admin panel themes
+
+Each user picks light/dark/automatic and a palette in the user menu → "Apariencia" (stored per browser, `src/features/admin/lib/panel-theme.ts`). Only `/admin` gets `data-palette` and the `dark` class on `<html>`; the palettes are CSS at the end of `app/globals.css`. When building panel screens:
+
+- Accent = the `ember` tokens (`ember`, `ember-2`, `ember-soft`, `ember-ring`) and `on-ember` for text on an ember fill. `amber` is the warning colour and stays gold in every palette.
+- Neutrals = `ink*`, `faint*`, `paper*`, `canvas*`, `line*` or the shadcn tokens. No hex values or `bg-white`/`text-black`.
+- Status colours (`emerald-*`, `amber-*`, `red-*`, `sky-*`) need their `dark:` variant.
+- The Whatsapp section uses the `--wa-*` variables (WhatsApp Web's palette, light and dark).
+
 ## Development rules
 
 @docs/rules/code-style.md

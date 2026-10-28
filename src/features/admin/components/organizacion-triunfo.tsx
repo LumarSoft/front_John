@@ -63,7 +63,7 @@ export function OrganizacionTriunfo({ orgId }: { orgId: number }) {
       <Card className="flex flex-col gap-5 p-5">
         <p className={`flex items-start gap-2 text-[13px] ${line.ok ? 'text-muted-foreground' : 'text-destructive'}`}>
           {line.ok ? (
-            <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-emerald-600" />
+            <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
           ) : (
             <TriangleAlert className="mt-0.5 size-4 shrink-0" />
           )}

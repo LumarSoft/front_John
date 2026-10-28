@@ -7,6 +7,7 @@ import { BrandMark } from '@/src/components/brand-mark'
 import { Button } from '@/src/components/ui/button'
 import { Separator } from '@/src/components/ui/separator'
 import type { AdminClientDetail, AdminPolizaDetail } from '@/src/types/api/clients'
+import { usePanelTheme } from '../context/panel-theme-context'
 import { formatCurrency, formatDate, policyName, polizaStatus, RiskIcon } from '../lib/asegurados-ui'
 import { PolizaStatusBadge } from './poliza-status-badge'
 import { TriunfoDocumentosCard } from './asegurado-triunfo-documentos'
@@ -17,6 +18,7 @@ type DocFormat = 'triunfo' | 'credencial' | 'certificado'
 
 function TarjetaCredencial({ poliza, client }: { poliza: AdminPolizaDetail; client: AdminClientDetail }) {
   const status = polizaStatus(poliza)
+  const { palette } = usePanelTheme()
 
   const statusPill =
     status.estado === 'vigente'
@@ -26,7 +28,11 @@ function TarjetaCredencial({ poliza, client }: { poliza: AdminPolizaDetail; clie
         : 'bg-destructive/20 text-red-400'
 
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-ink-2 via-[#1c1812] to-ink shadow-xl ring-1 ring-white/5">
+    // Always a dark card: it takes the dark version of the palette, whatever the mode.
+    <div
+      data-palette={palette}
+      className="dark relative overflow-hidden rounded-2xl bg-gradient-to-br from-dark-3 via-dark-2 to-dark shadow-xl ring-1 ring-white/5"
+    >
       {/* Noise grain */}
       <div
         aria-hidden
@@ -120,13 +126,13 @@ function CertificadoCard({ poliza, client }: { poliza: AdminPolizaDetail; client
     <div className="overflow-hidden rounded-2xl border border-line-2 bg-card shadow-sm">
       <div className="flex items-stretch">
         {/* Left accent bar */}
-        <div className="w-1.5 shrink-0 bg-gradient-to-b from-ember via-amber/70 to-amber/20" />
+        <div className="w-1.5 shrink-0 bg-gradient-to-b from-ember via-ember/60 to-ember/15" />
 
         <div className="flex-1 px-5 py-5">
           {/* Header */}
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-center gap-2.5">
-              <div className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-amber-border bg-ember-soft text-ember-2">
+              <div className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-ember-ring bg-ember-soft text-ember-2">
                 <RiskIcon type={poliza.riskType} className="size-4.5" />
               </div>
               <div>
@@ -310,7 +316,7 @@ export function AseguradoDocumentosTab({ client }: { client: AdminClientDetail }
               type="button"
               onClick={() => setFormat(option.value)}
               className={`flex h-8 items-center justify-center gap-1.5 rounded-md text-[12.5px] font-medium transition-colors ${
-                active ? 'bg-background text-ink shadow-sm' : 'text-muted-foreground hover:text-ink'
+                active ? 'bg-background text-ink shadow-sm dark:bg-canvas-3' : 'text-muted-foreground hover:text-ink'
               }`}
             >
               <Icon className="size-3.5 shrink-0" />

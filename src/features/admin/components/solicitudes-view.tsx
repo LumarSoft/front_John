@@ -164,7 +164,9 @@ export function SolicitudesView() {
                 onClick={() => setTab(t.value)}
                 className={cn(
                   'rounded-md px-3 py-1.5 text-[12.5px] font-medium transition-colors lg:px-4',
-                  tab === t.value ? 'bg-card text-ink shadow-sm' : 'text-muted-foreground hover:text-ink',
+                  tab === t.value
+                    ? 'bg-card text-ink shadow-sm dark:bg-canvas-3'
+                    : 'text-muted-foreground hover:text-ink',
                 )}
               >
                 {t.label}

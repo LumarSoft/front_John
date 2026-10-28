@@ -295,7 +295,7 @@ function Chip({ label, value, strong }: { label: string; value: number; strong?:
     <span
       className={cn(
         'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1',
-        strong && value > 0 ? 'border-amber-border bg-ember-soft text-ember-2' : 'border-line-2 text-ink-3',
+        strong && value > 0 ? 'border-ember-ring bg-ember-soft text-ember-2' : 'border-line-2 text-ink-3',
       )}
     >
       {label}

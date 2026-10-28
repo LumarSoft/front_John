@@ -213,7 +213,11 @@ export function CodesTable({
               <TableCell className="text-right text-[12px] text-muted-foreground">{int(c.policies)}</TableCell>
               <TableCell className="text-right text-[12px] text-muted-foreground">{int(c.claims)}</TableCell>
               <TableCell className="text-[12px] text-muted-foreground">
-                {c.lastCarteraSyncAt ? fecha(c.lastCarteraSyncAt) : <span className="text-amber-600">nunca</span>}
+                {c.lastCarteraSyncAt ? (
+                  fecha(c.lastCarteraSyncAt)
+                ) : (
+                  <span className="text-amber-600 dark:text-amber-400">nunca</span>
+                )}
               </TableCell>
               <TableCell className="text-right">
                 <Button

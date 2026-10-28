@@ -7,7 +7,7 @@ export const isOpen = (row: Rejection): boolean => OPEN.includes(row.status)
 export const canSend = (row: Rejection): boolean => isOpen(row) && row.waId !== null
 
 const TONES = {
-  ready: 'border-amber-border bg-ember-soft text-ember-2',
+  ready: 'border-ember-ring bg-ember-soft text-ember-2',
   muted: 'border-line-2 bg-secondary text-muted-foreground',
   busy: 'border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-900 dark:bg-sky-950/40 dark:text-sky-300',
   ok: 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-400',

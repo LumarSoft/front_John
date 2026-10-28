@@ -37,8 +37,8 @@ interface Props {
 
 const STATUS_STYLE: Record<TaskStatus, string> = {
   PENDING: 'border-line-2 bg-card text-ink-3',
-  IN_PROGRESS: 'border-amber/40 bg-amber-subtle text-amber-700',
-  DONE: 'border-emerald-300 bg-emerald-50 text-emerald-700',
+  IN_PROGRESS: 'border-amber/40 bg-amber-subtle text-amber-700 dark:text-amber',
+  DONE: 'border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-400',
 }
 
 export function TaskCard({ task, isNew, unseenByAssignee, canDelete, onEdit, onDelete }: Props) {
@@ -98,7 +98,7 @@ export function TaskCard({ task, isNew, unseenByAssignee, canDelete, onEdit, onD
           <div className="min-w-0">
             <p className={cn('text-[15px] font-semibold text-ink', done && 'text-muted-foreground line-through')}>
               {isNew && (
-                <span className="mr-2 inline-flex rounded-full bg-ember px-2 py-0.5 align-middle text-[10.5px] font-semibold uppercase tracking-wide text-on-dark">
+                <span className="mr-2 inline-flex rounded-full bg-ember px-2 py-0.5 align-middle text-[10.5px] font-semibold uppercase tracking-wide text-on-ember">
                   {replyFromOthers ? 'Novedad' : 'Nueva'}
                 </span>
               )}
@@ -108,7 +108,9 @@ export function TaskCard({ task, isNew, unseenByAssignee, canDelete, onEdit, onD
               Para <span className="font-medium text-ink-3">{personName(task.assignedTo)}</span> · de{' '}
               {personName(task.createdBy)} · {shortDateTime(task.createdAt)}
               {done && task.completedAt && ` · hecha ${shortDateTime(task.completedAt)}`}
-              {unseenByAssignee && !done && <span className="text-amber-700"> · todavía no la vio</span>}
+              {unseenByAssignee && !done && (
+                <span className="text-amber-700 dark:text-amber"> · todavía no la vio</span>
+              )}
             </p>
           </div>
 
@@ -156,7 +158,11 @@ export function TaskCard({ task, isNew, unseenByAssignee, canDelete, onEdit, onD
             <span
               className={cn(
                 'inline-flex items-center gap-1 font-medium',
-                due.overdue ? 'text-destructive' : due.soon ? 'text-amber-700' : 'text-muted-foreground',
+                due.overdue
+                  ? 'text-destructive'
+                  : due.soon
+                    ? 'text-amber-700 dark:text-amber'
+                    : 'text-muted-foreground',
               )}
             >
               <CalendarDays className="size-3.5" />
@@ -221,7 +227,7 @@ export function TaskCard({ task, isNew, unseenByAssignee, canDelete, onEdit, onD
                 onClick={sendReply}
                 disabled={!reply.trim() || comment.isPending}
                 aria-label="Enviar respuesta"
-                className="flex size-9 shrink-0 items-center justify-center rounded-md bg-ember text-on-dark disabled:opacity-40"
+                className="flex size-9 shrink-0 items-center justify-center rounded-md bg-ember text-on-ember disabled:opacity-40"
               >
                 {comment.isPending ? (
                   <Loader2 className="size-4 animate-spin" />

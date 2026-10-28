@@ -23,7 +23,7 @@ function DocumentoRow({
       <div className="min-w-0 flex-1">
         <p className="truncate text-[13px] font-medium text-ink">{doc.name}</p>
         {download.isError && (
-          <p className="text-[11.5px] text-red-600">Triunfo no entregó el archivo. Probá de nuevo.</p>
+          <p className="text-[11.5px] text-red-600 dark:text-red-400">Triunfo no entregó el archivo. Probá de nuevo.</p>
         )}
       </div>
       <Button
@@ -72,7 +72,7 @@ export function TriunfoDocumentosCard({ client, poliza }: { client: AdminClientD
 
         {isError && (
           <div className="flex items-center justify-between gap-3">
-            <span className="flex items-center gap-2 text-[13px] text-red-600">
+            <span className="flex items-center gap-2 text-[13px] text-red-600 dark:text-red-400">
               <AlertCircle className="size-4" />
               No se pudieron traer los documentos de Triunfo.
             </span>

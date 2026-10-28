@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import localFont from 'next/font/local'
 import { ThemeProvider } from '@/src/components/ui/theme-provider'
+import { PANEL_THEME_SCRIPT } from '@/src/features/admin/lib/panel-theme'
 import { WhatsAppFab } from '@/src/components/ui/whatsapp-fab'
 import { Providers } from './providers'
 import './globals.css'
@@ -32,6 +33,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" className={`${manrope.variable} ${inter.variable}`} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: PANEL_THEME_SCRIPT }} />
+      </head>
       <body>
         <Providers>
           <ThemeProvider>

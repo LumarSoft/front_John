@@ -89,7 +89,9 @@ export function TasksView() {
                 }}
                 className={cn(
                   'flex items-center gap-1.5 rounded-md px-3 py-1.5 text-[13px] font-medium transition-colors',
-                  view === item.key ? 'bg-card text-ink shadow-sm' : 'text-muted-foreground hover:text-ink-3',
+                  view === item.key
+                    ? 'bg-card text-ink shadow-sm dark:bg-canvas-3'
+                    : 'text-muted-foreground hover:text-ink-3',
                 )}
               >
                 {item.label}
@@ -110,7 +112,9 @@ export function TasksView() {
                 onClick={() => setStatus(key)}
                 className={cn(
                   'rounded-md px-3 py-1.5 text-[13px] font-medium transition-colors',
-                  status === key ? 'bg-card text-ink shadow-sm' : 'text-muted-foreground hover:text-ink-3',
+                  status === key
+                    ? 'bg-card text-ink shadow-sm dark:bg-canvas-3'
+                    : 'text-muted-foreground hover:text-ink-3',
                 )}
               >
                 {key === 'open' ? 'Por hacer' : 'Hechas'}

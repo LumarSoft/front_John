@@ -112,8 +112,8 @@ const EMOJIS = [
 // Sender name colours on outgoing bubbles, like participant names in a WhatsApp group.
 const SENDER_COLOR: Record<InboxMessage['role'], string> = {
   user: 'text-(--wa-green-dark)',
-  assistant: 'text-[#1f7aa8]',
-  agent: 'text-[#b4532a]',
+  assistant: 'text-(--wa-author-assistant)',
+  agent: 'text-(--wa-author-agent)',
 }
 
 interface Props {
@@ -248,7 +248,7 @@ function MessageBubble({
                     target="_blank"
                     rel="noreferrer"
                     title="Abrir el archivo"
-                    className="-mx-1 flex min-w-[240px] items-center gap-3 rounded-[6px] bg-black/5 px-3 py-2.5 hover:bg-black/[0.08]"
+                    className="-mx-1 flex min-w-[240px] items-center gap-3 rounded-[6px] bg-(--wa-tint) px-3 py-2.5 hover:bg-(--wa-tint-strong)"
                   >
                     <FileText className="size-8 shrink-0 text-[#e2574c]" strokeWidth={1.5} />
                     <span className="min-w-0">
@@ -278,7 +278,7 @@ function MessageBubble({
         {buttons.map(label => (
           <div
             key={label}
-            className="flex items-center justify-center gap-1.5 rounded-[7.5px] bg-(--wa-bubble-out) px-3 py-2 text-[14px] text-[#027eb5] shadow-[0_1px_0.5px_rgba(11,20,26,0.13)]"
+            className="flex items-center justify-center gap-1.5 rounded-[7.5px] bg-(--wa-bubble-out) px-3 py-2 text-[14px] text-(--wa-link) shadow-[0_1px_0.5px_rgba(11,20,26,0.13)]"
           >
             <CornerUpLeft className="size-4 shrink-0" />
             {label}
@@ -496,7 +496,7 @@ export function InboxThread({ conversation, onOpenClient, onBack }: Props) {
                 type="button"
                 onClick={() => takeover.mutate()}
                 disabled={takeover.isPending}
-                className="flex h-9 items-center gap-1.5 rounded-full bg-(--wa-green) px-4 text-[14px] font-medium text-white transition-colors hover:bg-(--wa-green-dark) disabled:opacity-60"
+                className="flex h-9 items-center gap-1.5 rounded-full bg-(--wa-green) px-4 text-[14px] font-medium text-(--wa-on-green) transition-colors hover:bg-(--wa-green-dark) disabled:opacity-60"
               >
                 {takeover.isPending ? <Loader2 className="size-4 animate-spin" /> : <UserCheck className="size-4" />}
                 Tomar
@@ -507,14 +507,17 @@ export function InboxThread({ conversation, onOpenClient, onBack }: Props) {
               onClick={() => setSearching(open => !open)}
               aria-label="Buscar en la conversación"
               title="Buscar en la conversación"
-              className={cn('rounded-full p-2 text-(--wa-icon) hover:bg-black/5', searching && 'bg-black/10')}
+              className={cn(
+                'rounded-full p-2 text-(--wa-icon) hover:bg-(--wa-tint)',
+                searching && 'bg-(--wa-tint-strong)',
+              )}
             >
               <Search className="size-5" />
             </button>
             <DropdownMenu>
               <DropdownMenuTrigger
                 aria-label="Opciones del chat"
-                className="rounded-full p-2 text-(--wa-icon) outline-none hover:bg-black/5 data-[state=open]:bg-black/10"
+                className="rounded-full p-2 text-(--wa-icon) outline-none hover:bg-(--wa-tint) data-[state=open]:bg-(--wa-tint-strong)"
               >
                 <MoreVertical className="size-5" />
               </DropdownMenuTrigger>
@@ -565,7 +568,7 @@ export function InboxThread({ conversation, onOpenClient, onBack }: Props) {
                       </div>
                     )}
                     {unreadStart && (
-                      <div ref={anchorRef} className="mt-3 flex justify-center bg-white/35 py-1.5">
+                      <div ref={anchorRef} className="mt-3 flex justify-center bg-(--wa-band) py-1.5">
                         <span className="rounded-full bg-(--wa-surface) px-3 py-1 text-[12.5px] text-(--wa-text-2) shadow-[0_1px_0.5px_rgba(11,20,26,0.13)]">
                           {unreadAtOpen === 1 ? '1 mensaje no leído' : `${unreadAtOpen} mensajes no leídos`}
                         </span>
@@ -598,7 +601,7 @@ export function InboxThread({ conversation, onOpenClient, onBack }: Props) {
             >
               <ChevronDown className="size-6" />
               {unseen > 0 && (
-                <span className="absolute -top-1.5 -left-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-(--wa-unread) px-1 text-[11px] font-semibold text-white">
+                <span className="absolute -top-1.5 -left-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-(--wa-unread) px-1 text-[11px] font-semibold text-(--wa-on-green)">
                   {unseen}
                 </span>
               )}
@@ -619,7 +622,7 @@ export function InboxThread({ conversation, onOpenClient, onBack }: Props) {
                 <DropdownMenuTrigger
                   disabled={!canSend}
                   aria-label="Emojis"
-                  className="mb-[3px] rounded-full p-1.5 text-(--wa-icon) outline-none hover:bg-black/5 disabled:opacity-40 data-[state=open]:bg-black/10"
+                  className="mb-[3px] rounded-full p-1.5 text-(--wa-icon) outline-none hover:bg-(--wa-tint) disabled:opacity-40 data-[state=open]:bg-(--wa-tint-strong)"
                 >
                   <Smile className="size-6" />
                 </DropdownMenuTrigger>
@@ -648,7 +651,7 @@ export function InboxThread({ conversation, onOpenClient, onBack }: Props) {
                 disabled={!canSend}
                 aria-label="Adjuntar foto o PDF"
                 title="Adjuntar foto o PDF"
-                className="mb-[3px] rounded-full p-1.5 text-(--wa-icon) hover:bg-black/5 disabled:opacity-40"
+                className="mb-[3px] rounded-full p-1.5 text-(--wa-icon) hover:bg-(--wa-tint) disabled:opacity-40"
               >
                 <Paperclip className="size-6" />
               </button>
@@ -680,7 +683,9 @@ export function InboxThread({ conversation, onOpenClient, onBack }: Props) {
                 aria-label="Enviar"
                 className={cn(
                   'mb-px flex size-10 shrink-0 items-center justify-center rounded-full transition-colors',
-                  text.trim() && canSend ? 'bg-(--wa-green) text-white hover:bg-(--wa-green-dark)' : 'text-(--wa-icon)',
+                  text.trim() && canSend
+                    ? 'bg-(--wa-green) text-(--wa-on-green) hover:bg-(--wa-green-dark)'
+                    : 'text-(--wa-icon)',
                   'disabled:cursor-not-allowed',
                 )}
               >

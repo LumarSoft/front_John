@@ -50,7 +50,7 @@ export function RejectionsView() {
       </header>
 
       {data && !data.templateReady && (
-        <p className="mb-4 rounded-lg border border-amber-border bg-amber-subtle px-4 py-3 text-[13px] text-amber-700">
+        <p className="mb-4 rounded-lg border border-amber-border bg-amber-subtle px-4 py-3 text-[13px] text-amber-700 dark:text-amber">
           El mensaje de WhatsApp para avisar rechazos está en revisión de Meta. Ya podés cargar los Excel; el botón de
           enviar se habilita cuando lo aprueben.
         </p>
@@ -86,7 +86,7 @@ export function RejectionsView() {
                     className={cn(
                       'w-full rounded-lg border px-3 py-2.5 text-left transition-colors',
                       item.id === selectedId
-                        ? 'border-amber-border bg-ember-soft'
+                        ? 'border-ember-ring bg-ember-soft'
                         : 'border-line-2 bg-card hover:bg-secondary/60',
                     )}
                   >
