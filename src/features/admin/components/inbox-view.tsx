@@ -48,7 +48,7 @@ const FILTERS: { key: InboxFilter; label: string }[] = [
 function matchesFilter(conv: InboxConversation, filter: InboxFilter): boolean {
   if (filter === 'unread') return conv.unreadCount > 0
   if (filter === 'pending') return conv.status === 'pending'
-  if (filter === 'taken') return conv.botPaused || conv.globalBotDisabled || !!conv.numberBotDisabled
+  if (filter === 'taken') return conv.botPaused || !!conv.numberBotDisabled
   return true
 }
 
@@ -131,7 +131,7 @@ export function InboxView() {
     all: 0,
     unread: conversations.filter(c => c.unreadCount > 0).length,
     pending: conversations.filter(c => c.status === 'pending').length,
-    taken: conversations.filter(c => c.botPaused || c.globalBotDisabled || !!c.numberBotDisabled).length,
+    taken: conversations.filter(c => c.botPaused || !!c.numberBotDisabled).length,
   }
 
   return (

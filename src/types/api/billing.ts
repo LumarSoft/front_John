@@ -11,10 +11,9 @@ export interface TokenPlanOption {
 export interface CatalogPlan extends TokenPlanOption {
   /** Price minus cost: SuperAdmin only. */
   marginUsd?: number
+  /** Off, the plan no longer places any number. */
   isActive: boolean
   sortOrder: number
-  /** Numbers currently on this plan. */
-  numbersOnPlan: number
 }
 
 export interface CatalogResponse {
@@ -22,7 +21,7 @@ export interface CatalogResponse {
   plans: CatalogPlan[]
 }
 
-/** What a number's month is billed on: a catalog plan, the trial, or a size past the catalog. */
+/** The plan a number's month is on: a catalog plan, the trial, or a size past the catalog. */
 export interface BilledPlan {
   id: number | null
   name: string
@@ -34,29 +33,26 @@ export interface BilledPlan {
   blocks: number
 }
 
+/**
+ * A number's running month. Nobody chooses its plan: the tokens it sent place
+ * it on the smallest plan that covers them, and it moves up as it sends more.
+ */
 export interface BillingNumber {
   id: number
   number: string
   isActive: boolean
   responsibleCode: { id: number; code: string; holderName: string | null } | null
-  /** The number's own plan (the smallest of the catalog when none was chosen); null without a catalog. */
-  plan: TokenPlanOption | null
+  /** The plan this month's tokens placed the number on. */
+  plan: BilledPlan
   /** Free tokens applied this month (a new account's first month). */
   trialTokens: number
   tokensUsed: number
-  /** The bar's denominator: the number's plan plus the trial. */
+  /** The bar's denominator: the trial while it lasts, then the plan plus the trial. */
   includedTokens: number
   remainingTokens: number
   percentUsed: number
-  /** The month went past the number's own plan. */
-  exceeded: boolean
-  billedPlan: BilledPlan
-  /** What the number's productor pays for the month at the catalog's prices. */
-  estimatedUsd: number
-  /** What the number costs the organization this month, and what it keeps: SuperAdmin only. */
-  costUsd?: number
-  marginUsd?: number
-  prorated: boolean
+  /** Where the number goes past this plan: the next of the catalog, or the next block. */
+  nextPlan: { name: string; tokens: number } | null
   /** When the month's counters last moved (ISO), null before the first message. */
   updatedAt: string | null
 }
@@ -68,10 +64,6 @@ export interface BillingOverview {
   trialTokens: number
   plans: TokenPlanOption[]
   numbers: BillingNumber[]
-  totalEstimatedUsd: number
-  /** SuperAdmin only. */
-  totalCostUsd?: number
-  totalMarginUsd?: number
 }
 
 export interface CreateTokenPlanRequest {

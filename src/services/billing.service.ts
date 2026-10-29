@@ -28,16 +28,4 @@ export const billingService = {
   removePlan(token: string, id: number): Promise<{ ok: boolean }> {
     return apiRequest<{ ok: boolean }>(`/admin/billing/plans/${id}`, { method: 'DELETE', token })
   },
-
-  setNumberPlan(
-    token: string,
-    numberId: number,
-    planId: number | null,
-  ): Promise<{ id: number; planId: number | null }> {
-    return apiRequest<{ id: number; planId: number | null }>(`/admin/billing/numbers/${numberId}/plan`, {
-      method: 'PATCH',
-      token,
-      body: { planId },
-    })
-  },
 }

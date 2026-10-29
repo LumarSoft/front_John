@@ -1,4 +1,4 @@
-import type { WeeklySchedule } from './business-hours'
+import type { Closure, WeeklySchedule } from './business-hours'
 import type { BotProfile, UpdateBotProfileRequest } from './config'
 
 export interface PhoneNumberCodeRef {
@@ -137,11 +137,12 @@ export interface NumberAssistant {
     botEnabled?: boolean
     /** How this number offers the organization's coverages (absent on older APIs). */
     coverageSettings?: CoverageOverrides
+    /** The number's holidays and closures, upcoming or under way (absent on older APIs). */
+    closures?: Closure[]
   }
   organization: AssistantSettings & {
     name: string
     businessHours: WeeklySchedule
-    botEnabled?: boolean
     coverages?: OrganizationCoverage[]
   }
   /** Who last flipped the number's own switch (absent on older APIs). */

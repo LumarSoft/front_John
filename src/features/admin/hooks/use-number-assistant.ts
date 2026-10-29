@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { phoneNumbersService } from '@/src/services/phone-numbers.service'
 import { QUERY_KEYS } from '@/src/lib/query-keys'
+import type { CreateClosureRequest } from '@/src/types/api/business-hours'
 import type { NumberAssistant, UpdateNumberAssistantRequest } from '@/src/types/api/phone-numbers'
 import { useAuth } from '../context/auth-context'
 
@@ -48,4 +49,23 @@ export function useSetNumberBotStatus(id: number) {
       void queryClient.invalidateQueries({ queryKey: ['admin', 'inbox', 'list'] })
     },
   })
+}
+
+/** Adds and removes the number's own holidays and closures; the sheet reloads them. */
+export function useNumberClosures(id: number) {
+  const { token } = useAuth()
+  const queryClient = useQueryClient()
+  const reload = () => queryClient.invalidateQueries({ queryKey: QUERY_KEYS.admin.numberAssistant(id) })
+
+  const addClosure = useMutation({
+    mutationFn: (data: CreateClosureRequest) => phoneNumbersService.addClosure(token as string, id, data),
+    onSuccess: reload,
+  })
+
+  const removeClosure = useMutation({
+    mutationFn: (closureId: number) => phoneNumbersService.removeClosure(token as string, id, closureId),
+    onSuccess: reload,
+  })
+
+  return { addClosure, removeClosure }
 }
