@@ -139,7 +139,7 @@ export function InboxThread({ conversation, onOpenClient, onBack }: Props) {
     el.style.height = `${Math.min(el.scrollHeight, 132)}px`
   }, [text])
 
-  const humanAttention = conversation.botPaused || conversation.globalBotDisabled || !!conversation.numberBotDisabled
+  const humanAttention = conversation.botPaused || !!conversation.numberBotDisabled
   const canSend = humanAttention && !windowExpired
   const isSending = sendMessage.isPending
 
@@ -230,13 +230,11 @@ export function InboxThread({ conversation, onOpenClient, onBack }: Props) {
   const client = conversation.client
   const contactName = contactDisplayName(conversation)
   const consulted = consultedClientLabel(conversation)
-  const status = conversation.globalBotDisabled
-    ? 'Atención humana global'
-    : conversation.numberBotDisabled
-      ? 'Bot apagado en este número'
-      : conversation.botPaused
-        ? `Atendido por ${conversation.assignedTo?.email ?? 'una persona'}`
-        : 'Atiende el bot'
+  const status = conversation.numberBotDisabled
+    ? 'Bot apagado en este número'
+    : conversation.botPaused
+      ? `Atendido por ${conversation.assignedTo?.email ?? 'una persona'}`
+      : 'Atiende el bot'
   const subtitle = [status, consulted, hasContactName(conversation) ? formatPhone(conversation.waId) : null]
     .filter(Boolean)
     .join(' · ')
@@ -284,7 +282,7 @@ export function InboxThread({ conversation, onOpenClient, onBack }: Props) {
           </button>
 
           <div className="flex shrink-0 items-center gap-2.5 pl-2">
-            {!conversation.globalBotDisabled && !conversation.botPaused && (
+            {!conversation.botPaused && (
               <button
                 type="button"
                 onClick={() => takeover.mutate()}
@@ -323,7 +321,7 @@ export function InboxThread({ conversation, onOpenClient, onBack }: Props) {
                 <DropdownMenuItem onSelect={() => setEditingContact(true)}>
                   <Pencil className="size-4" /> Editar contacto
                 </DropdownMenuItem>
-                {conversation.botPaused && !conversation.globalBotDisabled && (
+                {conversation.botPaused && (
                   <>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onSelect={() => release.mutate()} disabled={release.isPending}>
@@ -401,12 +399,7 @@ export function InboxThread({ conversation, onOpenClient, onBack }: Props) {
         {/* Composer */}
         {humanAttention ? (
           <footer className="shrink-0 bg-(--wa-panel)">
-            {conversation.globalBotDisabled && (
-              <p className="px-5 pt-2 text-center text-[12.5px] text-(--wa-text-2)">
-                La atención humana global está activa: podés responder sin tomar este chat.
-              </p>
-            )}
-            {!conversation.globalBotDisabled && conversation.numberBotDisabled && (
+            {conversation.numberBotDisabled && (
               <p className="px-5 pt-2 text-center text-[12.5px] text-(--wa-text-2)">
                 El bot está apagado en este número: podés responder sin tomar este chat.
               </p>

@@ -3,8 +3,6 @@ export interface InboxConversation {
   waId: string
   status: 'open' | 'pending' | 'closed'
   botPaused: boolean
-  /** True when the SuperAdmin activated human attention for the whole organization. */
-  globalBotDisabled: boolean
   /** True when the bot is switched off on the number this chat came through (absent on older APIs). */
   numberBotDisabled?: boolean
   assignedToUserId: number | null

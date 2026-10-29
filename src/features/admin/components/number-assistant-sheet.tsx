@@ -37,6 +37,7 @@ import {
 } from '../lib/number-assistant-form'
 import { firstInvalidDay } from '../lib/weekly-schedule'
 import { BOT_PROFILE_GROUPS } from './bot-profile-section'
+import { NumberClosures } from './number-closures'
 import { WeeklyScheduleFields } from './weekly-schedule-fields'
 
 function SectionTitle({ title, description }: { title: string; description: string }) {
@@ -71,7 +72,6 @@ const formatWhen = (iso: string): string =>
 function NumberBotSwitch({ assistant, canEdit }: { assistant: NumberAssistant; canEdit: boolean }) {
   const setStatus = useSetNumberBotStatus(assistant.id)
   const on = assistant.own.botEnabled !== false
-  const orgOff = assistant.organization.botEnabled === false
   const last = assistant.lastBotStatusChange
 
   const flip = (botEnabled: boolean) =>
@@ -115,7 +115,7 @@ function NumberBotSwitch({ assistant, canEdit }: { assistant: NumberAssistant; c
                     <AlertDialogTitle>¿Apagar el bot en {assistant.number}?</AlertDialogTitle>
                     <AlertDialogDescription>
                       El corte es inmediato. El bot deja de responder en los chats de este número y la oficina contesta
-                      desde Whatsapp sin tomar cada chat. Se avisa igual que con el interruptor general.
+                      desde Whatsapp sin tomar cada chat. Los demás números siguen igual.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
@@ -133,12 +133,6 @@ function NumberBotSwitch({ assistant, canEdit }: { assistant: NumberAssistant; c
         {last && (
           <p className="text-[12px] text-muted-foreground">
             {last.botEnabled ? 'Encendido' : 'Apagado'} por {last.by ?? 'alguien del equipo'} el {formatWhen(last.at)}.
-          </p>
-        )}
-        {orgOff && (
-          <p className="text-[12px] text-ember-2">
-            La organización tiene la atención humana global activa: el bot no responde en ningún número hasta que un
-            SuperAdmin la desactive en Configuración → Asistente.
           </p>
         )}
       </div>
@@ -241,10 +235,7 @@ function AssistantForm({ assistant, onDone }: { assistant: NumberAssistant; onDo
           <NumberBotSwitch assistant={assistant} canEdit={canEdit} />
 
           <section className="flex flex-col gap-4">
-            <SectionTitle
-              title="Horario de atención"
-              description="Con el que el bot dice si están atendiendo. Los feriados y pausas son los de la organización."
-            />
+            <SectionTitle title="Horario de atención" description="Con el que el bot dice si están atendiendo." />
             <div className="flex gap-2">
               <button type="button" className={choiceClasses(!draft.ownHours)} onClick={() => set('ownHours', false)}>
                 El de la organización
@@ -254,6 +245,14 @@ function AssistantForm({ assistant, onDone }: { assistant: NumberAssistant; onDo
               </button>
             </div>
             {draft.ownHours && <WeeklyScheduleFields value={draft.weekly} onChange={weekly => set('weekly', weekly)} />}
+          </section>
+
+          <section className="flex flex-col gap-4">
+            <SectionTitle
+              title="Feriados y pausas"
+              description="Solo de este número: cerrarlo no cierra los demás. Los feriados nacionales se cargan solos; si este número atiende uno, quitalo. Se guardan al agregarlos o quitarlos."
+            />
+            <NumberClosures numberId={assistant.id} closures={assistant.own.closures ?? []} canEdit={canEdit} />
           </section>
 
           {BOT_PROFILE_GROUPS.map(group => (
@@ -410,8 +409,8 @@ export function NumberAssistantSheet({
         )}
         {data && data.id === numberId && (
           <AssistantForm
-            // Flipping the bot switch must not reset what is being edited.
-            key={JSON.stringify({ ...data.own, botEnabled: undefined })}
+            // Flipping the bot switch or changing a closure must not reset what is being edited.
+            key={JSON.stringify({ ...data.own, botEnabled: undefined, closures: undefined })}
             assistant={data}
             onDone={() => onOpenChange(false)}
           />

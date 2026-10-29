@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { ArrowUpRight, Check, Loader2, Pencil, Plus, Sparkles, Trash2 } from 'lucide-react'
+import { Loader2, Pencil, Plus, Sparkles, Trash2, TrendingUp } from 'lucide-react'
 import { toast } from 'sonner'
 import {
   AlertDialog,
@@ -23,7 +23,7 @@ import { Skeleton } from '@/src/components/ui/skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/src/components/ui/table'
 import { Tabs, TabsList, TabsTrigger } from '@/src/components/ui/tabs'
 import { ApiError } from '@/src/lib/api-client'
-import type { BillingNumber, CatalogPlan, TokenPlanOption } from '@/src/types/api/billing'
+import type { BillingNumber, CatalogPlan } from '@/src/types/api/billing'
 import { useBillingActions, useBillingOverview, useTokenPlans } from '../hooks/use-billing'
 import { useRole } from '../hooks/use-role'
 
@@ -39,13 +39,7 @@ function failed(error: unknown, fallback: string) {
 
 function ConsumptionBar({ row }: { row: BillingNumber }) {
   const percent = Math.min(100, row.percentUsed)
-  const tone = row.exceeded
-    ? 'bg-destructive'
-    : row.percentUsed >= 80
-      ? 'bg-amber'
-      : row.billedPlan.trial
-        ? 'bg-emerald-500 dark:bg-emerald-400'
-        : 'bg-ember'
+  const tone = row.plan.trial ? 'bg-emerald-500 dark:bg-emerald-400' : row.percentUsed >= 80 ? 'bg-amber' : 'bg-ember'
   return (
     <div>
       <div className="h-2.5 w-full overflow-hidden rounded-full bg-line-2">
@@ -59,9 +53,7 @@ function ConsumptionBar({ row }: { row: BillingNumber }) {
           <span className="font-semibold text-ink">{int(row.tokensUsed)}</span> de {int(row.includedTokens)} tokens
           {row.trialTokens > 0 && <span className="text-muted-foreground"> · {int(row.trialTokens)} de prueba</span>}
         </span>
-        <span className={row.exceeded ? 'font-medium text-destructive' : 'text-muted-foreground'}>
-          {row.exceeded ? `${int(row.tokensUsed - row.includedTokens)} de más` : `quedan ${int(row.remainingTokens)}`}
-        </span>
+        <span className="text-muted-foreground">quedan {int(row.remainingTokens)}</span>
       </div>
     </div>
   )
@@ -69,154 +61,52 @@ function ConsumptionBar({ row }: { row: BillingNumber }) {
 
 // ─── Number card ───────────────────────────────────────────────────────────────
 
-function NumberCard({ row, onChangePlan }: { row: BillingNumber; onChangePlan: () => void }) {
-  const planLabel = row.billedPlan.trial
+/** The plan its tokens put the number on this month; nobody chooses it. */
+function NumberCard({ row }: { row: BillingNumber }) {
+  const planLabel = row.plan.trial
     ? `Prueba · ${int(row.trialTokens)} tokens gratis`
-    : row.plan
-      ? `${row.plan.name} · ${int(row.plan.tokens)} tokens · ${usd(row.plan.priceUsd)}`
-      : 'Sin plan'
+    : `${row.plan.name} · ${int(row.plan.includedTokens)} tokens · ${usd(row.plan.priceUsd)}`
   return (
     <Card className="flex flex-col gap-4 border-line-2 p-4 shadow-sm">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="font-mono text-[14px] font-semibold tracking-wide text-ink">{row.number}</span>
-            {!row.isActive && (
-              <Badge variant="outline" className="border-line-2 text-[10.5px] text-muted-foreground">
-                Inactivo
-              </Badge>
-            )}
-            {row.billedPlan.trial && (
-              <Badge className="bg-emerald-50 text-[10.5px] text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400">
-                <Sparkles className="size-3" /> Prueba
-              </Badge>
-            )}
-          </div>
-          <div className="mt-0.5 text-[12px] text-muted-foreground">
-            {row.responsibleCode ? `Productor ${row.responsibleCode.code}` : 'Sin productor responsable'}
-            {' · '}
-            {planLabel}
-          </div>
+      <div className="min-w-0">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="font-mono text-[14px] font-semibold tracking-wide text-ink">{row.number}</span>
+          {!row.isActive && (
+            <Badge variant="outline" className="border-line-2 text-[10.5px] text-muted-foreground">
+              Inactivo
+            </Badge>
+          )}
+          {row.plan.trial && (
+            <Badge className="bg-emerald-50 text-[10.5px] text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400">
+              <Sparkles className="size-3" /> Prueba
+            </Badge>
+          )}
         </div>
-        <Button
-          type="button"
-          size="sm"
-          variant="outline"
-          onClick={onChangePlan}
-          className="h-8 border-line-2 text-[12.5px]"
-        >
-          <ArrowUpRight className="size-3.5" />
-          Cambiar de plan
-        </Button>
+        <div className="mt-0.5 text-[12px] text-muted-foreground">
+          {row.responsibleCode ? `Productor ${row.responsibleCode.code}` : 'Sin productor responsable'}
+        </div>
+      </div>
+
+      <div className="flex items-baseline justify-between gap-3">
+        <span className="text-[11px] uppercase tracking-[0.12em] text-faint">Plan del mes</span>
+        <span className="text-right text-[13.5px] font-semibold text-ink">{planLabel}</span>
       </div>
 
       <ConsumptionBar row={row} />
 
-      <div className="border-t border-line-2 pt-3 text-[12.5px] text-muted-foreground">
-        {row.exceeded ? (
-          <>
-            Este mes pasa al plan <span className="font-medium text-ink">{row.billedPlan.name}</span> (
-            {int(row.billedPlan.includedTokens)} tokens)
-          </>
-        ) : row.billedPlan.trial ? (
-          'Los primeros tokens del mes no se cobran'
+      <div className="flex items-start gap-1.5 border-t border-line-2 pt-3 text-[12.5px] text-muted-foreground">
+        <TrendingUp className="mt-0.5 size-3.5 shrink-0 text-ember-2" />
+        {row.nextPlan ? (
+          <span>
+            {row.plan.trial ? 'Pasados los tokens gratis' : `Pasados los ${int(row.includedTokens)} tokens`}, este mes
+            sube a <span className="font-medium text-ink">{row.nextPlan.name}</span> ({int(row.nextPlan.tokens)}{' '}
+            tokens).
+          </span>
         ) : (
-          <>
-            Plan <span className="font-medium text-ink">{row.billedPlan.name}</span>
-          </>
+          <span>La organización todavía no tiene planes.</span>
         )}
       </div>
     </Card>
-  )
-}
-
-// ─── Change plan dialog ────────────────────────────────────────────────────────
-
-function ChangePlanDialog({
-  row,
-  plans,
-  pending,
-  onConfirm,
-  onClose,
-}: {
-  row: BillingNumber | null
-  plans: TokenPlanOption[]
-  pending: boolean
-  onConfirm: (planId: number) => void
-  onClose: () => void
-}) {
-  const [chosen, setChosen] = useState<number | null>(null)
-  const current = row?.plan?.id ?? null
-  const selected = chosen ?? current
-  return (
-    <Dialog
-      open={row !== null}
-      onOpenChange={open => {
-        if (!open) {
-          setChosen(null)
-          onClose()
-        }
-      }}
-    >
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Cambiar de plan</DialogTitle>
-          <DialogDescription>
-            {row
-              ? `${row.number}: el plan nuevo rige desde este mes. Si el mes se pasa, se factura el plan que lo cubre.`
-              : ''}
-          </DialogDescription>
-        </DialogHeader>
-        <div className="flex flex-col gap-2">
-          {plans.map(plan => {
-            const active = selected === plan.id
-            return (
-              <button
-                key={plan.id}
-                type="button"
-                onClick={() => setChosen(plan.id)}
-                className={`flex items-center justify-between rounded-lg border px-3 py-2.5 text-left transition-colors ${
-                  active ? 'border-ember bg-ember-soft' : 'border-line-2 hover:bg-secondary'
-                }`}
-              >
-                <span>
-                  <span className="text-[13.5px] font-medium text-ink">{plan.name}</span>
-                  <span className="ml-2 text-[12px] text-muted-foreground">{int(plan.tokens)} tokens por mes</span>
-                  {plan.id === current && <span className="ml-2 text-[11px] text-ember-2">actual</span>}
-                </span>
-                <span className="flex items-center gap-2 text-right text-[13.5px] font-semibold text-ink">
-                  <span>
-                    {usd(plan.priceUsd)}
-                    {plan.costUsd !== undefined && (
-                      <span className="block text-[11px] font-normal text-muted-foreground">
-                        costo {usd(plan.costUsd)}
-                      </span>
-                    )}
-                  </span>
-                  {active && <Check className="size-4 text-ember-2" />}
-                </span>
-              </button>
-            )
-          })}
-          {plans.length === 0 && (
-            <p className="text-[13px] text-muted-foreground">La organización todavía no tiene planes para ofrecer.</p>
-          )}
-        </div>
-        <div className="flex justify-end gap-2">
-          <Button type="button" variant="outline" onClick={onClose} className="border-line-2">
-            Cancelar
-          </Button>
-          <Button
-            type="button"
-            disabled={pending || selected === null || selected === current}
-            onClick={() => selected !== null && onConfirm(selected)}
-          >
-            {pending && <Loader2 className="size-4 animate-spin" />}
-            Cambiar
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
   )
 }
 
@@ -377,7 +267,7 @@ function PlansTab() {
     if (!retiring) return
     removePlan.mutate(retiring.id, {
       onSuccess: () => {
-        toast.success('Plan retirado; sus números pasan al plan más chico')
+        toast.success('Plan retirado')
         setRetiring(null)
       },
       onError: error => failed(error, 'No se pudo retirar el plan'),
@@ -390,9 +280,9 @@ function PlansTab() {
     <>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <p className="max-w-xl text-[13px] text-muted-foreground">
-          Los planes que tus productores pueden elegir. Cada token te cuesta {usd(unitPriceUsd)}; vos decidís los
-          tamaños y el precio, siempre por encima del costo. Pasado el plan más grande, el mes se cobra de 1.000 en
-          1.000.
+          Nadie elige el plan: cada mes, cada número queda en el plan más chico que cubre los mensajes que envió y sube
+          si envía más. Cada token te cuesta {usd(unitPriceUsd)}; vos decidís los tamaños y el precio, siempre por
+          encima del costo. Pasado el plan más grande, el mes se cobra de 1.000 en 1.000.
         </p>
         <Button type="button" size="sm" onClick={() => setCreating(true)} className="h-9 text-[12.5px]">
           <Plus className="size-4" />
@@ -409,7 +299,6 @@ function PlansTab() {
               <TableHead className={`text-right ${head}`}>Costo</TableHead>
               <TableHead className={`text-right ${head}`}>Precio</TableHead>
               <TableHead className={`hidden text-right sm:table-cell ${head}`}>Margen</TableHead>
-              <TableHead className={`hidden text-right sm:table-cell ${head}`}>Números</TableHead>
               <TableHead className={head}>Estado</TableHead>
               <TableHead className={`pr-5 text-right ${head}`}>Acciones</TableHead>
             </TableRow>
@@ -421,7 +310,7 @@ function PlansTab() {
                   <TableCell className="pl-5">
                     <Skeleton className="h-4 w-28" />
                   </TableCell>
-                  {Array.from({ length: 6 }).map((_, j) => (
+                  {Array.from({ length: 5 }).map((_, j) => (
                     <TableCell key={j}>
                       <Skeleton className="ml-auto h-4 w-12" />
                     </TableCell>
@@ -433,7 +322,7 @@ function PlansTab() {
               ))}
             {!isLoading && plans.length === 0 && (
               <TableRow>
-                <TableCell colSpan={8} className="py-12 text-center text-[14px] text-muted-foreground">
+                <TableCell colSpan={7} className="py-12 text-center text-[14px] text-muted-foreground">
                   Todavía no hay planes. Creá el primero.
                 </TableCell>
               </TableRow>
@@ -453,9 +342,6 @@ function PlansTab() {
                 >
                   {plan.marginUsd !== undefined ? usd(plan.marginUsd) : '—'}
                 </TableCell>
-                <TableCell className="hidden text-right text-[13px] text-ink-3 sm:table-cell">
-                  {int(plan.numbersOnPlan)}
-                </TableCell>
                 <TableCell>
                   <button
                     type="button"
@@ -466,7 +352,7 @@ function PlansTab() {
                         : 'border-line-2 bg-secondary text-muted-foreground'
                     }`}
                   >
-                    {plan.isActive ? 'Se ofrece' : 'Oculto'}
+                    {plan.isActive ? 'Activo' : 'Apagado'}
                   </button>
                 </TableCell>
                 <TableCell className="pr-4 text-right">
@@ -519,9 +405,8 @@ function PlansTab() {
           <AlertDialogHeader>
             <AlertDialogTitle>Retirar el plan {retiring?.name}</AlertDialogTitle>
             <AlertDialogDescription>
-              {retiring && retiring.numbersOnPlan > 0
-                ? `${int(retiring.numbersOnPlan)} ${retiring.numbersOnPlan === 1 ? 'número pasa' : 'números pasan'} al plan más chico del catálogo.`
-                : 'Deja de ofrecerse. Podés volver a crearlo cuando quieras.'}
+              Deja de usarse: desde ahora los números se ubican en los planes que quedan. Podés volver a crearlo cuando
+              quieras.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -543,9 +428,7 @@ type BillingTab = 'consumo' | 'planes'
 export function FacturacionView() {
   const { isSuperAdmin, isAdmin, isLoading: roleLoading } = useRole()
   const [tab, setTab] = useState<BillingTab>('consumo')
-  const [changing, setChanging] = useState<BillingNumber | null>(null)
   const { data, isLoading, isError } = useBillingOverview()
-  const { setNumberPlan } = useBillingActions()
 
   if (!roleLoading && !isSuperAdmin && !isAdmin) {
     return (
@@ -556,20 +439,7 @@ export function FacturacionView() {
   }
 
   const numbers = data?.numbers ?? []
-  const showsCost = data?.totalCostUsd !== undefined
-  const changePlan = (planId: number) => {
-    if (!changing) return
-    setNumberPlan.mutate(
-      { numberId: changing.id, planId },
-      {
-        onSuccess: () => {
-          toast.success('Plan cambiado para este mes')
-          setChanging(null)
-        },
-        onError: error => failed(error, 'No se pudo cambiar el plan'),
-      },
-    )
-  }
+  const showsCost = data?.plans.some(plan => plan.costUsd !== undefined) ?? false
 
   return (
     <div className="mx-auto w-full max-w-6xl px-5 py-8 md:px-8 md:py-10">
@@ -578,7 +448,8 @@ export function FacturacionView() {
           <div className="text-[10.5px] font-medium uppercase tracking-[0.3em] text-ember-2">Planes y consumo</div>
           <h1 className="mt-2 font-display text-[clamp(26px,3.5vw,36px)] tracking-[-0.035em] text-ink">Facturación</h1>
           <p className="mt-1.5 text-[14px] text-muted-foreground">
-            1 token = 1 mensaje que envía el asistente o la oficina por WhatsApp. Se factura a mes vencido
+            1 token = 1 mensaje que envía el asistente o la oficina por WhatsApp. Cada número queda en el plan que
+            cubren sus mensajes del mes y se factura a mes vencido
             {showsCost && data ? ` · cada token te cuesta ${usd(data.unitPriceUsd)}` : ''}.
           </p>
         </div>
@@ -613,7 +484,7 @@ export function FacturacionView() {
           {numbers.length > 0 && (
             <div className="grid gap-3 md:grid-cols-2">
               {numbers.map(row => (
-                <NumberCard key={row.id} row={row} onChangePlan={() => setChanging(row)} />
+                <NumberCard key={row.id} row={row} />
               ))}
             </div>
           )}
@@ -624,14 +495,6 @@ export function FacturacionView() {
           )}
         </>
       )}
-
-      <ChangePlanDialog
-        row={changing}
-        plans={data?.plans ?? []}
-        pending={setNumberPlan.isPending}
-        onConfirm={changePlan}
-        onClose={() => setChanging(null)}
-      />
     </div>
   )
 }

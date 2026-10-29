@@ -30,7 +30,7 @@ export function useTokenPlans(enabled = true) {
   })
 }
 
-/** Catalog changes and plan moves; the overview and the catalog refresh after each. */
+/** Catalog changes; the overview and the catalog refresh after each. */
 export function useBillingActions() {
   const { token } = useAuth()
   const queryClient = useQueryClient()
@@ -55,11 +55,5 @@ export function useBillingActions() {
     onSuccess: refresh,
   })
 
-  const setNumberPlan = useMutation({
-    mutationFn: ({ numberId, planId }: { numberId: number; planId: number | null }) =>
-      billingService.setNumberPlan(token as string, numberId, planId),
-    onSuccess: refresh,
-  })
-
-  return { createPlan, updatePlan, removePlan, setNumberPlan }
+  return { createPlan, updatePlan, removePlan }
 }

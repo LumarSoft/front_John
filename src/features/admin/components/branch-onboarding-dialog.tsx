@@ -10,26 +10,21 @@ import { Input } from '@/src/components/ui/input'
 import { Label } from '@/src/components/ui/label'
 import { ApiError } from '@/src/lib/api-client'
 import { QUERY_KEYS } from '@/src/lib/query-keys'
-import type { TokenPlanOption } from '@/src/types/api/billing'
 import type { ProducerCodeOption } from '@/src/types/api/users'
 import type { OnboardWhatsappResponse } from '@/src/types/api/whatsapp-onboarding'
-import { useBillingActions, useTokenPlans } from '../hooks/use-billing'
 import { useCreateProducerCode } from '../hooks/use-create-producer-code'
 import { useCreateUser } from '../hooks/use-create-user'
 import { ConectarWhatsapp } from './conectar-whatsapp'
 import { NumberAssistantSheet } from './number-assistant-sheet'
 
-type Step = 'branch' | 'user' | 'number' | 'assistant' | 'plan' | 'done'
+type Step = 'branch' | 'user' | 'number' | 'assistant' | 'done'
 
 const STEPS: { key: Step; label: string }[] = [
   { key: 'branch', label: 'Sucursal' },
   { key: 'user', label: 'Usuario' },
   { key: 'number', label: 'WhatsApp' },
   { key: 'assistant', label: 'Asistente' },
-  { key: 'plan', label: 'Plan' },
 ]
-
-const usd = (n: number) => `USD ${n.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
 
 function failed(error: unknown, fallback: string) {
   toast.error(error instanceof ApiError && error.status < 500 ? error.message : fallback)
@@ -239,8 +234,8 @@ function AssistantStep({ numberId, onNext }: { numberId: number; onNext: () => v
     <div className="flex flex-col gap-4">
       <p className="text-[13px] text-muted-foreground">
         Cómo atiende el bot en este número: su nombre, las personas de la oficina a las que los clientes pueden
-        escribir, el horario, los datos que da (grúa, denuncias, cuenta para transferir, dónde pagar) y qué coberturas
-        ofrece. Lo que no completes toma lo de la organización.
+        escribir, el horario y los feriados, los datos que da (grúa, denuncias, cuenta para transferir, dónde pagar) y
+        qué coberturas ofrece. Lo que no completes toma lo de la organización.
       </p>
       <div className="flex flex-wrap items-center gap-3">
         <Button
@@ -280,81 +275,19 @@ function AssistantStep({ numberId, onNext }: { numberId: number; onNext: () => v
   )
 }
 
-function PlanStep({ numberId, onDone }: { numberId: number; onDone: (plan: TokenPlanOption | null) => void }) {
-  const { data } = useTokenPlans()
-  const { setNumberPlan } = useBillingActions()
-  const [chosen, setChosen] = useState<number | null>(null)
-  const plans = (data?.plans ?? []).filter(p => p.isActive)
-  const confirm = () => {
-    const plan = plans.find(p => p.id === chosen) ?? null
-    if (!plan) return onDone(null)
-    setNumberPlan.mutate(
-      { numberId, planId: plan.id },
-      { onSuccess: () => onDone(plan), onError: error => failed(error, 'No se pudo asignar el plan') },
-    )
-  }
-  return (
-    <div className="flex flex-col gap-4">
-      <p className="text-[13px] text-muted-foreground">
-        El plan de tokens del número (1 token = 1 mensaje enviado). Sin elegir, queda en el más chico del catálogo.
-      </p>
-      <div className="flex flex-col gap-2">
-        {plans.map(plan => {
-          const active = chosen === plan.id
-          return (
-            <button
-              key={plan.id}
-              type="button"
-              onClick={() => setChosen(plan.id)}
-              className={`flex items-center justify-between rounded-lg border px-3 py-2.5 text-left transition-colors ${
-                active ? 'border-ember bg-ember-soft' : 'border-line-2 hover:bg-secondary'
-              }`}
-            >
-              <span>
-                <span className="text-[13.5px] font-medium text-ink">{plan.name}</span>
-                <span className="ml-2 text-[12px] text-muted-foreground">
-                  {plan.tokens.toLocaleString('es-AR')} tokens por mes
-                </span>
-              </span>
-              <span className="flex items-center gap-2 text-[13.5px] font-semibold text-ink">
-                {usd(plan.priceUsd)}
-                {active && <Check className="size-4 text-ember-2" />}
-              </span>
-            </button>
-          )
-        })}
-        {plans.length === 0 && (
-          <p className="text-[13px] text-muted-foreground">
-            No hay planes en el catálogo: se arman en Facturación → Planes.
-          </p>
-        )}
-      </div>
-      <div className="flex justify-end gap-2">
-        <Button type="button" variant="outline" onClick={() => onDone(null)} className="border-line-2">
-          Después
-        </Button>
-        <Button type="button" disabled={chosen === null || setNumberPlan.isPending} onClick={confirm}>
-          {setNumberPlan.isPending && <Loader2 className="size-4 animate-spin" />}
-          Asignar plan
-        </Button>
-      </div>
-    </div>
-  )
-}
-
 // ─── Dialog ──────────────────────────────────────────────────────────────────────
 
 interface Summary {
   code: ProducerCodeOption | null
   email: string | null
   number: OnboardWhatsappResponse | null
-  plan: TokenPlanOption | null
 }
 
 /**
  * The onboarding of a new branch: its code, its administrator, its WhatsApp
- * number, how the bot attends on it and its token plan, one step at a time.
- * Every step is saved as it goes, so closing early leaves what was done.
+ * number and how the bot attends on it, one step at a time. Every step is
+ * saved as it goes, so closing early leaves what was done. There is no plan to
+ * choose: each month the number's messages place it on its token plan.
  */
 export function BranchOnboardingDialog({
   open,
@@ -365,11 +298,11 @@ export function BranchOnboardingDialog({
 }) {
   const queryClient = useQueryClient()
   const [step, setStep] = useState<Step>('branch')
-  const [summary, setSummary] = useState<Summary>({ code: null, email: null, number: null, plan: null })
+  const [summary, setSummary] = useState<Summary>({ code: null, email: null, number: null })
 
   const reset = () => {
     setStep('branch')
-    setSummary({ code: null, email: null, number: null, plan: null })
+    setSummary({ code: null, email: null, number: null })
   }
   const close = () => {
     void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.admin.phoneNumbers })
@@ -383,7 +316,6 @@ export function BranchOnboardingDialog({
     user: 'Su administrador',
     number: 'Su número de WhatsApp',
     assistant: 'Cómo atiende el bot',
-    plan: 'Su plan de tokens',
     done: 'Sucursal lista',
   }
 
@@ -427,16 +359,7 @@ export function BranchOnboardingDialog({
           />
         )}
         {open && step === 'assistant' && summary.number && (
-          <AssistantStep numberId={summary.number.phoneNumberId} onNext={() => setStep('plan')} />
-        )}
-        {open && step === 'plan' && summary.number && (
-          <PlanStep
-            numberId={summary.number.phoneNumberId}
-            onDone={plan => {
-              setSummary(s => ({ ...s, plan }))
-              setStep('done')
-            }}
-          />
+          <AssistantStep numberId={summary.number.phoneNumberId} onNext={() => setStep('done')} />
         )}
         {open && step === 'done' && (
           <div className="flex flex-col gap-4">
@@ -457,14 +380,12 @@ export function BranchOnboardingDialog({
                 />
                 {summary.number ? 'Número de WhatsApp conectado' : 'Número de WhatsApp: pendiente (Números → Conectar)'}
               </li>
-              <li className="flex items-center gap-2 text-ink">
-                <CreditCard
-                  className={`size-4 ${summary.plan ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground'}`}
-                />
-                {summary.plan
-                  ? `Plan ${summary.plan.name} · ${usd(summary.plan.priceUsd)} por mes`
-                  : 'Plan: el más chico del catálogo'}
-              </li>
+              {summary.number && (
+                <li className="flex items-center gap-2 text-ink">
+                  <CreditCard className="size-4 text-muted-foreground" />
+                  Plan de tokens: cada mes queda en el que cubren sus mensajes
+                </li>
+              )}
             </ul>
             <p className="text-[12.5px] text-muted-foreground">
               Todo se puede ajustar después desde Usuarios, Números y Facturación.

@@ -58,7 +58,7 @@ export function InboxList({ conversations, selectedId, onSelect, onDelete }: Pro
         const name = contactDisplayName(conv)
         const isSelected = selectedId === conv.id
         const isUnread = conv.unreadCount > 0
-        const taken = conv.botPaused || conv.globalBotDisabled || !!conv.numberBotDisabled
+        const taken = conv.botPaused || !!conv.numberBotDisabled
 
         return (
           <li key={conv.id} className="group relative">
@@ -82,9 +82,9 @@ export function InboxList({ conversations, selectedId, onSelect, onDelete }: Pro
                     {taken ? (
                       <Headset
                         className="size-3.5 text-(--wa-green-dark)"
-                        aria-label={conv.botPaused ? 'Tomada por una persona' : 'Atención humana global'}
+                        aria-label={conv.botPaused ? 'Tomada por una persona' : 'Bot apagado en este número'}
                       >
-                        <title>{conv.botPaused ? 'Tomada por una persona' : 'Atención humana global'}</title>
+                        <title>{conv.botPaused ? 'Tomada por una persona' : 'Bot apagado en este número'}</title>
                       </Headset>
                     ) : (
                       conv.status === 'pending' && (
