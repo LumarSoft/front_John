@@ -15,6 +15,17 @@ export function useOrganizationTriunfo(organizationId: number) {
   })
 }
 
+/** OWNER: the organization's failed calls to Triunfo, latest first. */
+export function useOrganizationTriunfoErrors(organizationId: number) {
+  const { token } = useAuth()
+
+  return useQuery({
+    queryKey: QUERY_KEYS.owner.organizationTriunfoErrors(organizationId),
+    queryFn: () => ownerTriunfoService.errors(token as string, organizationId),
+    enabled: !!token,
+  })
+}
+
 export function useOrganizationTriunfoActions(organizationId: number) {
   const { token } = useAuth()
   const queryClient = useQueryClient()

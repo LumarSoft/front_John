@@ -65,11 +65,13 @@ export const QUERY_KEYS = {
     rejectionsAll: ['admin', 'rejections'] as const,
     rejectionImports: ['admin', 'rejections', 'list'] as const,
     rejectionImport: (id: number) => ['admin', 'rejections', 'detail', id] as const,
+    triunfoStatus: ['admin', 'triunfo', 'status'] as const,
   },
   owner: {
     organizations: ['owner', 'organizations'] as const,
     organization: (id: number) => ['owner', 'organizations', id] as const,
     organizationTriunfo: (id: number) => ['owner', 'organizations', id, 'triunfo'] as const,
+    organizationTriunfoErrors: (id: number) => ['owner', 'organizations', id, 'triunfo', 'errors'] as const,
     improvementsAll: ['owner', 'improvements'] as const,
     improvements: (params?: OwnerImprovementsQuery) => ['owner', 'improvements', 'list', params ?? {}] as const,
     proposalsAll: ['owner', 'improvement-proposals'] as const,

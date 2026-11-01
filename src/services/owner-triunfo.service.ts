@@ -1,5 +1,5 @@
 import { apiRequest } from '@/src/lib/api-client'
-import type { SaveTriunfoCredentialRequest, TriunfoCredentialStatus } from '@/src/types/api/triunfo'
+import type { SaveTriunfoCredentialRequest, TriunfoCredentialStatus, TriunfoErrorRow } from '@/src/types/api/triunfo'
 
 /** OWNER: each organization's own Triunfo web-service access. */
 export const ownerTriunfoService = {
@@ -18,4 +18,7 @@ export const ownerTriunfoService = {
       method: 'DELETE',
       token,
     }),
+
+  errors: (token: string, organizationId: number): Promise<TriunfoErrorRow[]> =>
+    apiRequest<TriunfoErrorRow[]>(`/owner/organizations/${organizationId}/triunfo/errors`, { token }),
 }
