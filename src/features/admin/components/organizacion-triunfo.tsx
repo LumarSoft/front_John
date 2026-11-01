@@ -11,6 +11,7 @@ import { Skeleton } from '@/src/components/ui/skeleton'
 import { ApiError } from '@/src/lib/api-client'
 import type { TriunfoCredentialStatus } from '@/src/types/api/triunfo'
 import { useOrganizationTriunfo, useOrganizationTriunfoActions } from '../hooks/use-organization-triunfo'
+import { formatDayTime } from '../lib/triunfo-errors'
 
 function statusLine(status: TriunfoCredentialStatus): { ok: boolean; text: string } {
   if (status.configured) {
@@ -56,19 +57,37 @@ export function OrganizacionTriunfo({ orgId }: { orgId: number }) {
 
   if (isLoading || !status) return <Skeleton className="h-40" />
   const line = statusLine(status)
+  // Configured is not working: no green check while Triunfo refuses them.
+  const healthy = line.ok && !status.failingSince
 
   return (
     <section className="flex flex-col gap-3">
       <h2 className="text-[15px] font-semibold text-ink">Integración con Triunfo</h2>
       <Card className="flex flex-col gap-5 p-5">
         <p className={`flex items-start gap-2 text-[13px] ${line.ok ? 'text-muted-foreground' : 'text-destructive'}`}>
-          {line.ok ? (
+          {healthy ? (
             <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
-          ) : (
+          ) : line.ok ? null : (
             <TriangleAlert className="mt-0.5 size-4 shrink-0" />
           )}
           {line.text}
         </p>
+
+        {status.failingSince && (
+          <p
+            role="alert"
+            className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-[13px] text-red-900 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-200"
+          >
+            <TriangleAlert className="mt-0.5 size-4 shrink-0" />
+            <span>
+              <span className="font-semibold">
+                Triunfo rechaza estas credenciales desde el {formatDayTime(status.failingSince)}
+              </span>
+              {status.failureMessage ? `: «${status.failureMessage}»` : ''}. Probablemente cambiaron la contraseña en
+              TriunfoNet: cargá la nueva acá abajo y todo vuelve a andar.
+            </span>
+          </p>
+        )}
 
         <form onSubmit={submit} className="flex flex-wrap items-end gap-2">
           <div className="flex flex-col gap-1">

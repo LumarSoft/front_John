@@ -86,6 +86,8 @@ export function NovedadesView() {
 
   const handleOpen = (matter: NovedadItem) => {
     if (!matter.readAt) markRead.mutate(matter.id, { onError: () => toast.error('No se pudo marcar como leído') })
+    // A Triunfo outage has nothing to open: the notice says it all and resolves itself when it ends.
+    if (matter.type === 'triunfo') return
     if (matter.type === 'siniestro') setSelectedSiniestroId(matter.refId)
     else if (matter.type === 'handoff' || matter.type === 'baja_poliza')
       router.push(inboxConversationHref(matter.refId))
@@ -286,9 +288,11 @@ export function NovedadesView() {
                       </option>
                     ))}
                   </select>
-                  <Button size="sm" variant="outline" onClick={() => handleOpen(matter)}>
-                    {matter.type === 'handoff' || matter.type === 'baja_poliza' ? 'Ver chat' : 'Ver detalle'}
-                  </Button>
+                  {matter.type !== 'triunfo' && (
+                    <Button size="sm" variant="outline" onClick={() => handleOpen(matter)}>
+                      {matter.type === 'handoff' || matter.type === 'baja_poliza' ? 'Ver chat' : 'Ver detalle'}
+                    </Button>
+                  )}
                 </div>
               </li>
             ))}

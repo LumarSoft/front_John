@@ -1,4 +1,4 @@
-export type NovedadType = 'siniestro' | 'handoff' | 'baja_poliza' | 'lead' | 'solicitud'
+export type NovedadType = 'siniestro' | 'handoff' | 'baja_poliza' | 'lead' | 'solicitud' | 'plan' | 'triunfo'
 
 export interface NovedadClient {
   id: number

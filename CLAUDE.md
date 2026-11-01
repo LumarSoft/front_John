@@ -84,7 +84,7 @@ Flat config only (`eslint.config.mjs`). No `.eslintrc.*` files.
 ## Multi-organization admin screens
 
 - Configuración → Asistente → "Datos de la productora" edits what the bot says for the organization (`/admin/config/profile`): its name, grúa and claims lines, transfer account, where to pay cash and the claims e-mail.
-- Organizaciones → detalle → "Integración con Triunfo" sets the organization's own Triunfo credentials (owner only, validated by Triunfo before they are saved).
+- Organizaciones → detalle → "Integración con Triunfo" sets the organization's own Triunfo credentials (owner only, validated by Triunfo before they are saved). It warns while Triunfo refuses them, and "Errores de Triunfo" below lists every distinct failed call. The office's panel shows a red banner (`TriunfoStatusBanner`) during that outage.
 - Panel branding per organization is not here: the admin panel is moving to its own SaaS app (see `PLAN-SAAS.md` at the repo root); the work is parked on branch `feat/panel-brand`.
 
 ## Admin panel themes

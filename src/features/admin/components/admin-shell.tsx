@@ -9,6 +9,7 @@ import { TooltipProvider } from '@/src/components/ui/tooltip'
 import { useAuth } from '../context/auth-context'
 import { useRole } from '../hooks/use-role'
 import { AppSidebar } from './app-sidebar'
+import { TriunfoStatusBanner } from './triunfo-status-banner'
 
 const TITLES: Record<string, string> = {
   '/admin': 'Inicio',
@@ -68,6 +69,8 @@ export function AdminShell({ children }: { children: ReactNode }) {
               <span className="font-display text-[14.5px] tracking-[-0.01em] text-ink">{title}</span>
             </header>
           )}
+          {/* The OWNER sees each organization's outage in Organizaciones instead. */}
+          <TriunfoStatusBanner enabled={!roleLoading && !isOwner} />
           <div className="flex flex-1 flex-col">{children}</div>
         </SidebarInset>
       </SidebarProvider>
