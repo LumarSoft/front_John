@@ -87,6 +87,14 @@ Flat config only (`eslint.config.mjs`). No `.eslintrc.*` files.
 - Organizaciones → detalle → "Integración con Triunfo" sets the organization's own Triunfo credentials (owner only, validated by Triunfo before they are saved). It warns while Triunfo refuses them, and "Errores de Triunfo" below lists every distinct failed call. The office's panel shows a red banner (`TriunfoStatusBanner`) during that outage.
 - Panel branding per organization is not here: the admin panel is moving to its own SaaS app (see `PLAN-SAAS.md` at the repo root); the work is parked on branch `feat/panel-brand`.
 
+## The admin panel lives in two repos: change both
+
+Polisend (`../polisend`, its `/admin`) is the panel every organization is moving to; this repo's `/admin` stays until JPMG's panel is switched off. Until then, **every change to the admin panel is made here and in Polisend, in the same task**, so both stay as level as possible: same screens, same endpoints, same behaviour. A change that lands in only one of them is half done.
+
+- Porting between them: imports use `@/src/` here and `@/` in Polisend; the rest of the panel code copies over as is.
+- What may differ, and only that: branding (JPMG here, Polisend there), copy that names who to ask for help ("Lumarsoft" here, "soporte de Polisend" there) and what each already does on its own (in Polisend the OWNER also sees Facturación and plan notices open it). If a change makes no sense in one of them, say so instead of silently leaving it out.
+- Polisend has no Prettier config: format its panel files with `prettier --single-quote --no-semi --print-width 120 --arrow-parens avoid`, never a bare `prettier --write`.
+
 ## Admin panel themes
 
 Each user picks light/dark/automatic and a palette in the user menu → "Apariencia" (stored per browser, `src/features/admin/lib/panel-theme.ts`). Only `/admin` gets `data-palette` and the `dark` class on `<html>`; the palettes are CSS at the end of `app/globals.css`. When building panel screens:
