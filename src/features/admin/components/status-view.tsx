@@ -1,7 +1,7 @@
 'use client'
 
 import type { ReactNode } from 'react'
-import { Activity, CircleCheck, Loader2, RefreshCw, TriangleAlert } from 'lucide-react'
+import { Activity, CircleCheck, Loader2, RefreshCw, ShieldCheck, Sparkles, TriangleAlert } from 'lucide-react'
 import { Button } from '@/src/components/ui/button'
 import { Card } from '@/src/components/ui/card'
 import { Skeleton } from '@/src/components/ui/skeleton'
@@ -15,8 +15,9 @@ import type {
   WhatsappNumberStatus,
 } from '@/src/types/api/status'
 import { useIntegrationStatus } from '../hooks/use-integration-status'
-import { useProfile } from '../hooks/use-profile'
+import { useRole } from '../hooks/use-role'
 import {
+  blameLabel,
   COMPONENT_COPY,
   diagnose,
   failingNames,
@@ -32,13 +33,28 @@ import {
 /**
  * How the services the panel and the bot depend on are answering: each of
  * Triunfo's web services, InfoAuto's catalogs and the WhatsApp numbers. When
- * one fails it says since when, what it answers and on whose side the problem
- * is, so the office can tell its clients it is not on our end.
+ * one fails it says since when, what it answers and, as the AI model reads it,
+ * what is failing and whose fault it is, so the office can tell its clients it
+ * is not on our end. Only the SuperAdmin (and the OWNER) sees it.
  */
 export function StatusView() {
-  const { data: profile } = useProfile()
-  const isOwner = profile?.role === 'OWNER'
-  const { data, isLoading, isError, refetch, isFetching } = useIntegrationStatus()
+  const { isOwner, isSuperAdmin, isLoading: roleLoading } = useRole()
+  const allowed = isOwner || isSuperAdmin
+  const { data, isLoading, isError, refetch, isFetching } = useIntegrationStatus({ enabled: allowed })
+
+  if (!roleLoading && !allowed) {
+    return (
+      <div className="mx-auto w-full max-w-5xl px-5 py-16 text-center md:px-8">
+        <div className="mx-auto flex max-w-md flex-col items-center gap-3">
+          <div className="flex size-12 items-center justify-center rounded-full bg-secondary text-muted-foreground">
+            <ShieldCheck className="size-5" />
+          </div>
+          <h1 className="font-display text-[22px] text-ink">Acceso restringido</h1>
+          <p className="text-[14px] text-muted-foreground">Solo un SuperAdmin puede ver el estado de los servicios.</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="mx-auto w-full max-w-[1200px] px-4 py-6 sm:px-6 lg:px-8">
@@ -59,7 +75,7 @@ export function StatusView() {
         </Button>
       </header>
 
-      {isLoading ? (
+      {isLoading || roleLoading ? (
         <div className="flex flex-col gap-4">
           <Skeleton className="h-16 rounded-xl" />
           <Skeleton className="h-64 rounded-xl" />
@@ -239,8 +255,24 @@ function IncidentDetail({
 }) {
   const copy = COMPONENT_COPY[incident.key]
   const diagnosis = diagnose(copy.provider, incident)
+  const explanation = incident.explanation
   return (
-    <ProblemBox title={diagnosis.title} detail={diagnosis.detail}>
+    <ProblemBox
+      title={diagnosis.title}
+      detail={explanation?.text ?? diagnosis.detail}
+      aside={
+        explanation && (
+          <span className="rounded-full bg-red-100 px-2 py-0.5 text-[11.5px] font-semibold whitespace-nowrap dark:bg-red-900/50">
+            Responsable: {blameLabel(explanation.blame, copy.provider)}
+          </span>
+        )
+      }
+    >
+      {explanation && (
+        <p className="mt-1 flex items-center gap-1 text-[11.5px] opacity-75">
+          <Sparkles className="size-3" /> Explicado por IA {formatWhen(explanation.at)}
+        </p>
+      )}
       {incident.answer && (
         <p className="mt-2">
           <span className="font-medium">Qué responde {copy.provider}:</span> «{incident.answer}»
@@ -251,7 +283,7 @@ function IncidentDetail({
           {formatWhen(incident.startedAt)} ({formatDuration(incident.startedAt, null)}) ·{' '}
           {failuresLabel(incident.failures)}, el último {formatWhen(incident.lastFailureAt)}
         </Fact>
-        <Fact label="Origen del problema">{diagnosis.origin}</Fact>
+        <Fact label="Responsable">{explanation?.blameReason || diagnosis.origin}</Fact>
         <Fact label="Qué afecta">{copy.impact}</Fact>
         <Fact label="Para que vuelva a andar">{diagnosis.resolution}</Fact>
       </dl>
@@ -271,10 +303,23 @@ function IncidentDetail({
   )
 }
 
-function ProblemBox({ title, detail, children }: { title: string; detail: string; children?: ReactNode }) {
+function ProblemBox({
+  title,
+  detail,
+  aside,
+  children,
+}: {
+  title: string
+  detail: string
+  aside?: ReactNode
+  children?: ReactNode
+}) {
   return (
     <div className="mt-3 rounded-lg border border-red-200 bg-red-50 p-3 text-[13px] text-red-900 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-200">
-      <p className="font-semibold">{title}</p>
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <p className="font-semibold">{title}</p>
+        {aside}
+      </div>
       <p className="mt-1">{detail}</p>
       {children}
     </div>
@@ -396,6 +441,9 @@ function History({ incidents }: { incidents: IntegrationIncident[] }) {
                       {diagnose(copy.provider, incident).title}
                       {incident.httpStatus ? ` (error ${incident.httpStatus})` : ''} ·{' '}
                       {failuresLabel(incident.failures)}
+                      {incident.explanation
+                        ? ` · Responsable: ${blameLabel(incident.explanation.blame, copy.provider)}`
+                        : ''}
                     </p>
                   </div>
                   <p className="text-[12px] text-muted-foreground tabular-nums">
