@@ -46,6 +46,13 @@ export interface AdminPolizaSummary {
   vehicle: AdminVehiculo | null
 }
 
+/** The Triunfo código de productor a client or a policy belongs to. */
+export interface AdminProducerCode {
+  id: number
+  code: string
+  holderName: string | null
+}
+
 export interface AdminPolizaDetail {
   id: number
   certificateNumber: string
@@ -60,6 +67,8 @@ export interface AdminPolizaDetail {
   paymentMethod: string | null
   /** What the API calls a non-vehicle policy ("Acc. personales", "Sepelio"…); null for vehicles. */
   product?: string | null
+  /** The code Triunfo lists the policy under now; a client's policies can span several. */
+  producerCode?: AdminProducerCode | null
   vehicle: AdminVehiculoDetail | null
   installments: AdminCuota[]
 }
@@ -100,6 +109,8 @@ export interface AdminClientDetail {
   city: string | null
   dni: string
   createdAt: string
+  /** The code the client first came in under. */
+  producerCode?: AdminProducerCode | null
   policies: AdminPolizaDetail[]
 }
 

@@ -1,5 +1,11 @@
 import { Car, Home, LifeBuoy, Shield, Store } from 'lucide-react'
-import type { AdminPolizaSummary, EstadoVigencia, RiskType } from '@/src/types/api/clients'
+import type {
+  AdminClientDetail,
+  AdminPolizaSummary,
+  AdminProducerCode,
+  EstadoVigencia,
+  RiskType,
+} from '@/src/types/api/clients'
 
 export const RISK_LABELS: Record<RiskType, string> = {
   auto: 'Automotor',
@@ -137,6 +143,23 @@ export function formatCurrency(amount: string | null | undefined): string {
     currency: 'ARS',
     maximumFractionDigits: 0,
   }).format(parseFloat(amount))
+}
+
+/** "8074 · PELLEGRINI JOHN": a código de productor as the panel names it everywhere. */
+export function producerCodeLabel(producerCode: AdminProducerCode): string {
+  return producerCode.holderName ? `${producerCode.code} · ${producerCode.holderName}` : producerCode.code
+}
+
+/**
+ * The producers a client's cartera belongs to: the codes of its policies, the client's own first, or the
+ * code the client came in under when it has no policies.
+ */
+export function clientProducers(client: AdminClientDetail): AdminProducerCode[] {
+  const own = client.producerCode ?? null
+  const byId = new Map<number, AdminProducerCode>()
+  for (const p of client.policies) if (p.producerCode) byId.set(p.producerCode.id, p.producerCode)
+  if (byId.size === 0) return own ? [own] : []
+  return [...byId.values()].sort((a, b) => Number(b.id === own?.id) - Number(a.id === own?.id))
 }
 
 export function initials(firstName: string, lastName: string): string {
