@@ -1,7 +1,7 @@
 'use client'
 
 import type { ReactNode } from 'react'
-import { Activity, CircleCheck, Loader2, RefreshCw, ShieldCheck, Sparkles, TriangleAlert } from 'lucide-react'
+import { Activity, CircleCheck, Loader2, RefreshCw, Sparkles, TriangleAlert } from 'lucide-react'
 import { Button } from '@/src/components/ui/button'
 import { Card } from '@/src/components/ui/card'
 import { Skeleton } from '@/src/components/ui/skeleton'
@@ -15,7 +15,7 @@ import type {
   WhatsappNumberStatus,
 } from '@/src/types/api/status'
 import { useIntegrationStatus } from '../hooks/use-integration-status'
-import { useRole } from '../hooks/use-role'
+import { useProfile } from '../hooks/use-profile'
 import {
   blameLabel,
   COMPONENT_COPY,
@@ -35,26 +35,12 @@ import {
  * Triunfo's web services, InfoAuto's catalogs and the WhatsApp numbers. When
  * one fails it says since when, what it answers and, as the AI model reads it,
  * what is failing and whose fault it is, so the office can tell its clients it
- * is not on our end. Only the SuperAdmin (and the OWNER) sees it.
+ * is not on our end. Everyone in the office sees it.
  */
 export function StatusView() {
-  const { isOwner, isSuperAdmin, isLoading: roleLoading } = useRole()
-  const allowed = isOwner || isSuperAdmin
-  const { data, isLoading, isError, refetch, isFetching } = useIntegrationStatus({ enabled: allowed })
-
-  if (!roleLoading && !allowed) {
-    return (
-      <div className="mx-auto w-full max-w-5xl px-5 py-16 text-center md:px-8">
-        <div className="mx-auto flex max-w-md flex-col items-center gap-3">
-          <div className="flex size-12 items-center justify-center rounded-full bg-secondary text-muted-foreground">
-            <ShieldCheck className="size-5" />
-          </div>
-          <h1 className="font-display text-[22px] text-ink">Acceso restringido</h1>
-          <p className="text-[14px] text-muted-foreground">Solo un SuperAdmin puede ver el estado de los servicios.</p>
-        </div>
-      </div>
-    )
-  }
+  const { data: profile } = useProfile()
+  const isOwner = profile?.role === 'OWNER'
+  const { data, isLoading, isError, refetch, isFetching } = useIntegrationStatus()
 
   return (
     <div className="mx-auto w-full max-w-[1200px] px-4 py-6 sm:px-6 lg:px-8">
@@ -75,7 +61,7 @@ export function StatusView() {
         </Button>
       </header>
 
-      {isLoading || roleLoading ? (
+      {isLoading ? (
         <div className="flex flex-col gap-4">
           <Skeleton className="h-16 rounded-xl" />
           <Skeleton className="h-64 rounded-xl" />
