@@ -23,9 +23,10 @@ const TITLES: Record<string, string> = {
   '/admin/organizaciones': 'Organizaciones',
   '/admin/configuracion': 'Configuración',
   '/admin/mejoras': 'Mejoras',
+  '/admin/status': 'Status',
 }
 
-const OWNER_PATHS = ['/admin/organizaciones', '/admin/facturacion', '/admin/mejoras']
+const OWNER_PATHS = ['/admin/organizaciones', '/admin/facturacion', '/admin/mejoras', '/admin/status']
 
 export function AdminShell({ children }: { children: ReactNode }) {
   const router = useRouter()
@@ -37,7 +38,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
     if (hydrated && !isAuthenticated) router.replace('/admin/login')
   }, [hydrated, isAuthenticated, router])
 
-  // The OWNER's interface is "Organizaciones", "Facturación" and the "Mejoras" editor: keep it there.
+  // The OWNER's interface is "Organizaciones", "Facturación", the "Mejoras" editor and "Status": keep it there.
   useEffect(() => {
     if (!roleLoading && isOwner && !OWNER_PATHS.some(p => pathname.startsWith(p))) {
       router.replace('/admin/organizaciones')
