@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from 'react'
 import Link from 'next/link'
-import { Bot, Clock, KeyRound, Loader2, Mail, ShieldCheck, Smartphone, Tags, UserRound } from 'lucide-react'
+import { Bot, Clock, ImageIcon, KeyRound, Loader2, Mail, ShieldCheck, Smartphone, Tags, UserRound } from 'lucide-react'
 import { toast } from 'sonner'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/src/components/ui/card'
 import { Button } from '@/src/components/ui/button'
@@ -17,6 +17,9 @@ import { useUpdateProfile } from '../hooks/use-update-profile'
 import { useProducerConfig } from '../hooks/use-producer-config'
 import { useUpdateProducerConfig } from '../hooks/use-update-producer-config'
 import { useRole } from '../hooks/use-role'
+import { useOwnLogo } from '../hooks/use-organization-logo'
+import { usePanelBrand } from '../hooks/use-panel-brand'
+import { LogoUploader } from './logo-uploader'
 import { BotProfileSection } from './bot-profile-section'
 import { PricingPlansSection } from './pricing-plans-section'
 import { BusinessHoursSection } from './business-hours-section'
@@ -131,7 +134,7 @@ function SettingsForm({ initialEmail, initialName }: { initialEmail: string; ini
 }
 
 /** "Mili, Milagros" → ["Mili", "Milagros"]. */
-/** How the bot names the organization: "John Pellegrini Management Group (JPMG)". */
+/** How the bot names the organization: its name and an optional short name ("Seguros del Litoral (SDL)"). */
 interface OrgNaming {
   name: string
   shortName: string | null
@@ -265,10 +268,32 @@ function BotConfigForm({
 const TABS = [
   { value: 'cuenta', label: 'Cuenta', icon: UserRound },
   { value: 'asistente', label: 'Asistente', icon: Bot },
+  { value: 'marca', label: 'Logo', icon: ImageIcon },
   { value: 'horarios', label: 'Horarios', icon: Clock },
   { value: 'precios', label: 'Precios', icon: Tags },
   { value: 'coberturas', label: 'Coberturas', icon: ShieldCheck },
 ] as const
+
+/** The organization's logo: the panel's sidebar and the printable policy card. Only the SuperAdmin changes it. */
+function LogoCard({ canEdit }: { canEdit: boolean }) {
+  const brand = usePanelBrand()
+  const { upload, remove } = useOwnLogo()
+  return (
+    <Card className="max-w-xl border-line-2 shadow-sm">
+      <CardHeader>
+        <CardTitle className="font-display text-[18px]">Logo de la organización</CardTitle>
+        <CardDescription>
+          Se ve en el panel y en la credencial que se imprime para los asegurados. PNG, JPG o WebP de hasta 2 MB; se
+          guarda en un cuadrado. Sin logo se muestran las iniciales.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-3">
+        <LogoUploader brand={brand} upload={upload} remove={remove} canEdit={canEdit} />
+        {!canEdit && <SuperAdminOnlyNote />}
+      </CardContent>
+    </Card>
+  )
+}
 
 function FormSkeleton() {
   return (
@@ -337,6 +362,10 @@ export function SettingsView() {
           ) : (
             <FormSkeleton />
           )}
+        </TabsContent>
+
+        <TabsContent value="marca" className="mt-6">
+          <LogoCard canEdit={isSuperAdmin} />
         </TabsContent>
 
         <TabsContent value="horarios" className="mt-6">

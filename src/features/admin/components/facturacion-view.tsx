@@ -1,7 +1,17 @@
 'use client'
 
 import { useState } from 'react'
-import { Loader2, Pencil, Plus, Sparkles, Trash2, TrendingUp } from 'lucide-react'
+import {
+  ArrowUpRight,
+  ChevronDown,
+  ChevronRight,
+  Loader2,
+  Pencil,
+  Plus,
+  Sparkles,
+  Trash2,
+  TrendingUp,
+} from 'lucide-react'
 import { toast } from 'sonner'
 import {
   AlertDialog,
@@ -23,16 +33,49 @@ import { Skeleton } from '@/src/components/ui/skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/src/components/ui/table'
 import { Tabs, TabsList, TabsTrigger } from '@/src/components/ui/tabs'
 import { ApiError } from '@/src/lib/api-client'
-import type { BillingNumber, CatalogPlan } from '@/src/types/api/billing'
-import { useBillingActions, useBillingOverview, useTokenPlans } from '../hooks/use-billing'
+import type {
+  BillingNumber,
+  CatalogPlan,
+  OwnerBillingOrganization,
+  OwnerBillingTotals,
+  PlanOffer,
+} from '@/src/types/api/billing'
+import { useAssignPlan, useBillingOverview, useOwnerBilling, useOwnerPlans, usePlanActions } from '../hooks/use-billing'
 import { useRole } from '../hooks/use-role'
+import { PlanLimitActions } from './plan-limit-actions'
 
 const int = (n: number) => n.toLocaleString('es-AR')
 const usd = (n: number) => `USD ${n.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
-const round2 = (n: number) => Math.round(n * 100) / 100
+const price = (n: number) => (n === 0 ? 'Gratis' : usd(n))
+const day = (iso: string) => new Date(iso).toLocaleDateString('es-AR', { day: 'numeric', month: 'numeric' })
+
+const thisMonth = () => {
+  const now = new Date()
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+}
+
+const HEAD = 'text-[11px] uppercase tracking-[0.12em] text-faint'
 
 function failed(error: unknown, fallback: string) {
   toast.error(error instanceof ApiError && error.status < 500 ? error.message : fallback)
+}
+
+function MonthPicker({ value, onChange }: { value: string; onChange: (period: string) => void }) {
+  return (
+    <div>
+      <Label htmlFor="billing-period">Mes</Label>
+      <Input
+        id="billing-period"
+        type="month"
+        value={value}
+        max={thisMonth()}
+        onChange={event => {
+          if (event.target.value) onChange(event.target.value)
+        }}
+        className="mt-1 w-48"
+      />
+    </div>
+  )
 }
 
 // ─── Consumption bar ──────────────────────────────────────────────────────────
@@ -50,22 +93,63 @@ function ConsumptionBar({ row }: { row: BillingNumber }) {
       </div>
       <div className="mt-1.5 flex flex-wrap items-baseline justify-between gap-x-3 text-[12px]">
         <span className="text-ink-3">
-          <span className="font-semibold text-ink">{int(row.tokensUsed)}</span> de {int(row.includedTokens)} tokens
-          {row.trialTokens > 0 && <span className="text-muted-foreground"> · {int(row.trialTokens)} de prueba</span>}
+          <span className="font-semibold text-ink">{int(row.messagesUsed)}</span> de {int(row.includedMessages)}{' '}
+          mensajes
         </span>
-        <span className="text-muted-foreground">quedan {int(row.remainingTokens)}</span>
+        <span className="text-muted-foreground">quedan {int(row.remainingMessages)}</span>
       </div>
     </div>
   )
 }
 
-// ─── Number card ───────────────────────────────────────────────────────────────
+// ─── Number card (admin and SuperAdmin) ───────────────────────────────────────
 
-/** The plan its tokens put the number on this month; nobody chooses it. */
-function NumberCard({ row }: { row: BillingNumber }) {
+function PlanSelect({ row, plans }: { row: BillingNumber; plans: PlanOffer[] }) {
+  const assign = useAssignPlan()
+  const paid = plans.filter(plan => !plan.isTrial)
+  const current = row.assignedPlan?.trial ? '' : String(row.assignedPlan?.id ?? '')
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <Label htmlFor={`plan-${row.id}`} className="text-[11px] font-normal uppercase tracking-[0.12em] text-faint">
+        Plan asignado
+      </Label>
+      <div className="flex items-center gap-2">
+        {assign.isPending && <Loader2 className="size-3.5 animate-spin text-muted-foreground" />}
+        <select
+          id={`plan-${row.id}`}
+          value={current}
+          disabled={assign.isPending}
+          onChange={event => {
+            const planId = Number(event.target.value)
+            if (!planId) return
+            assign.mutate(
+              { numberId: row.id, planId },
+              {
+                onSuccess: () => toast.success('Plan asignado'),
+                onError: error => failed(error, 'No se pudo asignar el plan'),
+              },
+            )
+          }}
+          className="h-8 rounded-md border border-line-2 bg-paper px-2 text-[13px] text-ink outline-none focus-visible:ring-2 focus-visible:ring-ember-ring"
+        >
+          {current === '' && (
+            <option value="">{row.assignedPlan?.trial ? 'Prueba (primer mes)' : 'Elegí un plan'}</option>
+          )}
+          {paid.map(plan => (
+            <option key={plan.id} value={plan.id}>
+              {plan.name} · {int(plan.messages)} mensajes · {usd(plan.priceUsd)}
+            </option>
+          ))}
+        </select>
+      </div>
+    </div>
+  )
+}
+
+function NumberCard({ row, plans, canAssign }: { row: BillingNumber; plans: PlanOffer[]; canAssign: boolean }) {
   const planLabel = row.plan.trial
-    ? `Prueba · ${int(row.trialTokens)} tokens gratis`
-    : `${row.plan.name} · ${int(row.plan.includedTokens)} tokens · ${usd(row.plan.priceUsd)}`
+    ? `Prueba · ${int(row.plan.includedMessages)} mensajes gratis`
+    : `${row.plan.name} · ${int(row.plan.includedMessages)} mensajes · ${usd(row.plan.priceUsd)}`
   return (
     <Card className="flex flex-col gap-4 border-line-2 p-4 shadow-sm">
       <div className="min-w-0">
@@ -81,11 +165,18 @@ function NumberCard({ row }: { row: BillingNumber }) {
               <Sparkles className="size-3" /> Prueba
             </Badge>
           )}
+          {row.upgraded && (
+            <Badge className="bg-ember-soft text-[10.5px] text-ember-2">
+              <ArrowUpRight className="size-3" /> Subió de plan
+            </Badge>
+          )}
         </div>
         <div className="mt-0.5 text-[12px] text-muted-foreground">
           {row.responsibleCode ? `Productor ${row.responsibleCode.code}` : 'Sin productor responsable'}
         </div>
       </div>
+
+      {canAssign && <PlanSelect row={row} plans={plans} />}
 
       <div className="flex items-baseline justify-between gap-3">
         <span className="text-[11px] uppercase tracking-[0.12em] text-faint">Plan del mes</span>
@@ -94,61 +185,174 @@ function NumberCard({ row }: { row: BillingNumber }) {
 
       <ConsumptionBar row={row} />
 
-      <div className="flex items-start gap-1.5 border-t border-line-2 pt-3 text-[12.5px] text-muted-foreground">
-        <TrendingUp className="mt-0.5 size-3.5 shrink-0 text-ember-2" />
-        {row.nextPlan ? (
-          <span>
-            {row.plan.trial ? 'Pasados los tokens gratis' : `Pasados los ${int(row.includedTokens)} tokens`}, este mes
-            sube a <span className="font-medium text-ink">{row.nextPlan.name}</span> ({int(row.nextPlan.tokens)}{' '}
-            tokens).
+      <PlanLimitActions row={row} />
+
+      <div className="flex flex-col gap-1.5 border-t border-line-2 pt-3 text-[12.5px] text-muted-foreground">
+        {row.movedUpAt && (
+          <span className="flex items-start gap-1.5">
+            <ArrowUpRight className="mt-0.5 size-3.5 shrink-0 text-ember-2" />
+            Pasó a {row.plan.name} el {day(row.movedUpAt)}.
           </span>
-        ) : (
-          <span>La organización todavía no tiene planes.</span>
         )}
+        {!row.limit?.paused && (
+          <span className="flex items-start gap-1.5">
+            <TrendingUp className="mt-0.5 size-3.5 shrink-0 text-ember-2" />
+            {row.nextPlan ? (
+              <span>
+                Al llegar a los {int(row.includedMessages)} mensajes, el asistente se pausa y se puede pasar a{' '}
+                <span className="font-medium text-ink">{row.nextPlan.name}</span> ({int(row.nextPlan.messages)}{' '}
+                mensajes, {usd(row.nextPlan.priceUsd)}).
+              </span>
+            ) : (
+              <span>Todavía no hay planes.</span>
+            )}
+          </span>
+        )}
+        <span className="flex items-baseline justify-between gap-3 pt-1">
+          <span>Precio del plan</span>
+          <span className="text-[13.5px] font-semibold text-ink">{price(row.billedUsd)} por mes</span>
+        </span>
       </div>
     </Card>
   )
 }
 
-// ─── Catalog (SuperAdmin) ──────────────────────────────────────────────────────
+function ConsumptionTab({ canAssign }: { canAssign: boolean }) {
+  const [period, setPeriod] = useState(thisMonth)
+  const { data, isLoading, isError } = useBillingOverview(period)
+  const numbers = data?.numbers ?? []
+  const largest = data?.plans.filter(plan => !plan.isTrial).at(-1)
+
+  return (
+    <>
+      <div className="mb-4 flex flex-wrap items-end justify-between gap-4">
+        <MonthPicker value={period} onChange={setPeriod} />
+        {data?.totalBilledUsd !== undefined && (
+          <Card className="flex items-center gap-4 border-line-2 px-4 py-3">
+            <span className="text-[13px] text-muted-foreground">
+              Total a pagar · {int(numbers.length)} {numbers.length === 1 ? 'número' : 'números'}
+            </span>
+            <span className="font-display text-[20px] text-ink">{usd(data.totalBilledUsd)}</span>
+          </Card>
+        )}
+      </div>
+      {isLoading && (
+        <div className="grid gap-3 md:grid-cols-2">
+          {Array.from({ length: 2 }).map((_, i) => (
+            <Skeleton key={i} className="h-[200px] rounded-xl" />
+          ))}
+        </div>
+      )}
+      {isError && <p className="text-[14px] text-destructive">No se pudo cargar la facturación.</p>}
+      {!isLoading && !isError && numbers.length === 0 && (
+        <Card className="border-line-2 p-8 text-center text-[14px] text-muted-foreground">
+          No hay números de WhatsApp a tu nombre todavía.
+        </Card>
+      )}
+      {numbers.length > 0 && data && (
+        <div className="grid gap-3 md:grid-cols-2">
+          {numbers.map(row => (
+            <NumberCard key={row.id} row={row} plans={data.plans} canAssign={canAssign && period === thisMonth()} />
+          ))}
+        </div>
+      )}
+      {largest && data && (
+        <p className="mt-4 text-[12px] text-muted-foreground">
+          Pasado el plan {largest.name}, se pueden sumar de a {int(data.blockMessages)} mensajes por{' '}
+          {usd(Math.round(((data.blockMessages * largest.priceUsd) / largest.messages) * 100) / 100)} al mes.
+        </p>
+      )}
+    </>
+  )
+}
+
+// ─── Catalog, read-only (SuperAdmin) ───────────────────────────────────────────
+
+function OfferTab() {
+  const { data, isLoading } = useBillingOverview()
+  const plans = data?.plans ?? []
+  return (
+    <>
+      <p className="mb-4 max-w-xl text-[13px] text-muted-foreground">
+        Los planes y sus precios los define Lumarsoft. Elegís el plan de cada número en Consumo. Cuando un número llega
+        a los mensajes de su plan, su asistente se pausa y te avisamos para que elijas si pasa al plan siguiente.
+      </p>
+      <Card className="overflow-hidden border-line-2 py-0 shadow-sm">
+        <Table>
+          <TableHeader>
+            <TableRow className="border-line-2 hover:bg-transparent">
+              <TableHead className={`h-11 pl-5 ${HEAD}`}>Plan</TableHead>
+              <TableHead className={`text-right ${HEAD}`}>Mensajes por mes</TableHead>
+              <TableHead className={`pr-5 text-right ${HEAD}`}>Precio por mes</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {isLoading && (
+              <TableRow>
+                <TableCell colSpan={3} className="pl-5">
+                  <Skeleton className="h-4 w-40" />
+                </TableCell>
+              </TableRow>
+            )}
+            {plans.map(plan => (
+              <TableRow key={plan.id}>
+                <TableCell className="pl-5 text-[14px] font-medium text-ink">
+                  {plan.name}
+                  {plan.isTrial && (
+                    <span className="ml-2 text-[11.5px] font-normal text-muted-foreground">
+                      primer mes de una cuenta nueva
+                    </span>
+                  )}
+                </TableCell>
+                <TableCell className="text-right text-[13px] text-ink-3">{int(plan.messages)}</TableCell>
+                <TableCell className="pr-5 text-right text-[13px] font-semibold text-ink">
+                  {price(plan.priceUsd)}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </Card>
+    </>
+  )
+}
+
+// ─── Catalog editor (owner) ────────────────────────────────────────────────────
+
+interface PlanValues {
+  name: string
+  messages: number
+  priceUsd: number
+  isTrial: boolean
+}
 
 function PlanDialog({
   plan,
-  open,
-  unitPriceUsd,
   pending,
   onSave,
   onClose,
 }: {
   plan: CatalogPlan | null
-  open: boolean
-  unitPriceUsd: number
   pending: boolean
-  onSave: (data: { name: string; tokens: number; priceUsd: number }) => void
+  onSave: (values: PlanValues) => void
   onClose: () => void
 }) {
   const [name, setName] = useState(plan?.name ?? '')
-  const [tokens, setTokens] = useState(plan ? String(plan.tokens) : '')
-  const [price, setPrice] = useState(plan ? String(plan.priceUsd) : '')
-  // The price follows the size until the office types one of its own.
-  const [priceTouched, setPriceTouched] = useState(plan !== null)
-  const size = Number(tokens)
+  const [messages, setMessages] = useState(plan ? String(plan.messages) : '')
+  const [priceUsd, setPriceUsd] = useState(plan ? String(plan.priceUsd) : '')
+  const [isTrial, setIsTrial] = useState(plan?.isTrial ?? false)
+  const size = Number(messages)
+  const amount = isTrial ? 0 : Number(priceUsd)
   const sizeOk = Number.isInteger(size) && size > 0
-  const cost = sizeOk ? round2(size * unitPriceUsd) : null
-  const priceValue = priceTouched && price.trim() !== '' ? Number(price) : cost
-  const priceOk = priceValue !== null && Number.isFinite(priceValue) && cost !== null && priceValue >= cost
-  const belowCost = cost !== null && priceValue !== null && Number.isFinite(priceValue) && priceValue < cost
-  const margin = priceOk && cost !== null ? round2((priceValue as number) - cost) : null
+  const priceOk = isTrial || (priceUsd.trim() !== '' && Number.isFinite(amount) && amount >= 0)
   const valid = name.trim().length > 0 && sizeOk && priceOk
+  const perMessage = sizeOk && priceOk && amount > 0 ? amount / size : null
   return (
-    <Dialog open={open} onOpenChange={o => !o && onClose()}>
+    <Dialog open onOpenChange={open => !open && onClose()}>
       <DialogContent className="sm:max-w-sm">
         <DialogHeader>
           <DialogTitle>{plan ? 'Editar plan' : 'Nuevo plan'}</DialogTitle>
-          <DialogDescription>
-            Cada token te cuesta {usd(unitPriceUsd)}. El precio es lo que paga el productor y nunca puede quedar por
-            debajo del costo.
-          </DialogDescription>
+          <DialogDescription>Lo ven y lo pagan todas las organizaciones. El precio puede ser 0.</DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-3">
           <div className="flex flex-col gap-1.5">
@@ -163,51 +367,49 @@ function PlanDialog({
             />
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="plan-tokens">Tokens por mes</Label>
+            <Label htmlFor="plan-messages">Mensajes por mes</Label>
             <Input
-              id="plan-tokens"
+              id="plan-messages"
               type="number"
               min={1}
               step={50}
-              value={tokens}
-              onChange={e => setTokens(e.target.value)}
+              value={messages}
+              onChange={e => setMessages(e.target.value)}
               placeholder="500"
               className="h-10 border-line-2 text-[13px]"
             />
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="plan-price">Precio mensual (USD)</Label>
+            <Label htmlFor="plan-price">Precio por mes (USD)</Label>
             <Input
               id="plan-price"
               type="number"
-              min={cost ?? 0}
+              min={0}
               step={0.5}
-              value={priceTouched ? price : cost !== null ? String(cost) : ''}
-              onChange={e => {
-                setPriceTouched(true)
-                setPrice(e.target.value)
-              }}
-              placeholder={cost !== null ? String(cost) : '25'}
-              aria-invalid={belowCost}
-              className={`h-10 border-line-2 text-[13px] ${belowCost ? 'border-destructive' : ''}`}
+              value={isTrial ? '0' : priceUsd}
+              disabled={isTrial}
+              onChange={e => setPriceUsd(e.target.value)}
+              placeholder="25"
+              className="h-10 border-line-2 text-[13px]"
             />
-            {belowCost && (
-              <p className="text-[12px] text-destructive">No puede ser menor que el costo ({usd(cost as number)}).</p>
+            {perMessage !== null && (
+              <p className="text-[12px] text-muted-foreground">
+                USD {perMessage.toLocaleString('es-AR', { maximumFractionDigits: 4 })} por mensaje
+              </p>
             )}
           </div>
-          <div className="grid grid-cols-2 gap-2 rounded-lg border border-line-2 bg-secondary/40 px-3 py-2 text-[12.5px]">
-            <span className="text-muted-foreground">
-              Costo <span className="font-semibold text-ink">{cost !== null ? usd(cost) : '—'}</span>
+          <label className="flex items-start gap-2.5 rounded-lg border border-line-2 bg-secondary/40 px-3 py-2.5 text-[12.5px] text-ink-3">
+            <input
+              type="checkbox"
+              checked={isTrial}
+              onChange={e => setIsTrial(e.target.checked)}
+              className="mt-0.5 size-4 accent-[var(--color-ember)]"
+            />
+            <span>
+              <span className="font-medium text-ink">Plan de prueba.</span> Gratis, para el primer mes de los números de
+              una cuenta nueva. Solo puede haber uno activo.
             </span>
-            <span className="text-right text-muted-foreground">
-              Margen{' '}
-              <span
-                className={`font-semibold ${margin !== null && margin > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-ink'}`}
-              >
-                {margin !== null ? usd(margin) : '—'}
-              </span>
-            </span>
-          </div>
+          </label>
         </div>
         <div className="flex justify-end gap-2">
           <Button type="button" variant="outline" onClick={onClose} className="border-line-2">
@@ -216,7 +418,7 @@ function PlanDialog({
           <Button
             type="button"
             disabled={!valid || pending}
-            onClick={() => onSave({ name: name.trim(), tokens: size, priceUsd: priceValue as number })}
+            onClick={() => onSave({ name: name.trim(), messages: size, priceUsd: amount, isTrial })}
           >
             {pending && <Loader2 className="size-4 animate-spin" />}
             Guardar
@@ -227,33 +429,28 @@ function PlanDialog({
   )
 }
 
-function PlansTab() {
-  const { data, isLoading } = useTokenPlans()
-  const { createPlan, updatePlan, removePlan } = useBillingActions()
+function OwnerPlansTab() {
+  const { data, isLoading } = useOwnerPlans()
+  const { createPlan, updatePlan, removePlan } = usePlanActions()
   const [editing, setEditing] = useState<CatalogPlan | null>(null)
   const [creating, setCreating] = useState(false)
   const [retiring, setRetiring] = useState<CatalogPlan | null>(null)
-  const unitPriceUsd = data?.unitPriceUsd ?? 0.05
   const plans = data?.plans ?? []
 
-  const save = (values: { name: string; tokens: number; priceUsd: number }) => {
+  const save = (values: PlanValues) => {
+    const done = (message: string) => () => {
+      toast.success(message)
+      setEditing(null)
+      setCreating(false)
+    }
     if (editing) {
       updatePlan.mutate(
         { id: editing.id, data: values },
-        {
-          onSuccess: () => {
-            toast.success('Plan actualizado')
-            setEditing(null)
-          },
-          onError: error => failed(error, 'No se pudo guardar el plan'),
-        },
+        { onSuccess: done('Plan actualizado'), onError: error => failed(error, 'No se pudo guardar el plan') },
       )
     } else {
       createPlan.mutate(values, {
-        onSuccess: () => {
-          toast.success('Plan agregado al catálogo')
-          setCreating(false)
-        },
+        onSuccess: done('Plan agregado'),
         onError: error => failed(error, 'No se pudo crear el plan'),
       })
     }
@@ -274,15 +471,14 @@ function PlansTab() {
     })
   }
 
-  const head = 'text-[11px] uppercase tracking-[0.12em] text-faint'
-
   return (
     <>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <p className="max-w-xl text-[13px] text-muted-foreground">
-          Nadie elige el plan: cada mes, cada número queda en el plan más chico que cubre los mensajes que envió y sube
-          si envía más. Cada token te cuesta {usd(unitPriceUsd)}; vos decidís los tamaños y el precio, siempre por
-          encima del costo. Pasado el plan más grande, el mes se cobra de 1.000 en 1.000.
+          El catálogo de toda la plataforma: lo que ven y pagan todas las organizaciones, y lo que muestra la landing.
+          Cada SuperAdmin elige el plan de sus números. Al llegar al límite, el asistente del número se pausa hasta que
+          la organización lo pase al plan siguiente o empiece el mes. Pasado el plan más grande, se suman bloques de{' '}
+          {int(data?.blockMessages ?? 1000)} mensajes al precio por mensaje de ese plan.
         </p>
         <Button type="button" size="sm" onClick={() => setCreating(true)} className="h-9 text-[12.5px]">
           <Plus className="size-4" />
@@ -294,53 +490,46 @@ function PlansTab() {
         <Table>
           <TableHeader>
             <TableRow className="border-line-2 hover:bg-transparent">
-              <TableHead className={`h-11 pl-5 ${head}`}>Plan</TableHead>
-              <TableHead className={`text-right ${head}`}>Tokens</TableHead>
-              <TableHead className={`text-right ${head}`}>Costo</TableHead>
-              <TableHead className={`text-right ${head}`}>Precio</TableHead>
-              <TableHead className={`hidden text-right sm:table-cell ${head}`}>Margen</TableHead>
-              <TableHead className={head}>Estado</TableHead>
-              <TableHead className={`pr-5 text-right ${head}`}>Acciones</TableHead>
+              <TableHead className={`h-11 pl-5 ${HEAD}`}>Plan</TableHead>
+              <TableHead className={`text-right ${HEAD}`}>Mensajes</TableHead>
+              <TableHead className={`text-right ${HEAD}`}>Precio</TableHead>
+              <TableHead className={`hidden text-right sm:table-cell ${HEAD}`}>Por mensaje</TableHead>
+              <TableHead className={HEAD}>Estado</TableHead>
+              <TableHead className={`pr-5 text-right ${HEAD}`}>Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading &&
-              Array.from({ length: 2 }).map((_, i) => (
+              Array.from({ length: 3 }).map((_, i) => (
                 <TableRow key={i}>
-                  <TableCell className="pl-5">
-                    <Skeleton className="h-4 w-28" />
-                  </TableCell>
-                  {Array.from({ length: 5 }).map((_, j) => (
-                    <TableCell key={j}>
-                      <Skeleton className="ml-auto h-4 w-12" />
-                    </TableCell>
-                  ))}
-                  <TableCell className="pr-5">
-                    <Skeleton className="ml-auto h-8 w-20" />
+                  <TableCell className="pl-5" colSpan={6}>
+                    <Skeleton className="h-4 w-full" />
                   </TableCell>
                 </TableRow>
               ))}
             {!isLoading && plans.length === 0 && (
               <TableRow>
-                <TableCell colSpan={7} className="py-12 text-center text-[14px] text-muted-foreground">
+                <TableCell colSpan={6} className="py-12 text-center text-[14px] text-muted-foreground">
                   Todavía no hay planes. Creá el primero.
                 </TableCell>
               </TableRow>
             )}
             {plans.map(plan => (
               <TableRow key={plan.id} className={plan.isActive ? '' : 'opacity-60'}>
-                <TableCell className="pl-5 text-[14px] font-medium text-ink">{plan.name}</TableCell>
-                <TableCell className="text-right text-[13px] text-ink-3">{int(plan.tokens)}</TableCell>
-                <TableCell className="text-right text-[13px] text-ink-3">
-                  {plan.costUsd !== undefined ? usd(plan.costUsd) : '—'}
+                <TableCell className="pl-5 text-[14px] font-medium text-ink">
+                  {plan.name}
+                  {plan.isTrial && (
+                    <Badge className="ml-2 bg-emerald-50 text-[10.5px] text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400">
+                      <Sparkles className="size-3" /> Prueba
+                    </Badge>
+                  )}
                 </TableCell>
-                <TableCell className="text-right text-[13px] font-semibold text-ink">{usd(plan.priceUsd)}</TableCell>
-                <TableCell
-                  className={`hidden text-right text-[13px] sm:table-cell ${
-                    (plan.marginUsd ?? 0) > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-ink-3'
-                  }`}
-                >
-                  {plan.marginUsd !== undefined ? usd(plan.marginUsd) : '—'}
+                <TableCell className="text-right text-[13px] text-ink-3">{int(plan.messages)}</TableCell>
+                <TableCell className="text-right text-[13px] font-semibold text-ink">{price(plan.priceUsd)}</TableCell>
+                <TableCell className="hidden text-right text-[13px] text-ink-3 sm:table-cell">
+                  {plan.priceUsd > 0
+                    ? `USD ${(plan.priceUsd / plan.messages).toLocaleString('es-AR', { maximumFractionDigits: 4 })}`
+                    : '—'}
                 </TableCell>
                 <TableCell>
                   <button
@@ -389,8 +578,6 @@ function PlansTab() {
         <PlanDialog
           key={editing?.id ?? 'new'}
           plan={editing}
-          open
-          unitPriceUsd={unitPriceUsd}
           pending={createPlan.isPending || updatePlan.isPending}
           onSave={save}
           onClose={() => {
@@ -405,8 +592,7 @@ function PlansTab() {
           <AlertDialogHeader>
             <AlertDialogTitle>Retirar el plan {retiring?.name}</AlertDialogTitle>
             <AlertDialogDescription>
-              Deja de usarse: desde ahora los números se ubican en los planes que quedan. Podés volver a crearlo cuando
-              quieras.
+              Deja de ofrecerse y sus números pasan al plan pago más chico. Podés volver a crearlo cuando quieras.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -421,16 +607,175 @@ function PlansTab() {
   )
 }
 
+// ─── Dashboard (owner) ─────────────────────────────────────────────────────────
+
+function Kpi({ label, value, hint, tone }: { label: string; value: string; hint: string; tone?: 'good' | 'bad' }) {
+  const color =
+    tone === 'good' ? 'text-emerald-600 dark:text-emerald-400' : tone === 'bad' ? 'text-destructive' : 'text-ink'
+  return (
+    <Card className="flex flex-col gap-1 border-line-2 p-4 shadow-sm">
+      <span className="text-[11px] uppercase tracking-[0.12em] text-faint">{label}</span>
+      <span className={`font-display text-[24px] tracking-[-0.02em] ${color}`}>{value}</span>
+      <span className="text-[12px] text-muted-foreground">{hint}</span>
+    </Card>
+  )
+}
+
+function MoneyCells({ totals }: { totals: OwnerBillingTotals }) {
+  return (
+    <>
+      <TableCell className="text-right text-[13px] text-ink-3">{int(totals.messages)}</TableCell>
+      <TableCell className="text-right text-[13px] font-semibold text-ink">{usd(totals.billedUsd)}</TableCell>
+      <TableCell className="text-right text-[13px] text-ink-3">{usd(totals.metaCostUsd)}</TableCell>
+      <TableCell
+        className={`text-right text-[13px] font-semibold ${totals.profitUsd < 0 ? 'text-destructive' : 'text-emerald-600 dark:text-emerald-400'}`}
+      >
+        {usd(totals.profitUsd)}
+      </TableCell>
+      <TableCell className="hidden pr-5 text-right text-[13px] text-muted-foreground md:table-cell">
+        {usd(totals.openaiCostUsd)}
+      </TableCell>
+    </>
+  )
+}
+
+function OrganizationRows({ org }: { org: OwnerBillingOrganization }) {
+  const [open, setOpen] = useState(false)
+  const Chevron = open ? ChevronDown : ChevronRight
+  return (
+    <>
+      <TableRow className="cursor-pointer" onClick={() => setOpen(!open)}>
+        <TableCell className="pl-3 text-[14px] font-medium text-ink">
+          <span className="flex items-center gap-1.5">
+            <Chevron className="size-4 text-muted-foreground" />
+            {org.name}
+            {!org.isActive && (
+              <Badge variant="outline" className="border-line-2 text-[10.5px] text-muted-foreground">
+                Inactiva
+              </Badge>
+            )}
+          </span>
+        </TableCell>
+        <TableCell className="text-right text-[13px] text-ink-3">{int(org.numbers.length)}</TableCell>
+        <MoneyCells totals={org.totals} />
+      </TableRow>
+      {open &&
+        org.numbers.map(n => (
+          <TableRow key={n.id} className="bg-secondary/30">
+            <TableCell className="pl-10 text-[13px] text-ink">
+              <span className="font-mono">{n.number}</span>
+              <div className="text-[11.5px] text-muted-foreground">
+                {n.plan.trial ? 'Prueba' : n.plan.name}
+                {n.upgraded && ' · subió de plan'}
+                {n.prorated && ' · prorrateado'}
+                {n.paused && ' · asistente en pausa'}
+                {n.metaBillableMessages > 0 && ` · ${int(n.metaBillableMessages)} cobrados por Meta`}
+              </div>
+            </TableCell>
+            <TableCell className="text-right text-[12px] text-muted-foreground">
+              {n.responsibleCode ? n.responsibleCode.code : '—'}
+            </TableCell>
+            <MoneyCells totals={n} />
+          </TableRow>
+        ))}
+    </>
+  )
+}
+
+function OwnerDashboardTab() {
+  const [period, setPeriod] = useState(thisMonth)
+  const { data, isLoading, isError } = useOwnerBilling(period)
+  const totals = data?.totals
+
+  return (
+    <>
+      <div className="mb-4 flex flex-wrap items-end justify-between gap-4">
+        <MonthPicker value={period} onChange={setPeriod} />
+        <p className="max-w-md text-[12.5px] text-muted-foreground">
+          Meta cobra los mensajes de servicio pasados los 1.000 gratis de cada número y las plantillas desde el primero.
+          OpenAI está precargado: se muestra aparte y no entra en la ganancia.
+        </p>
+      </div>
+      {isError && <p className="mb-4 text-[14px] text-destructive">No se pudo cargar el tablero.</p>}
+
+      <div className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {isLoading || !totals ? (
+          Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-[104px] rounded-xl" />)
+        ) : (
+          <>
+            <Kpi
+              label="Facturado"
+              value={usd(totals.billedUsd)}
+              hint={`${int(totals.activeNumbers)} números activos`}
+            />
+            <Kpi
+              label="Pago real a Meta"
+              value={usd(totals.metaCostUsd)}
+              hint={`${int(totals.metaBillableMessages)} de ${int(totals.messages)} mensajes con cargo`}
+            />
+            <Kpi
+              label="Ganancia"
+              value={usd(totals.profitUsd)}
+              hint="Facturado menos Meta"
+              tone={totals.profitUsd < 0 ? 'bad' : 'good'}
+            />
+            <Kpi
+              label="OpenAI (aparte)"
+              value={usd(totals.openaiCostUsd)}
+              hint={`${int(totals.upgradedNumbers)} ${totals.upgradedNumbers === 1 ? 'número subió' : 'números subieron'} de plan · ${int(totals.pausedNumbers ?? 0)} en pausa`}
+            />
+          </>
+        )}
+      </div>
+
+      <Card className="overflow-hidden border-line-2 py-0 shadow-sm">
+        <Table>
+          <TableHeader>
+            <TableRow className="border-line-2 hover:bg-transparent">
+              <TableHead className={`h-11 pl-5 ${HEAD}`}>Organización</TableHead>
+              <TableHead className={`text-right ${HEAD}`}>Números</TableHead>
+              <TableHead className={`text-right ${HEAD}`}>Mensajes</TableHead>
+              <TableHead className={`text-right ${HEAD}`}>Facturado</TableHead>
+              <TableHead className={`text-right ${HEAD}`}>Meta</TableHead>
+              <TableHead className={`text-right ${HEAD}`}>Ganancia</TableHead>
+              <TableHead className={`hidden pr-5 text-right md:table-cell ${HEAD}`}>OpenAI</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {isLoading && (
+              <TableRow>
+                <TableCell colSpan={7} className="pl-5">
+                  <Skeleton className="h-4 w-full" />
+                </TableCell>
+              </TableRow>
+            )}
+            {data?.organizations.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={7} className="py-12 text-center text-[14px] text-muted-foreground">
+                  No hay organizaciones.
+                </TableCell>
+              </TableRow>
+            )}
+            {data?.organizations.map(org => (
+              <OrganizationRows key={org.id} org={org} />
+            ))}
+          </TableBody>
+        </Table>
+      </Card>
+    </>
+  )
+}
+
 // ─── Main view ─────────────────────────────────────────────────────────────────
 
-type BillingTab = 'consumo' | 'planes'
+type BillingTab = 'consumo' | 'planes' | 'tablero'
 
 export function FacturacionView() {
-  const { isSuperAdmin, isAdmin, isLoading: roleLoading } = useRole()
-  const [tab, setTab] = useState<BillingTab>('consumo')
-  const { data, isLoading, isError } = useBillingOverview()
+  const { isOwner, isSuperAdmin, isAdmin, isLoading: roleLoading } = useRole()
+  const [tab, setTab] = useState<BillingTab | null>(null)
+  const current: BillingTab = tab ?? (isOwner ? 'tablero' : 'consumo')
 
-  if (!roleLoading && !isSuperAdmin && !isAdmin) {
+  if (!roleLoading && !isOwner && !isSuperAdmin && !isAdmin) {
     return (
       <div className="mx-auto w-full max-w-6xl px-5 py-8 md:px-8 md:py-10">
         <p className="text-[14px] text-muted-foreground">Acceso restringido.</p>
@@ -438,62 +783,45 @@ export function FacturacionView() {
     )
   }
 
-  const numbers = data?.numbers ?? []
-  const showsCost = data?.plans.some(plan => plan.costUsd !== undefined) ?? false
-
   return (
     <div className="mx-auto w-full max-w-6xl px-5 py-8 md:px-8 md:py-10">
-      <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <div className="text-[10.5px] font-medium uppercase tracking-[0.3em] text-ember-2">Planes y consumo</div>
-          <h1 className="mt-2 font-display text-[clamp(26px,3.5vw,36px)] tracking-[-0.035em] text-ink">Facturación</h1>
-          <p className="mt-1.5 text-[14px] text-muted-foreground">
-            1 token = 1 mensaje que envía el asistente o la oficina por WhatsApp. Cada número queda en el plan que
-            cubren sus mensajes del mes y se factura a mes vencido
-            {showsCost && data ? ` · cada token te cuesta ${usd(data.unitPriceUsd)}` : ''}.
-          </p>
+      <div className="mb-6">
+        <div className="text-[10.5px] font-medium uppercase tracking-[0.3em] text-ember-2">
+          {isOwner ? 'Plataforma' : 'Planes y consumo'}
         </div>
+        <h1 className="mt-2 font-display text-[clamp(26px,3.5vw,36px)] tracking-[-0.035em] text-ink">Facturación</h1>
+        <p className="mt-1.5 max-w-2xl text-[14px] text-muted-foreground">
+          {isOwner
+            ? 'Lo que se factura a cada organización y lo que cobra Meta de verdad, y el catálogo de planes que ven todos.'
+            : 'Cada número tiene un plan de mensajes por mes: cuenta cada mensaje que envía el asistente, la oficina desde el panel o un aviso. Cuando un número llega al límite de su plan, el asistente se pausa y elegís si pasa al siguiente. Se factura a mes vencido.'}
+        </p>
       </div>
 
-      {isSuperAdmin && (
-        <Tabs value={tab} onValueChange={v => setTab(v as BillingTab)} className="mb-5">
+      {(isOwner || isSuperAdmin) && (
+        <Tabs value={current} onValueChange={v => setTab(v as BillingTab)} className="mb-5">
           <TabsList>
-            <TabsTrigger value="consumo">Consumo</TabsTrigger>
+            {isOwner ? (
+              <TabsTrigger value="tablero">Tablero</TabsTrigger>
+            ) : (
+              <TabsTrigger value="consumo">Consumo</TabsTrigger>
+            )}
             <TabsTrigger value="planes">Planes</TabsTrigger>
           </TabsList>
         </Tabs>
       )}
 
-      {tab === 'planes' ? (
-        <PlansTab />
+      {roleLoading ? (
+        <Skeleton className="h-[200px] rounded-xl" />
+      ) : isOwner ? (
+        current === 'planes' ? (
+          <OwnerPlansTab />
+        ) : (
+          <OwnerDashboardTab />
+        )
+      ) : current === 'planes' && isSuperAdmin ? (
+        <OfferTab />
       ) : (
-        <>
-          {isLoading && (
-            <div className="grid gap-3 md:grid-cols-2">
-              {Array.from({ length: 2 }).map((_, i) => (
-                <Skeleton key={i} className="h-[168px] rounded-xl" />
-              ))}
-            </div>
-          )}
-          {isError && <p className="text-[14px] text-destructive">No se pudo cargar la facturación.</p>}
-          {!isLoading && !isError && numbers.length === 0 && (
-            <Card className="border-line-2 p-8 text-center text-[14px] text-muted-foreground">
-              No hay números de WhatsApp a tu nombre todavía.
-            </Card>
-          )}
-          {numbers.length > 0 && (
-            <div className="grid gap-3 md:grid-cols-2">
-              {numbers.map(row => (
-                <NumberCard key={row.id} row={row} />
-              ))}
-            </div>
-          )}
-          {data && data.trialTokens > 0 && (
-            <p className="mt-4 text-[12px] text-muted-foreground">
-              Las cuentas nuevas no pagan los primeros {int(data.trialTokens)} tokens del primer mes de cada número.
-            </p>
-          )}
-        </>
+        <ConsumptionTab canAssign={isSuperAdmin} />
       )}
     </div>
   )

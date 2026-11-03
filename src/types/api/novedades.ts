@@ -1,3 +1,7 @@
+/**
+ * `plan`: a number moved up a plan, or passed the largest one (refId = the number).
+ * `triunfo`: Triunfo refuses the organization's credentials; resolved on its own when they work again.
+ */
 export type NovedadType = 'siniestro' | 'handoff' | 'baja_poliza' | 'lead' | 'solicitud' | 'plan' | 'triunfo'
 
 export interface NovedadClient {

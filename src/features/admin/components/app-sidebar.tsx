@@ -45,6 +45,8 @@ import {
 } from '@/src/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback } from '@/src/components/ui/avatar'
 import { useAuth } from '../context/auth-context'
+import { usePanelBrand } from '../hooks/use-panel-brand'
+import { OrgMark } from './org-mark'
 import { useProfile } from '../hooks/use-profile'
 import { useNovedadesStats } from '../hooks/use-novedades-stats'
 import { useInboxConversations } from '../hooks/use-inbox-conversations'
@@ -54,6 +56,7 @@ import { useImprovementsUnseenCount } from '../hooks/use-improvements'
 import { useNewProposalsCount } from '../hooks/use-proposals'
 import { useTaskStats } from '../hooks/use-tasks'
 import { AppearanceDialog } from './appearance-dialog'
+import { SidebarUsage } from './sidebar-usage'
 
 interface NavItem {
   label: string
@@ -78,10 +81,10 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Cobranzas', href: '/admin/cobranzas', icon: Wallet },
   { label: 'Rechazos', href: '/admin/rechazos', icon: BanknoteX },
   { label: 'Usuarios', href: '/admin/usuarios', icon: Users, superAdminOnly: true },
-  // Admins see each number's tokens; managing numbers stays with the SuperAdmin.
+  // Admins see each number's messages; managing numbers stays with the SuperAdmin.
   { label: 'Números', href: '/admin/numeros', icon: Phone },
-  // Each admin's numbers, their token plan and the month's consumption; the SuperAdmin also edits the catalog.
-  { label: 'Facturación', href: '/admin/facturacion', icon: CreditCard },
+  // Each number's plan and month; the SuperAdmin assigns plans, the OWNER edits the catalog and sees the platform's month.
+  { label: 'Facturación', href: '/admin/facturacion', icon: CreditCard, everyone: true },
   { label: 'Organizaciones', href: '/admin/organizaciones', icon: Building2, ownerOnly: true },
   { label: 'Mejoras', href: '/admin/mejoras', icon: Sparkles, everyone: true },
   { label: 'Configuración', href: '/admin/configuracion', icon: UserCog },
@@ -123,7 +126,8 @@ export function AppSidebar() {
     return 0
   }
 
-  const initials = profile?.email.slice(0, 2).toUpperCase() ?? 'JP'
+  const brand = usePanelBrand()
+  const initials = profile?.email.slice(0, 2).toUpperCase() ?? brand.initials
   const isSuperAdmin = profile?.role === 'SUPERADMIN'
   const roleLabel = isOwner ? 'Owner · Lumar' : isSuperAdmin ? 'SuperAdmin' : 'Administrador'
   // The OWNER's interface is "Organizaciones" plus the "Mejoras" editor. Everyone
@@ -139,9 +143,15 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon" variant="inset">
       <SidebarHeader>
-        <span className="flex h-10 items-center truncate px-2 font-display text-[14px] tracking-[-0.01em] text-sidebar-foreground group-data-[collapsible=icon]:hidden">
-          Panel de administración
-        </span>
+        <div className="flex items-center gap-2.5 px-1 py-1 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
+          <OrgMark brand={brand} size={32} className="rounded-lg shadow-sm" />
+          <div className="grid flex-1 leading-tight group-data-[collapsible=icon]:hidden">
+            <span className="truncate font-display text-[13.5px] text-sidebar-foreground">{brand.name}</span>
+            <span className="truncate text-[11px] text-muted-foreground">
+              {brand.mark === 'platform' ? 'Panel de la plataforma' : 'Panel de administración'}
+            </span>
+          </div>
+        </div>
       </SidebarHeader>
 
       <SidebarContent>
@@ -188,6 +198,8 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter>
+        {/* The owner has no numbers of its own: its billing is the platform's, in Facturación. */}
+        <SidebarUsage enabled={!!profile && !isOwner} />
         <SidebarMenu>
           <SidebarMenuItem>
             <DropdownMenu>

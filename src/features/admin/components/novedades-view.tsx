@@ -89,6 +89,7 @@ export function NovedadesView() {
     // A Triunfo outage has nothing to open: the notice says it all and resolves itself when it ends.
     if (matter.type === 'triunfo') return
     if (matter.type === 'siniestro') setSelectedSiniestroId(matter.refId)
+    else if (matter.type === 'plan') router.push('/admin/facturacion')
     else if (matter.type === 'handoff' || matter.type === 'baja_poliza')
       router.push(inboxConversationHref(matter.refId))
     else router.push(`/admin/solicitudes?kind=${matter.type === 'lead' ? 'lead' : 'cotizacion'}&id=${matter.refId}`)
@@ -290,7 +291,11 @@ export function NovedadesView() {
                   </select>
                   {matter.type !== 'triunfo' && (
                     <Button size="sm" variant="outline" onClick={() => handleOpen(matter)}>
-                      {matter.type === 'handoff' || matter.type === 'baja_poliza' ? 'Ver chat' : 'Ver detalle'}
+                      {matter.type === 'handoff' || matter.type === 'baja_poliza'
+                        ? 'Ver chat'
+                        : matter.type === 'plan'
+                          ? 'Ver facturación'
+                          : 'Ver detalle'}
                     </Button>
                   )}
                 </div>

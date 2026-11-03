@@ -1,4 +1,5 @@
 import type { Closure, WeeklySchedule } from './business-hours'
+import type { BilledPlan } from './billing'
 import type { BotProfile, UpdateBotProfileRequest } from './config'
 
 export interface PhoneNumberCodeRef {
@@ -7,52 +8,48 @@ export interface PhoneNumberCodeRef {
   holderName: string | null
 }
 
-/** The token plan a number's month is billed on (1 token = 1 message sent). */
-export interface TokenPlan {
-  /** The catalog plan, or null for the trial and for a size past the catalog. */
-  id: number | null
-  name: string
-  includedTokens: number
-  /** The organization's price to its productor. */
-  priceUsd: number
-  /** The platform's charge to the organization: SuperAdmin and owner only. */
-  costUsd?: number
-  /** The free first-month plan of a new account. */
-  trial: boolean
-  /** Blocks of 1,000 the plan spans. */
-  blocks: number
-}
-
 /**
  * A number's month. The API sends each role its own part: every role gets the
- * tokens, the plan and what the month adds up to, the SuperAdmin also the
- * activity, and only the OWNER the provider cost and the margin.
+ * messages, the plan and what the month adds up to, the SuperAdmin also the
+ * activity, and only the OWNER what Meta and OpenAI cost and the profit.
  */
 export interface PhoneNumberUsage {
   period: string
-  /** Messages the platform sent this month: one token each. */
-  tokens: number
-  /** Free tokens applied this month (a new account's first month). */
-  trialTokens?: number
-  /** The plan the month is billed on, and what it adds up to at the catalog's prices. */
-  plan?: TokenPlan
+  /** Messages the platform sent this month. */
+  messages: number
+  /** The plan the number is on, and the one the month is billed on. */
+  assignedPlan?: BilledPlan | null
+  plan?: BilledPlan
+  upgraded?: boolean
   prorated?: boolean
   billedUsd?: number
-  /** SuperAdmin and owner: what the organization pays the platform for the number this month. */
-  costUsd?: number
+  /** Its assistant is paused this month for reaching the plan. */
+  planPaused?: boolean
   /** SuperAdmin and owner: messages sent and the OpenAI calls and tokens. */
   metaMessages?: number
   metaConversations?: number
   openaiCalls?: number
   inputTokens?: number
   outputTokens?: number
-  /** Owner only: the fixed price per token and the block past the largest plan. */
-  pricing?: { unitPriceUsd: number; blockTokens: number; blockPriceUsd: number; trialTokens: number }
+  /** Owner only. */
   metaBillableMessages?: number
   openaiCostUsd?: number
   metaCostUsd?: number
   totalCostUsd?: number
+  /** Owner only: billed minus Meta (OpenAI is prepaid). */
   marginUsd?: number
+}
+
+/** The Meta business portfolio that owns a number's WhatsApp account, as Meta reported it. */
+export interface MetaPortfolio {
+  /** The WhatsApp account's name in Meta. */
+  wabaName: string | null
+  businessId: string | null
+  /** The portfolio's name: whose it is. */
+  businessName: string | null
+  /** Meta's business_verification_status: verified, not_verified, pending… */
+  verification: string | null
+  checkedAt: string
 }
 
 export interface AdminPhoneNumber {
@@ -70,6 +67,8 @@ export interface AdminPhoneNumber {
   disconnectReason: string | null
   /** The reason in plain words, for the office. */
   disconnectReasonLabel: string | null
+  /** Null until Meta was read (it is read at onboarding and once a day). */
+  portfolio?: MetaPortfolio | null
   responsibleCode: PhoneNumberCodeRef | null
   servedCodes: PhoneNumberCodeRef[]
   usage: PhoneNumberUsage

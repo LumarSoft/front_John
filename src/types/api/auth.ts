@@ -8,9 +8,11 @@ export interface AdminUserProducerCode {
 export interface AdminOrganization {
   slug: string
   name: string
-  /** The name the bot uses for it ("John Pellegrini Management Group"), or `name`. */
+  /** The name the bot uses for it ("Seguros del Litoral"), or `name`. */
   displayName: string
   shortName: string | null
+  /** The organization's logo (API-relative URL); null = its initials. Absent on older APIs. */
+  logoUrl?: string | null
   /**
    * The office line (the active number billed to the master code): the SuperAdmin's
    * sections open filtered by it. Absent on older APIs.

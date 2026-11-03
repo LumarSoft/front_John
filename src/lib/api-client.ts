@@ -1,5 +1,10 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'
 
+/** A file the API serves (an API-relative path like /uploads/...) as an absolute URL. */
+export function apiAssetUrl(path: string): string {
+  return path.startsWith('http') ? path : `${API_URL}${path}`
+}
+
 export class ApiError extends Error {
   constructor(
     public readonly status: number,

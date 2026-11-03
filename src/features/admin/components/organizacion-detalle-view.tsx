@@ -13,6 +13,9 @@ import { Skeleton } from '@/src/components/ui/skeleton'
 import { ApiError } from '@/src/lib/api-client'
 import { useRole } from '../hooks/use-role'
 import { useOrganization, useOrganizationMutations } from '../hooks/use-organizations'
+import { useOrganizationLogo } from '../hooks/use-organization-logo'
+import { initialsOf } from '../lib/org-brand'
+import { LogoUploader } from './logo-uploader'
 import { BillingSummary, CodesTable, NumbersSection, UsersSection } from './organizacion-secciones'
 import { OrganizacionTriunfo } from './organizacion-triunfo'
 import { OrganizacionTriunfoErrores } from './organizacion-triunfo-errores'
@@ -34,6 +37,7 @@ export function OrganizacionDetalleView({ orgId }: { orgId: number }) {
   const { isOwner, isLoading: roleLoading } = useRole()
   const { data: org, isLoading } = useOrganization(Number.isFinite(orgId) ? orgId : null)
   const { addCode, updateCode, setActive } = useOrganizationMutations(orgId)
+  const logo = useOrganizationLogo(orgId)
 
   const [newCode, setNewCode] = useState('')
   const [newCodeHolder, setNewCodeHolder] = useState('')
@@ -119,6 +123,25 @@ export function OrganizacionDetalleView({ orgId }: { orgId: number }) {
           </Button>
         </div>
       </header>
+
+      <section className="flex flex-col gap-2">
+        <h2 className="text-[15px] font-semibold text-ink">Logo</h2>
+        <p className="text-[12.5px] text-muted-foreground">
+          Lo ven sus usuarios en el panel y sus asegurados en la credencial impresa. Sin logo, las iniciales.
+        </p>
+        <LogoUploader
+          brand={{
+            name: org.name,
+            signature: org.name,
+            mark: 'initials',
+            initials: initialsOf(org.name),
+            logoUrl: org.logoUrl ?? null,
+          }}
+          upload={logo.upload}
+          remove={logo.remove}
+          canEdit
+        />
+      </section>
 
       <BillingSummary billing={org.billing} />
 

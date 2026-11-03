@@ -40,7 +40,6 @@ export const QUERY_KEYS = {
     expiredPoliciesAll: ['admin', 'cobranzas', 'vencidas'] as const,
     billingAll: ['admin', 'billing'] as const,
     billing: (period?: string) => ['admin', 'billing', 'overview', period ?? 'current'] as const,
-    billingPlans: ['admin', 'billing', 'plans'] as const,
     expiredPolicies: (params?: ExpiredPoliciesQuery) =>
       ['admin', 'cobranzas', 'vencidas', 'list', params ?? {}] as const,
     novedades: (params?: NovedadesQuery) => ['admin', 'novedades', 'list', params ?? {}] as const,
@@ -72,6 +71,9 @@ export const QUERY_KEYS = {
     organization: (id: number) => ['owner', 'organizations', id] as const,
     organizationTriunfo: (id: number) => ['owner', 'organizations', id, 'triunfo'] as const,
     organizationTriunfoErrors: (id: number) => ['owner', 'organizations', id, 'triunfo', 'errors'] as const,
+    plans: ['owner', 'plans'] as const,
+    billingAll: ['owner', 'billing'] as const,
+    billing: (period?: string) => ['owner', 'billing', period ?? 'current'] as const,
     improvementsAll: ['owner', 'improvements'] as const,
     improvements: (params?: OwnerImprovementsQuery) => ['owner', 'improvements', 'list', params ?? {}] as const,
     proposalsAll: ['owner', 'improvement-proposals'] as const,

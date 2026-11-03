@@ -1,5 +1,6 @@
 import type { AdminRole } from './auth'
-import type { TokenPlan } from './phone-numbers'
+import type { BilledPlan } from './billing'
+import type { MetaPortfolio } from './phone-numbers'
 
 export interface OrganizationCode {
   id: number
@@ -28,16 +29,15 @@ export interface PhoneNumberUsage {
   metaCostUsd: number
   /** What the number costs us (OpenAI + Meta). Measured. */
   totalCostUsd: number
-  /** Messages the platform sent this month: one token each. */
-  tokens: number
-  /** Free tokens applied this month (a new account's first month). */
-  trialTokens: number
-  plan: TokenPlan
+  /** Messages the platform sent this month. */
+  messages: number
+  assignedPlan: BilledPlan | null
+  plan: BilledPlan
+  upgraded: boolean
   prorated: boolean
-  /** What the platform invoices the organization for the month (the plan's cost). */
+  /** What the platform invoices the organization for the month. */
   billedUsd: number
-  /** What the organization resells the month for to its productor. */
-  resaleUsd: number
+  /** Billed minus Meta (OpenAI is prepaid). */
   marginUsd: number
 }
 
@@ -48,17 +48,20 @@ export interface OrganizationNumber {
   isActive: boolean
   responsibleCode: { id: number; code: string; holderName: string | null } | null
   servedCodes: Array<{ id: number; code: string }>
+  portfolio?: MetaPortfolio | null
   budget: { monthlyBudgetUsd: number | null; exceededAt: string | null }
   usage: PhoneNumberUsage
 }
 
 export interface OrganizationBilling {
   period: string
-  /** The fixed price per token (USD 0.05) and the block past the largest plan. */
-  pricing: { unitPriceUsd: number; blockTokens: number; blockPriceUsd: number; trialTokens: number }
+  /** Messages per block past the largest plan. */
+  blockMessages: number
   activeNumbers: number
-  costUsd: number
+  metaCostUsd: number
+  openaiCostUsd: number
   billedUsd: number
+  /** Billed minus Meta (OpenAI is prepaid). */
   marginUsd: number
 }
 
@@ -75,6 +78,7 @@ export interface OrganizationSummary {
   slug: string
   masterCode: string | null
   botName: string | null
+  logoUrl?: string | null
   isActive: boolean
   createdAt: string
   counts: {
@@ -91,6 +95,7 @@ export interface OrganizationDetail {
   slug: string
   masterCode: string | null
   botName: string | null
+  logoUrl?: string | null
   isActive: boolean
   createdAt: string
   codes: OrganizationCode[]

@@ -18,6 +18,7 @@ import type {
   OrganizationUser,
 } from '@/src/types/api/organizations'
 import { useOrganizationMutations } from '../hooks/use-organizations'
+import { MetaPortfolioLine } from './meta-portfolio-line'
 
 // ── helpers ────────────────────────────────────────────────
 
@@ -40,13 +41,13 @@ function fecha(iso: string | null) {
 export function BillingSummary({ billing }: { billing: OrganizationBilling }) {
   const cards = [
     { label: 'Números activos', value: int(billing.activeNumbers) },
-    { label: 'Costo real del mes', value: usd(billing.costUsd), hint: 'OpenAI + Meta' },
+    { label: 'Facturado del mes', value: usd(billing.billedUsd), hint: 'Planes de mensajes de sus números' },
     {
-      label: 'Total estimado del mes',
-      value: usd(billing.billedUsd),
-      hint: `USD ${billing.pricing.unitPriceUsd} por token · bloques de ${int(billing.pricing.blockTokens)}`,
+      label: 'Pago real a Meta',
+      value: usd(billing.metaCostUsd),
+      hint: `OpenAI aparte: ${usd(billing.openaiCostUsd)}`,
     },
-    { label: 'Ganancia estimada', value: usd(billing.marginUsd), hint: 'Total menos costo de proveedores' },
+    { label: 'Ganancia', value: usd(billing.marginUsd), hint: 'Facturado menos Meta' },
   ]
 
   return (
@@ -64,7 +65,7 @@ export function BillingSummary({ billing }: { billing: OrganizationBilling }) {
       {billing.marginUsd < 0 && (
         <p className="flex items-center gap-1.5 text-[12px] text-destructive">
           <AlertTriangle className="size-3.5" />
-          El costo supera lo facturado: margen {usd(billing.marginUsd)}
+          Meta cobra más de lo facturado: ganancia {usd(billing.marginUsd)}
         </p>
       )}
     </section>
@@ -83,10 +84,10 @@ export function NumbersSection({ numbers }: { numbers: OrganizationNumber[] }) {
             <TableRow>
               <TableHead>Número</TableHead>
               <TableHead>Código</TableHead>
-              <TableHead className="text-right">OpenAI</TableHead>
-              <TableHead className="text-right">Tokens (mensajes) · plan</TableHead>
-              <TableHead className="text-right">Costo</TableHead>
-              <TableHead className="text-right">Total del mes</TableHead>
+              <TableHead className="text-right">OpenAI (aparte)</TableHead>
+              <TableHead className="text-right">Mensajes · plan</TableHead>
+              <TableHead className="text-right">Meta</TableHead>
+              <TableHead className="text-right">Facturado</TableHead>
               <TableHead className="text-right">Ganancia</TableHead>
             </TableRow>
           </TableHeader>
@@ -110,6 +111,7 @@ export function NumbersSection({ numbers }: { numbers: OrganizationNumber[] }) {
                         </Badge>
                       )}
                     </div>
+                    <MetaPortfolioLine portfolio={n.portfolio} />
                     <span className="text-[11px] text-muted-foreground">{n.phoneNumberId}</span>
                   </TableCell>
                   <TableCell className="text-[12px]">
@@ -125,14 +127,19 @@ export function NumbersSection({ numbers }: { numbers: OrganizationNumber[] }) {
                     )}
                   </TableCell>
                   <TableCell className="text-right text-[12px] text-muted-foreground">
-                    {int(n.usage.openaiCalls)} llamadas · {int(llmTokens)} tokens
+                    {usd(n.usage.openaiCostUsd)}
+                    <div className="text-[11px]">
+                      {int(n.usage.openaiCalls)} llamadas · {int(llmTokens)} tokens
+                    </div>
                   </TableCell>
                   <TableCell className="text-right text-[12px] text-muted-foreground">
-                    {int(n.usage.tokens)} · <span className="text-ink">{n.usage.plan.name}</span> (USD{' '}
-                    {int(n.usage.plan.costUsd ?? n.usage.plan.priceUsd)}){n.usage.prorated && ' · prorrateado'}
+                    {int(n.usage.messages)} · <span className="text-ink">{n.usage.plan.name}</span> (
+                    {usd(n.usage.plan.priceUsd)}){n.usage.upgraded && ' · subió'}
+                    {n.usage.prorated && ' · prorrateado'}
                   </TableCell>
                   <TableCell className="text-right text-[12px] text-muted-foreground">
-                    {usd(n.usage.totalCostUsd)}
+                    {usd(n.usage.metaCostUsd)}
+                    <div className="text-[11px]">{int(n.usage.metaBillableMessages)} con cargo</div>
                   </TableCell>
                   <TableCell className="text-right text-[13px] font-medium text-ink">
                     {usd(n.usage.billedUsd)}
