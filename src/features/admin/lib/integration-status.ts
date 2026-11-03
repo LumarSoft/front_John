@@ -1,4 +1,5 @@
 import type {
+  IntegrationBlame,
   IntegrationComponentKey,
   IntegrationIncident,
   IntegrationState,
@@ -180,6 +181,13 @@ export function failingNames(overview: StatusOverview): string[] {
       .map(c => `${COMPONENT_COPY[c.key].name} (${COMPONENT_COPY[c.key].provider})`),
     ...overview.whatsapp.filter(n => n.status === 'failing').map(n => `WhatsApp ${n.number}`),
   ]
+}
+
+/** Who is responsible, as the AI model says: "Triunfo", "la plataforma". */
+export function blameLabel(blame: IntegrationBlame, provider: Provider): string {
+  if (blame === 'PROVIDER') return provider
+  if (blame === 'PLATFORM') return 'la plataforma'
+  return 'sin determinar'
 }
 
 export const STATE_LABELS: Record<IntegrationState, string> = {

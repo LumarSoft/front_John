@@ -18,6 +18,18 @@ export type IntegrationFailureKind =
   | 'TIMEOUT'
   | 'NETWORK'
 
+/** Whose fault an incident is, as the AI model reads it: the provider's side, the platform's, or unknown. */
+export type IntegrationBlame = 'PROVIDER' | 'PLATFORM' | 'UNKNOWN'
+
+/** What the AI model says is failing and whose fault it is. */
+export interface IncidentExplanation {
+  text: string
+  blame: IntegrationBlame
+  /** "Triunfo: dio de baja o movió esta dirección sin avisar" */
+  blameReason: string
+  at: string
+}
+
 /** A stretch of time a service failed: from its first failed call to the next one that worked. */
 export interface IntegrationIncident {
   id: number
@@ -33,6 +45,8 @@ export interface IntegrationIncident {
   startedAt: string
   lastFailureAt: string
   endedAt: string | null
+  /** Null until the AI model answers (or without an OpenAI key). */
+  explanation: IncidentExplanation | null
 }
 
 export interface IntegrationComponent {
