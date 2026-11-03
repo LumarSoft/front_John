@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
+  Activity,
   BanknoteX,
   Bell,
   ListTodo,
@@ -55,6 +56,8 @@ import { useNewSolicitudesCount } from '../hooks/use-solicitudes'
 import { useImprovementsUnseenCount } from '../hooks/use-improvements'
 import { useNewProposalsCount } from '../hooks/use-proposals'
 import { useTaskStats } from '../hooks/use-tasks'
+import { useIntegrationStatus } from '../hooks/use-integration-status'
+import { failingNames } from '../lib/integration-status'
 import { AppearanceDialog } from './appearance-dialog'
 import { SidebarUsage } from './sidebar-usage'
 
@@ -87,6 +90,8 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Facturación', href: '/admin/facturacion', icon: CreditCard, everyone: true },
   { label: 'Organizaciones', href: '/admin/organizaciones', icon: Building2, ownerOnly: true },
   { label: 'Mejoras', href: '/admin/mejoras', icon: Sparkles, everyone: true },
+  // How Triunfo, InfoAuto and the WhatsApp numbers are answering, for everyone.
+  { label: 'Status', href: '/admin/status', icon: Activity, everyone: true },
   { label: 'Configuración', href: '/admin/configuracion', icon: UserCog },
 ]
 
@@ -114,6 +119,7 @@ export function AppSidebar() {
   // "Mejoras" badge: unseen improvements for the office, new proposals for the OWNER.
   const { data: improvementsUnseen } = useImprovementsUnseenCount(!!profile && !isOwner)
   const { data: newProposals } = useNewProposalsCount(isOwner)
+  const { data: integrationStatus } = useIntegrationStatus({ refreshMs: 5 * 60 * 1000 })
   const [appearanceOpen, setAppearanceOpen] = useState(false)
 
   // Count of items needing the advisor's attention, per sidebar section.
@@ -123,6 +129,7 @@ export function AppSidebar() {
     if (href === '/admin/solicitudes') return solicitudesNuevas
     if (href === '/admin/inbox') return inboxPending
     if (href === '/admin/mejoras') return (isOwner ? newProposals?.count : improvementsUnseen?.count) ?? 0
+    if (href === '/admin/status') return integrationStatus ? failingNames(integrationStatus).length : 0
     return 0
   }
 
