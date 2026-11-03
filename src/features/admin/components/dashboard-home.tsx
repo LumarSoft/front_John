@@ -10,6 +10,7 @@ import { useDashboard } from '../hooks/use-dashboard'
 import { ScopeFilter } from './scope-filter'
 import { useScopeFilterState } from '../hooks/use-scope-filter-state'
 import type { DashboardData } from '@/src/types/api/dashboard'
+import { PlanLimitAlerts } from './plan-limit-alerts'
 
 // Recharts is heavy and never needed on first paint — load it lazily.
 const DashboardCharts = dynamic(() => import('./dashboard-charts').then(m => m.DashboardCharts), {
@@ -151,6 +152,8 @@ export function DashboardHome() {
         </div>
         <ScopeFilter value={scope} onChange={setScope} />
       </motion.div>
+
+      <PlanLimitAlerts />
 
       {isLoading ? <DashboardSkeleton /> : null}
 

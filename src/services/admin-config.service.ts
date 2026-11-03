@@ -11,4 +11,13 @@ export const adminConfigService = {
 
   updateBotProfile: (token: string, data: UpdateBotProfileRequest): Promise<BotProfile> =>
     apiRequest<BotProfile>('/admin/config/profile', { method: 'PATCH', token, body: data }),
+
+  uploadLogo: (token: string, file: File): Promise<{ logoUrl: string }> => {
+    const body = new FormData()
+    body.append('file', file)
+    return apiRequest<{ logoUrl: string }>('/admin/config/logo', { method: 'POST', token, body })
+  },
+
+  removeLogo: (token: string): Promise<{ logoUrl: null }> =>
+    apiRequest<{ logoUrl: null }>('/admin/config/logo', { method: 'DELETE', token }),
 }

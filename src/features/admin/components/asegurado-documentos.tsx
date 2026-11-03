@@ -3,11 +3,12 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { Building2, CreditCard, Download, FileText, Shield } from 'lucide-react'
-import { BrandMark } from '@/src/components/brand-mark'
 import { Button } from '@/src/components/ui/button'
 import { Separator } from '@/src/components/ui/separator'
 import type { AdminClientDetail, AdminPolizaDetail } from '@/src/types/api/clients'
 import { usePanelTheme } from '../context/panel-theme-context'
+import { usePanelBrand } from '../hooks/use-panel-brand'
+import { OrgMark } from './org-mark'
 import { formatCurrency, formatDate, policyName, polizaStatus, RiskIcon } from '../lib/asegurados-ui'
 import { PolizaStatusBadge } from './poliza-status-badge'
 import { TriunfoDocumentosCard } from './asegurado-triunfo-documentos'
@@ -19,6 +20,7 @@ type DocFormat = 'triunfo' | 'credencial' | 'certificado'
 function TarjetaCredencial({ poliza, client }: { poliza: AdminPolizaDetail; client: AdminClientDetail }) {
   const status = polizaStatus(poliza)
   const { palette } = usePanelTheme()
+  const brand = usePanelBrand()
 
   const statusPill =
     status.estado === 'vigente'
@@ -51,7 +53,7 @@ function TarjetaCredencial({ poliza, client }: { poliza: AdminPolizaDetail; clie
       />
 
       <div className="relative z-10 flex flex-col gap-5 p-6">
-        {/* Top: company + JP logo */}
+        {/* Top: company + the organization's mark */}
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
             <div className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-ember/25 bg-ember/10 text-ember">
@@ -61,7 +63,7 @@ function TarjetaCredencial({ poliza, client }: { poliza: AdminPolizaDetail; clie
               {poliza.company.charAt(0).toUpperCase() + poliza.company.slice(1)} Seguros
             </span>
           </div>
-          <BrandMark size={36} className="rounded-lg shadow-sm" />
+          <OrgMark brand={brand} size={36} className="rounded-lg shadow-sm" />
         </div>
 
         {/* Client name */}

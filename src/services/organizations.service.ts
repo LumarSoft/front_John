@@ -19,6 +19,15 @@ export const organizationsService = {
   detail: (token: string, id: number): Promise<OrganizationDetail> =>
     apiRequest<OrganizationDetail>(`/owner/organizations/${id}`, { token }),
 
+  uploadLogo: (token: string, id: number, file: File): Promise<{ logoUrl: string }> => {
+    const body = new FormData()
+    body.append('file', file)
+    return apiRequest<{ logoUrl: string }>(`/owner/organizations/${id}/logo`, { method: 'POST', token, body })
+  },
+
+  removeLogo: (token: string, id: number): Promise<{ logoUrl: null }> =>
+    apiRequest<{ logoUrl: null }>(`/owner/organizations/${id}/logo`, { method: 'DELETE', token }),
+
   create: (token: string, data: CreateOrganizationRequest): Promise<OrganizationDetail> =>
     apiRequest<OrganizationDetail>('/owner/organizations', { method: 'POST', token, body: data }),
 

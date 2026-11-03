@@ -84,11 +84,11 @@ function CreateOrgForm({ onDone }: { onDone: () => void }) {
       <div className="grid grid-cols-2 gap-3">
         <div className="flex flex-col gap-2">
           <Label htmlFor="org-master">Código master</Label>
-          <Input id="org-master" value={masterCode} onChange={e => setMasterCode(e.target.value)} placeholder="11425" />
+          <Input id="org-master" value={masterCode} onChange={e => setMasterCode(e.target.value)} placeholder="12345" />
         </div>
         <div className="flex flex-col gap-2">
           <Label htmlFor="org-bot">Nombre del bot</Label>
-          <Input id="org-bot" value={botName} onChange={e => setBotName(e.target.value)} placeholder="NICO" />
+          <Input id="org-bot" value={botName} onChange={e => setBotName(e.target.value)} placeholder="SOFÍA" />
         </div>
       </div>
 
@@ -128,7 +128,7 @@ function CreateOrgForm({ onDone }: { onDone: () => void }) {
           value={codesText}
           onChange={e => setCodesText(e.target.value)}
           rows={4}
-          placeholder={'Un código por línea. Formato: código, titular\n8074, PELLEGRINI JOHN\n14831, CANARELLI ADRIANA'}
+          placeholder={'Un código por línea. Formato: código, titular\n8074, PEREZ JUAN\n14831, GOMEZ ANA'}
           className="rounded-md border border-line-2 bg-background px-3 py-2 text-[13px] font-mono"
         />
         <p className="text-[12px] text-muted-foreground">
