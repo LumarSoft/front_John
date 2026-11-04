@@ -1,7 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { createPortal } from 'react-dom'
+import { useState, type ReactNode } from 'react'
 import { Building2, CreditCard, Download, FileText, Shield } from 'lucide-react'
 import { Button } from '@/src/components/ui/button'
 import { Separator } from '@/src/components/ui/separator'
@@ -12,6 +11,7 @@ import { OrgMark } from './org-mark'
 import { formatCurrency, formatDate, policyName, polizaStatus, RiskIcon } from '../lib/asegurados-ui'
 import { PolizaStatusBadge } from './poliza-status-badge'
 import { TriunfoDocumentosCard } from './asegurado-triunfo-documentos'
+import { PrintFrame } from './print-frame'
 
 type DocFormat = 'triunfo' | 'credencial' | 'certificado'
 
@@ -249,29 +249,6 @@ const FORMAT_OPTIONS: { value: DocFormat; label: string; icon: typeof CreditCard
 ]
 
 // ─── Printing ───────────────────────────────────────────────────────────────────
-
-// Renders a document into an isolated, print-only layer and opens the browser print
-// dialog (where the user can save as PDF). Native print is used on purpose: Tailwind v4
-// emits oklch colors that html-to-canvas libraries fail to rasterize.
-function PrintFrame({ children, onDone }: { children: ReactNode; onDone: () => void }) {
-  const onDoneRef = useRef(onDone)
-
-  useEffect(() => {
-    onDoneRef.current = onDone
-  })
-
-  useEffect(() => {
-    const handleAfterPrint = () => onDoneRef.current()
-    window.addEventListener('afterprint', handleAfterPrint)
-    const timer = window.setTimeout(() => window.print(), 80)
-    return () => {
-      window.clearTimeout(timer)
-      window.removeEventListener('afterprint', handleAfterPrint)
-    }
-  }, [])
-
-  return createPortal(<div className="print-area">{children}</div>, document.body)
-}
 
 function printableDoc(format: DocFormat, poliza: AdminPolizaDetail, client: AdminClientDetail): ReactNode {
   if (format === 'credencial') {

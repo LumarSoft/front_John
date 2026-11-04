@@ -422,6 +422,19 @@
     background: #ffffff;
   }
 
+  /* A report that runs over several pages flows from the top instead of being fixed to one. */
+  .print-area.print-flow {
+    position: absolute;
+    inset: 0 0 auto 0;
+    display: block;
+    padding: 0;
+    color: #111111;
+  }
+
+  .print-area.print-flow * {
+    border-color: #d4d4d4 !important;
+  }
+
   @page {
     margin: 10mm;
   }
