@@ -2,7 +2,6 @@
 export type PlanFeatureKey =
   | 'rejection_notices'
   | 'expiry_notices'
-  | 'internal_chat'
   | 'campaign_coverage_upgrade'
   | 'campaign_quote_followup'
   | 'campaign_renewal'
