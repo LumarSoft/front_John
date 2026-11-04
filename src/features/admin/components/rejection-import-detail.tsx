@@ -130,7 +130,9 @@ export function RejectionImportDetail({ importId, onDeleted }: { importId: numbe
           disabled={busy || !notices.included || !data.templateReady || selection.toSend.length === 0}
           title={
             !notices.included
-              ? 'Tu plan no incluye el envío de avisos'
+              ? notices.byRole
+                ? 'Tu usuario no tiene habilitado el envío de avisos'
+                : 'Tu plan no incluye el envío de avisos'
               : data.templateReady
                 ? undefined
                 : 'La plantilla de WhatsApp todavía no está habilitada'
@@ -148,9 +150,12 @@ export function RejectionImportDetail({ importId, onDeleted }: { importId: numbe
         )}
         {!notices.included && (
           <p className="w-full text-[12.5px] text-muted-foreground">
-            El plan de tus números no incluye el envío de avisos de rechazos
-            {notices.availableIn ? `: está desde el plan ${notices.availableIn}` : ''}. El plan de cada número se elige
-            en Facturación. Mientras tanto podés avisar por otro medio y marcarlos como avisados a mano.
+            {notices.byRole
+              ? 'Tu usuario no tiene habilitado el envío de avisos de rechazos. Lo define el soporte de la plataforma.'
+              : `El plan de tus números no incluye el envío de avisos de rechazos${
+                  notices.availableIn ? `: está desde el plan ${notices.availableIn}` : ''
+                }. El plan de cada número se elige en Facturación.`}{' '}
+            Mientras tanto podés avisar por otro medio y marcarlos como avisados a mano.
           </p>
         )}
       </div>

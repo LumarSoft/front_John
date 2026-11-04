@@ -73,9 +73,11 @@ export function CampaignCard({
         {locked ? (
           <span className={`${CHIP} border-line-2 bg-secondary text-muted-foreground`}>
             <Lock className="size-3" />
-            {campaign.plan.availableIn
-              ? `Disponible en el plan ${campaign.plan.availableIn}`
-              : 'No incluida en tu plan'}
+            {campaign.plan.byRole
+              ? 'No habilitada para tu usuario'
+              : campaign.plan.availableIn
+                ? `Disponible en el plan ${campaign.plan.availableIn}`
+                : 'No incluida en tu plan'}
           </span>
         ) : (
           <>

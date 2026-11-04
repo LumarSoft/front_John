@@ -49,7 +49,8 @@ export interface Campaign {
   templates: CampaignTemplate[]
   /** Some sending number has this message approved by Meta. */
   ready: boolean
-  plan: { included: boolean; availableIn: string | null }
+  /** byRole: the plans include it but the user's role has it off (missing from an older API). */
+  plan: { included: boolean; availableIn: string | null; byRole?: boolean }
   /** Clients the campaign finds now, in the user's scope. */
   candidates: number
   /** The message rendered with the example values. */

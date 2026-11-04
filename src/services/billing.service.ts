@@ -4,7 +4,10 @@ import type {
   CatalogPlan,
   CatalogResponse,
   CreatePlanRequest,
+  FeatureRoles,
+  FeatureRolesResponse,
   OrganizationFeatures,
+  PlanFeatureKey,
   OwnerBilling,
   UpdatePlanRequest,
 } from '@/src/types/api/billing'
@@ -56,6 +59,15 @@ export const billingService = {
 
   updatePlan(token: string, id: number, data: UpdatePlanRequest): Promise<CatalogPlan> {
     return apiRequest<CatalogPlan>(`/owner/plans/${id}`, { method: 'PATCH', token, body: data })
+  },
+
+  /** Who may use each function besides the plan (owner). */
+  featureRoles(token: string): Promise<FeatureRolesResponse> {
+    return apiRequest<FeatureRolesResponse>('/owner/plan-features/roles', { token })
+  },
+
+  updateFeatureRoles(token: string, key: PlanFeatureKey, data: Partial<FeatureRoles>): Promise<FeatureRoles> {
+    return apiRequest<FeatureRoles>(`/owner/plan-features/roles/${key}`, { method: 'PATCH', token, body: data })
   },
 
   removePlan(token: string, id: number): Promise<{ ok: boolean }> {
