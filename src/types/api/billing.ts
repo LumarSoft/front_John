@@ -149,7 +149,12 @@ export interface UpdatePlanRequest {
 
 /** The owner's month: billed vs what Meta really charged, OpenAI apart. */
 export interface OwnerBillingTotals {
+  /** Plan messages consumed: a template counts 2 from its start date. */
   messages: number
+  /** Messages sent, one each. Missing from an API older than the template weight. */
+  sentMessages?: number
+  /** Of the messages sent, the templates. Missing from an API older than the template weight. */
+  templateMessages?: number
   /** Messages Meta charged for (past the free service messages, and every template). */
   metaBillableMessages: number
   billedUsd: number
@@ -183,6 +188,11 @@ export interface OwnerBillingOrganization {
 
 export interface OwnerBilling {
   period: string
+  /** Read as frozen on the 1st of the next month. Missing from an API older than the monthly close. */
+  closed?: boolean
+  closedAt?: string | null
+  /** Closed after the 1st of the next month, with the plans of that day. */
+  backfilled?: boolean
   organizations: OwnerBillingOrganization[]
   totals: OwnerBillingTotals & {
     organizations: number
