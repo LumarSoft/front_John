@@ -45,6 +45,8 @@ export interface OrganizationNumber {
   id: number
   phoneNumberId: string
   number: string
+  /** The branch the number belongs to, as the office calls it ("27 de Febrero"); absent on older APIs. */
+  branchName?: string | null
   isActive: boolean
   responsibleCode: { id: number; code: string; holderName: string | null } | null
   servedCodes: Array<{ id: number; code: string }>

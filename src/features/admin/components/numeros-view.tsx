@@ -34,6 +34,7 @@ import { useRole } from '../hooks/use-role'
 import { useProducerCodes } from '../hooks/use-producer-codes'
 import { useOwnProducerCodes } from '../hooks/use-own-producer-codes'
 import { usePhoneNumbers, usePhoneNumberMutations } from '../hooks/use-phone-numbers'
+import { numberLabel } from '../lib/number-label'
 import { NumberAssistantSheet } from './number-assistant-sheet'
 import { MetaPortfolioLine } from './meta-portfolio-line'
 
@@ -58,7 +59,7 @@ function DisconnectedNotice({ numbers }: { numbers: AdminPhoneNumber[] }) {
         <ul className="mt-1 flex flex-col gap-1 text-[13px] text-ink-3">
           {numbers.map(n => (
             <li key={n.id}>
-              <span className="font-medium text-ink">{n.number}</span> se desconectó el{' '}
+              <span className="font-medium text-ink">{numberLabel(n)}</span> se desconectó el{' '}
               {formatMoment(n.disconnectedAt as string)}. Motivo: {n.disconnectReasonLabel ?? n.disconnectReason}.
             </li>
           ))}
@@ -422,7 +423,7 @@ export function NumerosView() {
               <TableRow key={n.id}>
                 <TableCell className="pl-5">
                   <div className="flex flex-col">
-                    <span className="text-[14px] font-medium text-ink">{n.number}</span>
+                    <span className="text-[14px] font-medium text-ink">{numberLabel(n)}</span>
                     <span className="font-mono text-[11px] text-muted-foreground">{n.phoneNumberId}</span>
                     <MetaPortfolioLine portfolio={n.portfolio} />
                     <div className="mt-1 flex flex-wrap gap-1">
@@ -571,8 +572,9 @@ export function NumerosView() {
           <AlertDialogHeader>
             <AlertDialogTitle>¿Dar de baja el número?</AlertDialogTitle>
             <AlertDialogDescription>
-              El bot dejará de atender <span className="font-medium text-ink">{deleteTarget?.number}</span> y su consumo
-              del mes deja de verse acá. Si Meta lo desconectó, no lo des de baja: usá Reconectar número.
+              El bot dejará de atender{' '}
+              <span className="font-medium text-ink">{deleteTarget && numberLabel(deleteTarget)}</span> y su consumo del
+              mes deja de verse acá. Si Meta lo desconectó, no lo des de baja: usá Reconectar número.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

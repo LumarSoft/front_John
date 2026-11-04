@@ -56,6 +56,8 @@ export interface AdminPhoneNumber {
   id: number
   phoneNumberId: string
   number: string
+  /** The branch the number belongs to, as the office calls it ("27 de Febrero"); absent on older APIs. */
+  branchName?: string | null
   isActive: boolean
   /** Owner only: the OpenAI budget of the month. */
   monthlyBudgetUsd?: number | null
@@ -130,6 +132,8 @@ export interface AssistantSettings {
 export interface NumberAssistant {
   id: number
   number: string
+  /** The branch the number belongs to, as the office calls it ("27 de Febrero"); absent on older APIs. */
+  branchName?: string | null
   canEdit: boolean
   own: AssistantSettings & {
     /** The number's own bot switch (absent on older APIs). */
@@ -150,6 +154,8 @@ export interface NumberAssistant {
 
 /** Only the fields sent change; clearing one gives the number the organization's value back. */
 export interface UpdateNumberAssistantRequest {
+  /** The number's branch; empty = none (it is never the organization's). */
+  branchName?: string
   botName?: string
   staffNames?: string[]
   businessHours?: WeeklySchedule | null

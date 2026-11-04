@@ -4,6 +4,7 @@ import { useOwnProducerCodes } from '../hooks/use-own-producer-codes'
 import { useProducerCodes } from '../hooks/use-producer-codes'
 import { usePhoneNumbers } from '../hooks/use-phone-numbers'
 import { useRole } from '../hooks/use-role'
+import { numberLabel } from '../lib/number-label'
 
 /** A section filter value: either a producer code OR a phone number (never both). */
 export interface ScopeFilterValue {
@@ -21,7 +22,9 @@ interface ScopeFilterProps {
 
 /**
  * Combined "ver todo o filtrar" combobox for the SuperAdmin sections. One select
- * with two groups — Números/Sucursales and Productores — plus "Todos". Choosing a
+ * with two groups — Números/Sucursales and Productores — plus "Todos". A number
+ * reads with its branch ("+54 9 341 275-7294 · 27 de Febrero"), or with its
+ * responsible code while it has no branch name. Choosing a
  * número filters by the codes that number serves (and, in the inbox, by that exact
  * number); choosing a productor filters by that single code. A plain admin
  * (already restricted to their own codes by the API) gets a select of those
@@ -80,8 +83,8 @@ export function ScopeFilter({ value, onChange, className, allLabel = 'Todos' }: 
         <optgroup label="Números / Sucursales">
           {numbers.map(n => (
             <option key={`p${n.id}`} value={`p:${n.id}`}>
-              {n.number}
-              {n.responsibleCode ? ` · ${n.responsibleCode.code}` : ''}
+              {numberLabel(n)}
+              {!n.branchName && n.responsibleCode ? ` · ${n.responsibleCode.code}` : ''}
             </option>
           ))}
         </optgroup>

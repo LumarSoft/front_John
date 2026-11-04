@@ -235,9 +235,10 @@ function AssistantStep({ numberId, onNext }: { numberId: number; onNext: () => v
   return (
     <div className="flex flex-col gap-4">
       <p className="text-[13px] text-muted-foreground">
-        Cómo atiende el bot en este número: su nombre, las personas de la oficina a las que los clientes pueden
-        escribir, el horario y los feriados, los datos que da (grúa, denuncias, cuenta para transferir, dónde pagar) y
-        qué coberturas ofrece. Lo que no completes toma lo de la organización.
+        El nombre de la sucursal, con el que el panel muestra el número, y cómo atiende el bot en este número: su
+        nombre, las personas de la oficina a las que los clientes pueden escribir, el horario y los feriados, los datos
+        que da (grúa, denuncias, cuenta para transferir, dónde pagar) y qué coberturas ofrece. Lo que no completes toma
+        lo de la organización.
       </p>
       <div className="flex flex-wrap items-center gap-3">
         <Button
