@@ -191,3 +191,83 @@ export interface OwnerBilling {
     pausedNumbers: number
   }
 }
+
+// ─── Liquidación (owner) ─────────────────────────────────────────────────────
+
+/** How a month splits: the platform's cost per consumed message and the partner's share of what is left. */
+export interface SettlementTerms {
+  costPerMessageUsd: number
+  /** 0–1. */
+  partnerShare: number
+}
+
+export interface SettlementAmounts {
+  consumedMessages: number
+  billedUsd: number
+  /** consumed messages × cost per message. */
+  serviceCostUsd: number
+  /** billed − service cost (negative when a trial costs and bills nothing). */
+  remainderUsd: number
+  partnerShareUsd: number
+  ownerShareUsd: number
+  /** The platform's service cost plus its share. */
+  ownerTotalUsd: number
+}
+
+export interface SettlementNumber extends SettlementAmounts {
+  id: number
+  number: string
+  isActive: boolean
+  responsibleCode: { code: string; holderName: string | null } | null
+  plan: { name: string; includedMessages: number; priceUsd: number }
+  trial: boolean
+  prorated: boolean
+  firstMonth: boolean
+  sentMessages: number
+  templateMessages: number
+}
+
+export interface SettlementOrganization {
+  id: number
+  name: string
+  isActive: boolean
+  numbers: SettlementNumber[]
+  totals: SettlementAmounts
+}
+
+export interface SettlementMonth {
+  period: string
+  /** The running month. */
+  live: boolean
+  closed: boolean
+  closedAt: string | null
+  backfilled: boolean
+  terms: SettlementTerms
+  totals: SettlementAmounts & { organizations: number; numbers: number; trialNumbers: number }
+  organizations: SettlementOrganization[]
+}
+
+export interface SettlementSeriesMonth extends SettlementAmounts {
+  period: string
+  live: boolean
+  closed: boolean
+  backfilled: boolean
+  activeNumbers: number
+  newNumbers: number
+  /** In service the month before, not this one. */
+  stoppedNumbers: number
+}
+
+export interface SettlementSeries {
+  to: string
+  terms: SettlementTerms
+  months: SettlementSeriesMonth[]
+}
+
+export interface CloseMonthResult {
+  period: string
+  alreadyClosed: boolean
+  closedNumbers: number
+  backfilled: boolean
+  closedAt: string | null
+}

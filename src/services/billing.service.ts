@@ -2,6 +2,7 @@ import { apiRequest } from '@/src/lib/api-client'
 import type {
   BillingOverview,
   CatalogPlan,
+  CloseMonthResult,
   CatalogResponse,
   CreatePlanRequest,
   FeatureRoles,
@@ -9,6 +10,8 @@ import type {
   OrganizationFeatures,
   PlanFeatureKey,
   OwnerBilling,
+  SettlementMonth,
+  SettlementSeries,
   UpdatePlanRequest,
 } from '@/src/types/api/billing'
 
@@ -47,6 +50,21 @@ export const billingService = {
 
   ownerBilling(token: string, period?: string): Promise<OwnerBilling> {
     return apiRequest<OwnerBilling>(`/owner/billing${periodQuery(period)}`, { token })
+  },
+
+  /** How a month's billing splits with the commercial partner (owner). */
+  settlement(token: string, period?: string): Promise<SettlementMonth> {
+    return apiRequest<SettlementMonth>(`/owner/settlement${periodQuery(period)}`, { token })
+  },
+
+  /** The last twelve months of the settlement (owner). */
+  settlementSeries(token: string): Promise<SettlementSeries> {
+    return apiRequest<SettlementSeries>('/owner/settlement/series', { token })
+  },
+
+  /** Freezes a month that already ended (owner). */
+  closeMonth(token: string, period: string): Promise<CloseMonthResult> {
+    return apiRequest<CloseMonthResult>('/owner/billing/close', { method: 'POST', token, body: { period } })
   },
 
   plans(token: string): Promise<CatalogResponse> {
