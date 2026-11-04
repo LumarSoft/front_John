@@ -73,7 +73,6 @@ function OrganizationRows({ org }: { org: SettlementOrganization }) {
               <span className="font-mono whitespace-nowrap">{n.number}</span>
               <div className="text-[11.5px] text-muted-foreground">
                 {n.trial ? 'Prueba' : `${n.plan.name} · ${usd(n.plan.priceUsd)}`}
-                {n.prorated && ' · prorrateado'}
                 {n.firstMonth && ' · primer mes'}
                 {n.templateMessages > 0 &&
                   ` · ${int(n.templateMessages)} ${n.templateMessages === 1 ? 'plantilla' : 'plantillas'}`}

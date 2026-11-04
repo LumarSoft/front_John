@@ -110,9 +110,8 @@ export interface BillingNumber {
   percentUsed: number
   /** Where the number goes past this plan: the next of the catalog, or the next block. */
   nextPlan: { name: string; messages: number; priceUsd: number } | null
-  /** The whole plan for the organization; prorated in the first month for the owner only. */
+  /** The whole plan: the calendar month is always charged whole. */
   billedUsd: number
-  prorated: boolean
   /** Missing from an API older than the plan limit pause. */
   limit?: PlanLimit
   /** When the month's counters last moved (ISO), null before the first message. */
@@ -151,7 +150,7 @@ export interface UpdatePlanRequest {
 
 /** The owner's month: billed vs what Meta really charged, OpenAI apart. */
 export interface OwnerBillingTotals {
-  /** Plan messages consumed: a template counts 2 from its start date. */
+  /** Plan messages consumed: a campaign (marketing) message counts 2 from its start date; every other, 1. */
   messages: number
   /** Messages sent, one each. Missing from an API older than the template weight. */
   sentMessages?: number
@@ -177,7 +176,6 @@ export interface OwnerBillingNumber extends OwnerBillingTotals {
   plan: BilledPlan
   assignedPlan: BilledPlan | null
   upgraded: boolean
-  prorated: boolean
   /** Its assistant is paused this month for reaching the plan. */
   paused: boolean
 }
@@ -235,7 +233,6 @@ export interface SettlementNumber extends SettlementAmounts {
   responsibleCode: { code: string; holderName: string | null } | null
   plan: { name: string; includedMessages: number; priceUsd: number }
   trial: boolean
-  prorated: boolean
   firstMonth: boolean
   sentMessages: number
   templateMessages: number
