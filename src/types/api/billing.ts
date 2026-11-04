@@ -1,3 +1,23 @@
+/** The panel functions a plan can include or leave out (api_john `src/plan-features/plan-features.ts`). */
+export type PlanFeatureKey = 'rejection_notices' | 'expiry_notices' | 'internal_chat'
+
+/** Whether a plan (or the organization's plans) includes each function. */
+export type PlanFeatures = Record<PlanFeatureKey, boolean>
+
+/** A function of the catalog as the owner sees it in Planes. */
+export interface PlanFeatureInfo {
+  key: PlanFeatureKey
+  label: string
+  description: string
+}
+
+/** What the organization's plans include, for the panel to show or lock a function. */
+export interface OrganizationFeatures {
+  features: PlanFeatures
+  /** The cheapest active paid plan that includes each function, or null. */
+  availableIn: Record<PlanFeatureKey, string | null>
+}
+
 /** A plan of the platform's catalog as the organizations see it: messages a month for a price. */
 export interface PlanOffer {
   id: number
@@ -13,11 +33,15 @@ export interface CatalogPlan extends PlanOffer {
   /** Off: the numbers on it keep it, but no number moves to it. */
   isActive: boolean
   sortOrder: number
+  /** The functions it includes. Missing from an API older than the plan features. */
+  features?: PlanFeatures
 }
 
 export interface CatalogResponse {
   /** Messages per block past the largest plan. */
   blockMessages: number
+  /** The functions a plan can include. Missing from an API older than the plan features. */
+  features?: PlanFeatureInfo[]
   plans: CatalogPlan[]
 }
 
@@ -91,6 +115,7 @@ export interface CreatePlanRequest {
   priceUsd: number
   isTrial?: boolean
   sortOrder?: number
+  features?: Partial<PlanFeatures>
 }
 
 export interface UpdatePlanRequest {
@@ -100,6 +125,8 @@ export interface UpdatePlanRequest {
   isTrial?: boolean
   isActive?: boolean
   sortOrder?: number
+  /** Only the functions to change. */
+  features?: Partial<PlanFeatures>
 }
 
 /** The owner's month: billed vs what Meta really charged, OpenAI apart. */

@@ -1,7 +1,7 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { billingService } from '@/src/services/billing.service'
 import { QUERY_KEYS } from '@/src/lib/query-keys'
-import type { CreatePlanRequest, UpdatePlanRequest } from '@/src/types/api/billing'
+import type { CreatePlanRequest, PlanFeatureKey, UpdatePlanRequest } from '@/src/types/api/billing'
 import { useAuth } from '../context/auth-context'
 
 /** How often the consumption bars follow Meta's deliveries. */
@@ -18,6 +18,27 @@ export function useBillingOverview(period?: string, enabled = true) {
     placeholderData: keepPreviousData,
     refetchInterval: LIVE_REFRESH_MS,
   })
+}
+
+/** The functions the organization's plans include (the owner gets them all). */
+export function usePlanFeatures() {
+  const { token } = useAuth()
+
+  return useQuery({
+    queryKey: QUERY_KEYS.admin.planFeatures,
+    queryFn: () => billingService.features(token as string),
+    enabled: !!token,
+    staleTime: 5 * 60_000,
+  })
+}
+
+/**
+ * Whether the organization's plans include one function, and the cheapest plan that does. Until it is known, or
+ * against an API older than the plan features, the function counts as included: the API has the last word.
+ */
+export function usePlanFeature(key: PlanFeatureKey) {
+  const { data } = usePlanFeatures()
+  return { included: data?.features[key] ?? true, availableIn: data?.availableIn[key] ?? null }
 }
 
 /** The SuperAdmin puts a number on a plan; the month and the numbers refresh after it. */

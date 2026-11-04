@@ -4,6 +4,7 @@ import type {
   CatalogPlan,
   CatalogResponse,
   CreatePlanRequest,
+  OrganizationFeatures,
   OwnerBilling,
   UpdatePlanRequest,
 } from '@/src/types/api/billing'
@@ -26,6 +27,11 @@ export const billingService = {
       token,
       body: { choice },
     })
+  },
+
+  /** The functions the organization's plans include. */
+  features(token: string): Promise<OrganizationFeatures> {
+    return apiRequest<OrganizationFeatures>('/admin/billing/features', { token })
   },
 
   assignPlan(token: string, numberId: number, planId: number): Promise<{ ok: boolean }> {

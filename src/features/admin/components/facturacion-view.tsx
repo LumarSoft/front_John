@@ -38,6 +38,7 @@ import type {
   CatalogPlan,
   OwnerBillingOrganization,
   OwnerBillingTotals,
+  PlanFeatureInfo,
   PlanOffer,
 } from '@/src/types/api/billing'
 import { useAssignPlan, useBillingOverview, useOwnerBilling, useOwnerPlans, usePlanActions } from '../hooks/use-billing'
@@ -429,6 +430,110 @@ function PlanDialog({
   )
 }
 
+/** One function of one plan, on or off. */
+function FeatureSwitch({
+  on,
+  label,
+  disabled,
+  onChange,
+}: {
+  on: boolean
+  label: string
+  disabled: boolean
+  onChange: (on: boolean) => void
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={on}
+      aria-label={label}
+      disabled={disabled}
+      onClick={() => onChange(!on)}
+      className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full border transition-colors disabled:cursor-wait disabled:opacity-60 ${
+        on ? 'border-ember bg-ember' : 'border-line-2 bg-secondary'
+      }`}
+    >
+      <span
+        className={`inline-block size-4 rounded-full bg-background shadow-sm transition-transform ${
+          on ? 'translate-x-4' : 'translate-x-0.5'
+        }`}
+      />
+    </button>
+  )
+}
+
+/** What each plan includes besides its messages: the owner turns each function on or off per plan. */
+function PlanFeaturesCard({ features, plans }: { features: PlanFeatureInfo[]; plans: CatalogPlan[] }) {
+  const { updatePlan } = usePlanActions()
+  const [pending, setPending] = useState<string | null>(null)
+
+  const flip = (plan: CatalogPlan, feature: PlanFeatureInfo, on: boolean) => {
+    setPending(`${plan.id}:${feature.key}`)
+    updatePlan.mutate(
+      { id: plan.id, data: { features: { [feature.key]: on } } },
+      {
+        onSuccess: () =>
+          toast.success(
+            on
+              ? `${feature.label}: ahora en el plan ${plan.name}`
+              : `${feature.label}: ya no está en el plan ${plan.name}`,
+          ),
+        onError: error => failed(error, 'No se pudo cambiar la función'),
+        onSettled: () => setPending(null),
+      },
+    )
+  }
+
+  return (
+    <section className="mt-8">
+      <h2 className="font-display text-[20px] tracking-[-0.02em] text-ink">Funciones por plan</h2>
+      <p className="mt-1 mb-4 max-w-2xl text-[13px] text-muted-foreground">
+        Qué incluye cada plan además de los mensajes. Una organización puede usar una función si el plan de alguno de
+        sus números la incluye; si no, el panel la muestra bloqueada y dice desde qué plan está. Una función nueva llega
+        prendida en todos los planes.
+      </p>
+      <Card className="overflow-hidden border-line-2 py-0 shadow-sm">
+        <Table>
+          <TableHeader>
+            <TableRow className="border-line-2 hover:bg-transparent">
+              <TableHead className={`h-11 pl-5 ${HEAD}`}>Función</TableHead>
+              {plans.map(plan => (
+                <TableHead key={plan.id} className={`text-center ${HEAD} ${plan.isActive ? '' : 'opacity-60'}`}>
+                  {plan.name}
+                </TableHead>
+              ))}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {features.map(feature => (
+              <TableRow key={feature.key}>
+                <TableCell className="min-w-[220px] whitespace-normal pl-5">
+                  <div className="text-[14px] font-medium text-ink">{feature.label}</div>
+                  <div className="text-[12px] text-muted-foreground">{feature.description}</div>
+                </TableCell>
+                {plans.map(plan => {
+                  const on = plan.features?.[feature.key] ?? true
+                  return (
+                    <TableCell key={plan.id} className={`text-center ${plan.isActive ? '' : 'opacity-60'}`}>
+                      <FeatureSwitch
+                        on={on}
+                        label={`${feature.label} en el plan ${plan.name}`}
+                        disabled={pending === `${plan.id}:${feature.key}`}
+                        onChange={value => flip(plan, feature, value)}
+                      />
+                    </TableCell>
+                  )
+                })}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </Card>
+    </section>
+  )
+}
+
 function OwnerPlansTab() {
   const { data, isLoading } = useOwnerPlans()
   const { createPlan, updatePlan, removePlan } = usePlanActions()
@@ -573,6 +678,10 @@ function OwnerPlansTab() {
           </TableBody>
         </Table>
       </Card>
+
+      {data?.features && data.features.length > 0 && plans.length > 0 && (
+        <PlanFeaturesCard features={data.features} plans={plans} />
+      )}
 
       {(creating || editing) && (
         <PlanDialog

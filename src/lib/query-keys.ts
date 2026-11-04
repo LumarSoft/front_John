@@ -40,6 +40,7 @@ export const QUERY_KEYS = {
     expiredPoliciesAll: ['admin', 'cobranzas', 'vencidas'] as const,
     billingAll: ['admin', 'billing'] as const,
     billing: (period?: string) => ['admin', 'billing', 'overview', period ?? 'current'] as const,
+    planFeatures: ['admin', 'billing', 'features'] as const,
     expiredPolicies: (params?: ExpiredPoliciesQuery) =>
       ['admin', 'cobranzas', 'vencidas', 'list', params ?? {}] as const,
     novedades: (params?: NovedadesQuery) => ['admin', 'novedades', 'list', params ?? {}] as const,
