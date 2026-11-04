@@ -16,6 +16,7 @@ import type {
 } from '@/src/types/api/status'
 import { useIntegrationStatus } from '../hooks/use-integration-status'
 import { useProfile } from '../hooks/use-profile'
+import { numberLabel } from '../lib/number-label'
 import {
   blameLabel,
   COMPONENT_COPY,
@@ -383,7 +384,7 @@ function WhatsappRow({ number, isOwner }: { number: WhatsappNumberStatus; isOwne
   const problem = whatsappProblem(number)
   return (
     <Row
-      name={number.number}
+      name={numberLabel(number)}
       description={isOwner ? number.producerName : 'Número de WhatsApp conectado a Meta.'}
       state={number.status}
       stateLabel={number.status === 'failing' ? 'Desconectado' : undefined}

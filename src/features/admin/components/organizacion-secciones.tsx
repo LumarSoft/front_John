@@ -18,6 +18,7 @@ import type {
   OrganizationUser,
 } from '@/src/types/api/organizations'
 import { useOrganizationMutations } from '../hooks/use-organizations'
+import { numberLabel } from '../lib/number-label'
 import { MetaPortfolioLine } from './meta-portfolio-line'
 
 // ── helpers ────────────────────────────────────────────────
@@ -99,7 +100,7 @@ export function NumbersSection({ numbers }: { numbers: OrganizationNumber[] }) {
                   <TableCell>
                     <div className="flex items-center gap-1.5">
                       <Phone className="size-3.5 text-muted-foreground" />
-                      <span className="text-[13px] font-medium text-ink">{n.number}</span>
+                      <span className="text-[13px] font-medium text-ink">{numberLabel(n)}</span>
                       {!n.isActive && (
                         <Badge variant="destructive" className="text-[10px]">
                           inactivo

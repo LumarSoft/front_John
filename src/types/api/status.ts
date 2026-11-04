@@ -70,6 +70,8 @@ export interface TriunfoAccess {
 export interface WhatsappNumberStatus {
   id: number
   number: string
+  /** The branch the number belongs to, as the office calls it ("27 de Febrero"); absent on older APIs. */
+  branchName?: string | null
   producerName: string
   status: Exclude<IntegrationState, 'unknown'>
   disconnectedAt: string | null
