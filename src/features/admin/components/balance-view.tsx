@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import dynamic from 'next/dynamic'
-import { AlertTriangle, ArrowDownRight, ArrowUpRight, Download, Minus } from 'lucide-react'
+import { AlertTriangle, ArrowDownRight, ArrowUpRight, Download, Minus, ShieldCheck } from 'lucide-react'
 import { Button } from '@/src/components/ui/button'
 import { Card, CardContent } from '@/src/components/ui/card'
 import { Skeleton } from '@/src/components/ui/skeleton'
@@ -10,6 +10,7 @@ import { saveBlob } from '@/src/lib/download'
 import { cn } from '@/src/lib/utils'
 import type { BalanceMetricKey, BalanceMonth } from '@/src/types/api/balance'
 import { useBalance } from '../hooks/use-balance'
+import { useRole } from '../hooks/use-role'
 import { useScopeFilterState } from '../hooks/use-scope-filter-state'
 import {
   BACKFILL_NOTE,
@@ -168,7 +169,7 @@ function BalanceTable({ months }: { months: BalanceMonth[] }) {
   )
 }
 
-export function BalanceView() {
+function BalanceContent() {
   // Opens on the office line for a SuperAdmin; see useScopeFilterState.
   const [scope, setScope] = useScopeFilterState()
   const [months, setMonths] = useState(12)
@@ -271,4 +272,26 @@ export function BalanceView() {
       ) : null}
     </div>
   )
+}
+
+/** The monthly balance is the SuperAdmin's alone: an ADMIN gets this notice (and a 403 from the API). */
+export function BalanceView() {
+  const { isSuperAdmin, isLoading } = useRole()
+  if (isLoading) return null
+  if (!isSuperAdmin) {
+    return (
+      <div className="mx-auto w-full max-w-5xl px-5 py-16 text-center md:px-8">
+        <div className="mx-auto flex max-w-md flex-col items-center gap-3">
+          <div className="flex size-12 items-center justify-center rounded-full bg-secondary text-muted-foreground">
+            <ShieldCheck className="size-5" />
+          </div>
+          <h1 className="font-display text-[22px] text-ink">Acceso restringido</h1>
+          <p className="text-[14px] text-muted-foreground">
+            Solo el SuperAdmin de la organización puede ver el balance mensual.
+          </p>
+        </div>
+      </div>
+    )
+  }
+  return <BalanceContent />
 }
