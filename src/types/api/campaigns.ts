@@ -81,6 +81,8 @@ export interface CampaignCandidate {
   /** ISO of the date that matters for the campaign. */
   date: string | null
   producerCode: { id: number; code: string } | null
+  /** What the message fills in for this person ({ nombre, bien, vencimiento }). Missing from an older API. */
+  values?: Record<string, string>
   lastMessage: { status: CampaignMessageStatus; sentAt: string | null; createdAt: string; error: string | null } | null
   optedOut: boolean
 }

@@ -79,6 +79,8 @@ export function candidateMessage(campaign: Campaign, candidate: CampaignCandidat
     nombre: firstName(candidate.client.name),
     bien: candidate.item,
     vencimiento: shortDate(candidate.date),
+    // The API's own values, when it sends them: the preview then reads exactly like the message.
+    ...candidate.values,
   })
 }
 
