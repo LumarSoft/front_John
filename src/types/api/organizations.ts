@@ -34,7 +34,6 @@ export interface PhoneNumberUsage {
   assignedPlan: BilledPlan | null
   plan: BilledPlan
   upgraded: boolean
-  prorated: boolean
   /** What the platform invoices the organization for the month. */
   billedUsd: number
   /** Billed minus Meta (OpenAI is prepaid). */
