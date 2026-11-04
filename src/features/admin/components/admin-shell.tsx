@@ -9,6 +9,7 @@ import { TooltipProvider } from '@/src/components/ui/tooltip'
 import { useAuth } from '../context/auth-context'
 import { useRole } from '../hooks/use-role'
 import { AppSidebar } from './app-sidebar'
+import { AssistantLauncher } from './assistant-launcher'
 import { TriunfoStatusBanner } from './triunfo-status-banner'
 
 const TITLES: Record<string, string> = {
@@ -68,6 +69,8 @@ export function AdminShell({ children }: { children: ReactNode }) {
               <SidebarTrigger className="-ml-1 text-muted-foreground" />
               <Separator orientation="vertical" className="mr-1 !h-4" />
               <span className="font-display text-[14.5px] tracking-[-0.01em] text-ink">{title}</span>
+              {/* The OWNER does not work a cartera: nothing for the assistant to look up. */}
+              {!roleLoading && !isOwner && <AssistantLauncher />}
             </header>
           )}
           {/* The OWNER sees each organization's outage in Organizaciones instead. */}

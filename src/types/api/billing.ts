@@ -7,6 +7,7 @@ export type PlanFeatureKey =
   | 'campaign_renewal'
   | 'campaign_winback'
   | 'campaign_cross_sell'
+  | 'ai_assistant'
 
 /** Whether a plan (or the organization's plans) includes each function. */
 export type PlanFeatures = Record<PlanFeatureKey, boolean>
