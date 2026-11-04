@@ -79,6 +79,7 @@ export const QUERY_KEYS = {
     organizationTriunfo: (id: number) => ['owner', 'organizations', id, 'triunfo'] as const,
     organizationTriunfoErrors: (id: number) => ['owner', 'organizations', id, 'triunfo', 'errors'] as const,
     plans: ['owner', 'plans'] as const,
+    featureRoles: ['owner', 'plans', 'feature-roles'] as const,
     billingAll: ['owner', 'billing'] as const,
     billing: (period?: string) => ['owner', 'billing', period ?? 'current'] as const,
     improvementsAll: ['owner', 'improvements'] as const,

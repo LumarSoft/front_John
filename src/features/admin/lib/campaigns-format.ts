@@ -36,6 +36,8 @@ export function campaignReview(templates: CampaignTemplate[]): CampaignReview {
 /** Why the office cannot send a campaign now, or null when it can. */
 export function sendBlockedReason(campaign: Campaign): string | null {
   if (!campaign.plan.included) {
+    if (campaign.plan.byRole)
+      return 'Tu usuario no tiene habilitada esta campaña. Lo define el soporte de la plataforma.'
     return campaign.plan.availableIn
       ? `Tu plan no incluye esta campaña: está desde el plan ${campaign.plan.availableIn}.`
       : 'Tu plan no incluye esta campaña.'

@@ -221,7 +221,8 @@ export function CampaignClientsTab({ campaign }: { campaign: Campaign }) {
   if (!campaign.plan.included) {
     return (
       <div className="rounded-xl border border-line-2 bg-secondary/30 px-5 py-10 text-center text-[13.5px] text-muted-foreground">
-        {blocked} El plan de cada número se elige en Facturación.
+        {blocked}
+        {!campaign.plan.byRole && ' El plan de cada número se elige en Facturación.'}
       </div>
     )
   }

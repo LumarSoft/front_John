@@ -16,6 +16,9 @@ export function AssistantLauncher() {
   const assistant = useAssistant()
   const plan = usePlanFeature('ai_assistant')
 
+  // No plan includes it yet (it starts off): no button that only says it is not available.
+  if (plan.nowhere) return null
+
   return (
     <>
       <Button

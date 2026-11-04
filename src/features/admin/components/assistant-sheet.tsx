@@ -25,7 +25,7 @@ interface AssistantSheetProps {
   onSend: (text: string) => void
   onRetry: () => void
   onReset: () => void
-  plan: { included: boolean; availableIn: string | null }
+  plan: { included: boolean; availableIn: string | null; byRole?: boolean }
 }
 
 export function AssistantSheet({
@@ -106,11 +106,15 @@ export function AssistantSheet({
         {!plan.included ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-2 px-6 text-center">
             <Lock className="size-5 text-faint" />
-            <p className="text-[14px] font-medium text-ink">Tu plan no incluye el asistente con IA</p>
+            <p className="text-[14px] font-medium text-ink">
+              {plan.byRole ? 'Tu usuario no tiene habilitado el asistente' : 'Tu plan no incluye el asistente con IA'}
+            </p>
             <p className="text-[13px] text-muted-foreground">
-              {plan.availableIn
-                ? `Está desde el plan ${plan.availableIn}. El plan de cada número se elige en Facturación.`
-                : 'El plan de cada número se elige en Facturación.'}
+              {plan.byRole
+                ? 'Lo define el soporte de la plataforma.'
+                : plan.availableIn
+                  ? `Está desde el plan ${plan.availableIn}. El plan de cada número se elige en Facturación.`
+                  : 'El plan de cada número se elige en Facturación.'}
             </p>
           </div>
         ) : (

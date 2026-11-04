@@ -588,9 +588,11 @@ export function ExpiredPoliciesTab({
                   </TooltipTrigger>
                   {!notices.included ? (
                     <TooltipContent className="max-w-xs">
-                      El plan de tus números no incluye el envío de avisos de pólizas vencidas
-                      {notices.availableIn ? `: está desde el plan ${notices.availableIn}` : ''}. El plan de cada número
-                      se elige en Facturación.
+                      {notices.byRole
+                        ? 'Tu usuario no tiene habilitado el envío de avisos de pólizas vencidas. Lo define el soporte de la plataforma.'
+                        : `El plan de tus números no incluye el envío de avisos de pólizas vencidas${
+                            notices.availableIn ? `: está desde el plan ${notices.availableIn}` : ''
+                          }. El plan de cada número se elige en Facturación.`}
                     </TooltipContent>
                   ) : (
                     !templateReady && (

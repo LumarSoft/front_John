@@ -24,6 +24,16 @@ export interface OrganizationFeatures {
   features: PlanFeatures
   /** The cheapest active paid plan that includes each function, or null. */
   availableIn: Record<PlanFeatureKey, string | null>
+  /** Functions the plans include but the user's role has off. Missing from an older API. */
+  blockedByRole?: PlanFeatureKey[]
+}
+
+/** The roles a function can be turned off for, besides the plan (the owner always has everything). */
+export type FeatureRoleName = 'ADMIN' | 'SUPERADMIN'
+export type FeatureRoles = Record<FeatureRoleName, boolean>
+
+export interface FeatureRolesResponse {
+  roles: Record<PlanFeatureKey, FeatureRoles>
 }
 
 /** A plan of the platform's catalog as the organizations see it: messages a month for a price. */

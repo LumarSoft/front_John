@@ -1,7 +1,7 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { billingService } from '@/src/services/billing.service'
 import { QUERY_KEYS } from '@/src/lib/query-keys'
-import type { CreatePlanRequest, PlanFeatureKey, UpdatePlanRequest } from '@/src/types/api/billing'
+import type { CreatePlanRequest, FeatureRoles, PlanFeatureKey, UpdatePlanRequest } from '@/src/types/api/billing'
 import { useAuth } from '../context/auth-context'
 
 /** How often the consumption bars follow Meta's deliveries. */
@@ -38,7 +38,40 @@ export function usePlanFeatures() {
  */
 export function usePlanFeature(key: PlanFeatureKey) {
   const { data } = usePlanFeatures()
-  return { included: data?.features[key] ?? true, availableIn: data?.availableIn[key] ?? null }
+  return {
+    included: data?.features[key] ?? true,
+    availableIn: data?.availableIn[key] ?? null,
+    /** The plans include it but the user's role has it off: the panel says so instead of naming a plan. */
+    byRole: data?.blockedByRole?.includes(key) ?? false,
+    /** Known to be in no plan at all (nobody can turn it on from Facturación). */
+    nowhere: data !== undefined && !data.features[key] && !data.availableIn[key] && !data.blockedByRole?.includes(key),
+  }
+}
+
+/** Who may use each function besides the plan (owner). */
+export function useFeatureRoles(enabled = true) {
+  const { token } = useAuth()
+
+  return useQuery({
+    queryKey: QUERY_KEYS.owner.featureRoles,
+    queryFn: () => billingService.featureRoles(token as string),
+    enabled: !!token && enabled,
+  })
+}
+
+/** The owner turns a function on or off for a role; every screen that reads the functions refreshes. */
+export function useUpdateFeatureRoles() {
+  const { token } = useAuth()
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ key, data }: { key: PlanFeatureKey; data: Partial<FeatureRoles> }) =>
+      billingService.updateFeatureRoles(token as string, key, data),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.owner.featureRoles })
+      void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.admin.billingAll })
+    },
+  })
 }
 
 /** The SuperAdmin puts a number on a plan; the month and the numbers refresh after it. */
