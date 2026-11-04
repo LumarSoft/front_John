@@ -63,11 +63,6 @@ export const QUERY_KEYS = {
     tasks: (params: TasksQuery) => ['admin', 'tasks', 'list', params] as const,
     tasksStats: ['admin', 'tasks', 'stats'] as const,
     taskPeople: ['admin', 'tasks', 'people'] as const,
-    internalChatAll: ['admin', 'internal-chat'] as const,
-    internalChats: ['admin', 'internal-chat', 'chats'] as const,
-    internalChatUnread: ['admin', 'internal-chat', 'unread'] as const,
-    internalChatPeople: ['admin', 'internal-chat', 'people'] as const,
-    internalChatMessages: (chatId: number) => ['admin', 'internal-chat', 'messages', chatId] as const,
     campaignsAll: ['admin', 'campaigns'] as const,
     campaigns: ['admin', 'campaigns', 'list'] as const,
     campaignCandidates: (kind: CampaignKind, params: CampaignCandidatesQuery) =>
