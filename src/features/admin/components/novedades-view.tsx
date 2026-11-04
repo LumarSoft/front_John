@@ -34,6 +34,7 @@ import { ScopeFilter } from './scope-filter'
 import { useScopeFilterState } from '../hooks/use-scope-filter-state'
 import { SiniestroSheet } from './siniestro-sheet'
 import { AseguradoSheet } from './asegurado-sheet'
+import { BlockedClaimBadge } from './blocked-claim-badge'
 import { inboxConversationHref } from './inbox-view'
 
 const categories = Object.keys(MATTER_LABELS) as MatterCategory[]
@@ -240,6 +241,11 @@ export function NovedadesView() {
                     )}
                     {matter.title}
                   </button>
+                  {matter.blockedClaimReason && (
+                    <div className="mt-1.5">
+                      <BlockedClaimBadge reason={matter.blockedClaimReason} />
+                    </div>
+                  )}
                   <p className="mt-1 line-clamp-3 max-w-2xl whitespace-pre-wrap break-words text-[13px] text-muted-foreground">
                     {matter.body || 'Pidió atención de un asesor. Revisar la conversación para precisar el motivo.'}
                   </p>

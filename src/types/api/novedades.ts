@@ -11,6 +11,14 @@ export interface NovedadClient {
   dni: string
 }
 
+/** Why the bot refused to file a claim and sent it to the office ("denuncia frenada"). */
+export type BlockedClaimReason = 'NO_POLICY' | 'REJECTED_PAYMENT' | 'OVERDUE_INSTALLMENTS'
+export const BLOCKED_CLAIM_LABELS: Record<BlockedClaimReason, string> = {
+  NO_POLICY: 'Denuncia frenada: sin póliza vigente',
+  REJECTED_PAYMENT: 'Denuncia frenada: pago rechazado',
+  OVERDUE_INSTALLMENTS: 'Denuncia frenada: cuotas vencidas',
+}
+
 export type MatterCategory = 'baja' | 'pagos' | 'cotizacion' | 'siniestro' | 'documentos' | 'other'
 export type MatterStatus = 'pending' | 'in_progress' | 'resolved'
 export const MATTER_LABELS: Record<MatterCategory, string> = {
@@ -37,6 +45,8 @@ export interface NovedadItem {
   body: string | null
   readAt: string | null
   createdAt: string
+  /** Set on a claim the bot refused to file (absent on older APIs). */
+  blockedClaimReason?: BlockedClaimReason | null
   client: NovedadClient | null
 }
 

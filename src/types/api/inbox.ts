@@ -1,3 +1,5 @@
+import type { BlockedClaimReason } from './novedades'
+
 export interface InboxConversation {
   id: number
   waId: string
@@ -25,6 +27,8 @@ export interface InboxConversation {
   clientIsContact?: boolean
   /** Latest message of any role, for the list preview (absent on older APIs, null for an empty chat). */
   lastMessage?: InboxLastMessage | null
+  /** The open request of this chat is a claim the bot refused to file (absent on older APIs). */
+  blockedClaim?: BlockedClaimReason | null
 }
 
 export interface InboxLastMessage {

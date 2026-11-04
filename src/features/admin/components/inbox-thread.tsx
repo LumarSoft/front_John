@@ -33,6 +33,7 @@ import { firstUnreadId, OUTGOING_FILE_ACCEPT, outgoingFileProblem, isSameDay } f
 import { ApiError } from '@/src/lib/api-client'
 import { InboxAttachmentPreview } from './inbox-attachment-preview'
 import { InboxAvatar } from './inbox-avatar'
+import { BlockedClaimBadge } from './blocked-claim-badge'
 import { InboxContactDialog } from './inbox-contact-dialog'
 import { DayDivider, InboxMessageBubble, InboxNotice } from './inbox-message-bubble'
 import { InboxSearchPanel } from './inbox-search-panel'
@@ -333,6 +334,15 @@ export function InboxThread({ conversation, onOpenClient, onBack }: Props) {
             </DropdownMenu>
           </div>
         </header>
+
+        {conversation.blockedClaim && (
+          <div className="flex shrink-0 items-center gap-2 border-b border-l border-(--wa-line) bg-(--wa-panel) px-4 py-1.5">
+            <BlockedClaimBadge reason={conversation.blockedClaim} />
+            <span className="min-w-0 truncate text-[12.5px] text-(--wa-text-2)">
+              El bot no tomó la denuncia: revisá el caso con el cliente.
+            </span>
+          </div>
+        )}
 
         {/* Messages */}
         <div className="wa-wallpaper relative min-h-0 flex-1">
