@@ -6,6 +6,7 @@ import {
   ChevronDown,
   ChevronRight,
   Loader2,
+  Lock,
   Pencil,
   Plus,
   Sparkles,
@@ -763,6 +764,7 @@ function OrganizationRows({ org }: { org: OwnerBillingOrganization }) {
                 {n.upgraded && ' · subió de plan'}
                 {n.prorated && ' · prorrateado'}
                 {n.paused && ' · asistente en pausa'}
+                {(n.templateMessages ?? 0) > 0 && ` · ${int(n.templateMessages ?? 0)} plantillas`}
                 {n.metaBillableMessages > 0 && ` · ${int(n.metaBillableMessages)} cobrados por Meta`}
               </div>
             </TableCell>
@@ -790,6 +792,14 @@ function OwnerDashboardTab() {
           OpenAI está precargado: se muestra aparte y no entra en la ganancia.
         </p>
       </div>
+      {data?.closed && (
+        <p className="mb-4 flex items-center gap-1.5 text-[12.5px] text-muted-foreground">
+          <Lock className="size-3.5 shrink-0" />
+          {data.backfilled
+            ? 'Mes cerrado después de terminar: se calculó con los planes del día en que se cerró.'
+            : 'Mes cerrado: se muestra como quedó el 1 del mes siguiente.'}
+        </p>
+      )}
       {isError && <p className="mb-4 text-[14px] text-destructive">No se pudo cargar el tablero.</p>}
 
       <div className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
