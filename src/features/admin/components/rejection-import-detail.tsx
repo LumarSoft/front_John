@@ -18,6 +18,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { ApiError } from '@/src/lib/api-client'
 import { cn } from '@/src/lib/utils'
 import type { Rejection } from '@/src/types/api/rejections'
+import { usePlanFeature } from '../hooks/use-billing'
 import { useRejectionActions, useRejectionImport } from '../hooks/use-rejections'
 import { useRejectionSelection } from '../hooks/use-rejection-selection'
 import {
@@ -40,6 +41,7 @@ export function RejectionImportDetail({ importId, onDeleted }: { importId: numbe
   const { data, isLoading, isError } = useRejectionImport(importId)
   const selection = useRejectionSelection(importId, data?.rows)
   const { send, mark, remove } = useRejectionActions()
+  const notices = usePlanFeature('rejection_notices')
   const [confirm, setConfirm] = useState<Confirm>(null)
   const [preview, setPreview] = useState<Rejection | null>(null)
   const busy = send.isPending || mark.isPending || remove.isPending
@@ -125,8 +127,14 @@ export function RejectionImportDetail({ importId, onDeleted }: { importId: numbe
       <div className="flex flex-wrap items-center gap-2 px-4 py-3">
         <Button
           onClick={() => setConfirm('send')}
-          disabled={busy || !data.templateReady || selection.toSend.length === 0}
-          title={data.templateReady ? undefined : 'La plantilla de WhatsApp todavía no está habilitada'}
+          disabled={busy || !notices.included || !data.templateReady || selection.toSend.length === 0}
+          title={
+            !notices.included
+              ? 'Tu plan no incluye el envío de avisos'
+              : data.templateReady
+                ? undefined
+                : 'La plantilla de WhatsApp todavía no está habilitada'
+          }
         >
           <Send className="size-4" /> Enviar aviso{selection.toSend.length === 1 ? '' : 's'} ({selection.toSend.length})
         </Button>
@@ -137,6 +145,13 @@ export function RejectionImportDetail({ importId, onDeleted }: { importId: numbe
           <span className="flex items-center gap-1.5 text-[12.5px] text-muted-foreground">
             <Loader2 className="size-3.5 animate-spin" /> Enviando de a uno…
           </span>
+        )}
+        {!notices.included && (
+          <p className="w-full text-[12.5px] text-muted-foreground">
+            El plan de tus números no incluye el envío de avisos de rechazos
+            {notices.availableIn ? `: está desde el plan ${notices.availableIn}` : ''}. El plan de cada número se elige
+            en Facturación. Mientras tanto podés avisar por otro medio y marcarlos como avisados a mano.
+          </p>
         )}
       </div>
 
