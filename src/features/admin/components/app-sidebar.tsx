@@ -23,6 +23,7 @@ import {
   Settings,
   ShieldCheck,
   Sparkles,
+  TrendingUp,
   UserCog,
   Users,
   Wallet,
@@ -109,6 +110,8 @@ const NAV: NavEntry[] = [
       { label: 'Siniestros', href: '/admin/siniestros', icon: FileWarning },
       { label: 'Cobranzas', href: '/admin/cobranzas', icon: Wallet },
       { label: 'Rechazos', href: '/admin/rechazos', icon: BanknoteX },
+      // Month-end numbers of the codes the user sees; the OWNER has no cartera of its own.
+      { label: 'Balance mensual', href: '/admin/balance', icon: TrendingUp },
     ],
   },
   // Its own group so each of Nico's campaigns can get its own page later.
