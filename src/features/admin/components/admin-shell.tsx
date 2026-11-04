@@ -14,6 +14,7 @@ import { TriunfoStatusBanner } from './triunfo-status-banner'
 
 const TITLES: Record<string, string> = {
   '/admin': 'Inicio',
+  '/admin/balance': 'Balance mensual',
   '/admin/novedades': 'Asuntos pendientes',
   '/admin/tareas': 'Tareas',
   '/admin/solicitudes': 'Solicitudes de cotización',
