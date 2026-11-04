@@ -4,6 +4,7 @@ import type { BillingOverview } from '@/src/types/api/billing'
 export interface NumberUsage {
   id: number
   number: string
+  branchName?: string | null
   used: number
   included: number
   percent: number
@@ -43,6 +44,7 @@ export function summarizeMonth(overview: BillingOverview): MonthUsage | null {
     .map(n => ({
       id: n.id,
       number: n.number,
+      branchName: n.branchName,
       used: n.messagesUsed,
       included: n.includedMessages,
       percent: percentOf(n.messagesUsed, n.includedMessages),

@@ -6,6 +6,7 @@ import type {
   StatusOverview,
   WhatsappNumberStatus,
 } from '@/src/types/api/status'
+import { numberLabel } from './number-label'
 
 export type Provider = 'Triunfo' | 'InfoAuto'
 
@@ -179,7 +180,7 @@ export function failingNames(overview: StatusOverview): string[] {
     ...overview.components
       .filter(c => c.status === 'failing' && (triunfo || !c.key.startsWith('triunfo.')))
       .map(c => `${COMPONENT_COPY[c.key].name} (${COMPONENT_COPY[c.key].provider})`),
-    ...overview.whatsapp.filter(n => n.status === 'failing').map(n => `WhatsApp ${n.number}`),
+    ...overview.whatsapp.filter(n => n.status === 'failing').map(n => `WhatsApp ${numberLabel(n)}`),
   ]
 }
 
