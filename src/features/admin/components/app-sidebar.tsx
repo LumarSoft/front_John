@@ -265,27 +265,37 @@ function NavGroupBlock({
           <CountBadge count={total} />
         ) : (
           <ChevronRight
-            className={`ml-auto size-4 text-muted-foreground transition-transform ${open ? 'rotate-90' : ''}`}
+            className={`ml-auto size-4 text-muted-foreground transition-transform duration-200 ease-out motion-reduce:transition-none ${open ? 'rotate-90' : ''}`}
           />
         )}
       </SidebarMenuButton>
-      {open && (
-        <SidebarMenuSub>
-          {group.items.map(item => {
-            const count = alertCount(item.href)
-            return (
-              <SidebarMenuSubItem key={item.href}>
-                <SidebarMenuSubButton asChild isActive={isActive(pathname, item.href)} className={activeClasses}>
-                  <Link href={item.href}>
-                    <span>{item.label}</span>
-                    {count > 0 && <CountBadge count={count} small />}
-                  </Link>
-                </SidebarMenuSubButton>
-              </SidebarMenuSubItem>
-            )
-          })}
-        </SidebarMenuSub>
-      )}
+      {/* Always rendered so it can unfold and fold: the grid row goes from 0fr to 1fr. Closed, it is
+          hidden from screen readers and out of the tab order. */}
+      <div
+        aria-hidden={!open}
+        inert={!open}
+        className={`grid transition-[grid-template-rows,opacity] duration-200 ease-out motion-reduce:transition-none ${
+          open ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
+        }`}
+      >
+        <div className="min-h-0 overflow-hidden">
+          <SidebarMenuSub>
+            {group.items.map(item => {
+              const count = alertCount(item.href)
+              return (
+                <SidebarMenuSubItem key={item.href}>
+                  <SidebarMenuSubButton asChild isActive={isActive(pathname, item.href)} className={activeClasses}>
+                    <Link href={item.href}>
+                      <span>{item.label}</span>
+                      {count > 0 && <CountBadge count={count} small />}
+                    </Link>
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
+              )
+            })}
+          </SidebarMenuSub>
+        </div>
+      </div>
     </SidebarMenuItem>
   )
 }
