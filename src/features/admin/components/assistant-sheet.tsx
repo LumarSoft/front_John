@@ -12,8 +12,8 @@ import { AssistantMessage, AssistantTyping } from './assistant-message'
 const SUGGESTIONS: Array<{ label: string; fill?: string }> = [
   { label: '¿Cuál es el estado de la póliza de …?', fill: '¿Cuál es el estado de la póliza de ' },
   { label: '¿Qué pólizas vencen esta semana?' },
-  { label: '¿Quiénes tienen cuotas rechazadas?' },
-  { label: 'Resumen de la cartera' },
+  { label: '¿Cómo cargo un Excel de rechazos?' },
+  { label: 'Quiero proponer una mejora', fill: 'Quiero proponer una mejora: ' },
 ]
 
 interface AssistantSheetProps {
@@ -98,7 +98,8 @@ export function AssistantSheet({
             )}
           </div>
           <SheetDescription className="text-[12.5px]">
-            Preguntale por clientes, pólizas, cuotas y vencimientos. Solo consulta: no envía mensajes ni cambia nada.
+            Preguntale por clientes, pólizas, cuotas y vencimientos, cómo se hace algo en el panel, o armá con él una
+            propuesta de mejora. No envía mensajes a clientes ni cambia datos.
           </SheetDescription>
         </SheetHeader>
 
