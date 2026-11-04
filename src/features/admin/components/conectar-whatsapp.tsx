@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState, type RefObject } from 'react'
 import type { OnboardWhatsappResponse } from '@/src/types/api/whatsapp-onboarding'
 import { Button } from '@/src/components/ui/button'
 import { useEmbeddedSignupConfig, useOnboardWhatsapp } from '../hooks/use-whatsapp-onboarding'
+import { BranchNameField } from './branch-name-field'
 
 /**
  * Launches Meta's Embedded Signup and hands the result to the API.
@@ -15,7 +16,8 @@ import { useEmbeddedSignupConfig, useOnboardWhatsapp } from '../hooks/use-whatsa
  * the callback fires.
  *
  * The code expires 30 SECONDS after the popup closes, so the callback posts it
- * to the backend immediately — no confirmation step in between.
+ * to the backend immediately — no confirmation step in between. That is why
+ * the branch's name is asked BEFORE the popup opens.
  */
 
 const COEXISTENCE_FEATURE = 'whatsapp_business_app_onboarding'
@@ -77,6 +79,9 @@ export function ConectarWhatsapp({
 
   const [sdkReady, setSdkReady] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [branchName, setBranchName] = useState('')
+  const [branchError, setBranchError] = useState<string | null>(null)
+  const branchInput = useRef<HTMLInputElement>(null)
   const session = useRef<SessionInfo>({ finished: false })
 
   // ── SDK ──
@@ -168,6 +173,12 @@ export function ConectarWhatsapp({
 
   const launch = useCallback(() => {
     if (!window.FB || !config?.configId) return
+    const name = branchName.trim()
+    if (!name) {
+      setBranchError('Escribí el nombre de la sucursal antes de conectar el número.')
+      branchInput.current?.focus()
+      return
+    }
     setError(null)
     session.current = { finished: false }
 
@@ -209,6 +220,7 @@ export function ConectarWhatsapp({
               isCoexistence: coexistence,
               pin,
               responsibleProducerCodeId,
+              branchName: name,
             },
             {
               onSuccess: result => onConnected?.(result),
@@ -230,7 +242,7 @@ export function ConectarWhatsapp({
         },
       },
     )
-  }, [config, coexistence, pin, responsibleProducerCodeId, onboard, onConnected])
+  }, [config, branchName, coexistence, pin, responsibleProducerCodeId, onboard, onConnected])
 
   if (loadingConfig) return null
 
@@ -248,6 +260,18 @@ export function ConectarWhatsapp({
 
   return (
     <div className="flex flex-col gap-2">
+      <div className="mb-2 max-w-md">
+        <BranchNameField
+          id="connect-branch-name"
+          inputRef={branchInput}
+          value={branchName}
+          error={branchError}
+          onChange={value => {
+            setBranchName(value)
+            if (value.trim()) setBranchError(null)
+          }}
+        />
+      </div>
       <Button onClick={launch} disabled={!sdkReady || onboard.isPending} className="w-fit">
         {onboard.isPending ? 'Conectando…' : label}
       </Button>

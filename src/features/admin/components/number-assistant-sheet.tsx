@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, type FormEvent } from 'react'
-import { Bot, Loader2, MapPin, Power, PowerOff } from 'lucide-react'
+import { Bot, Loader2, Power, PowerOff } from 'lucide-react'
 import { toast } from 'sonner'
 import {
   AlertDialog,
@@ -38,6 +38,7 @@ import {
 import { numberLabel } from '../lib/number-label'
 import { firstInvalidDay } from '../lib/weekly-schedule'
 import { BOT_PROFILE_GROUPS } from './bot-profile-section'
+import { BranchNameField } from './branch-name-field'
 import { NumberClosures } from './number-closures'
 import { WeeklyScheduleFields } from './weekly-schedule-fields'
 
@@ -191,24 +192,13 @@ function AssistantForm({ assistant, onDone }: { assistant: NumberAssistant; onDo
           </p>
         )}
         <fieldset disabled={!canEdit} className="flex flex-col gap-8">
-          <section className="flex flex-col gap-2">
-            <Label htmlFor="number-branch">Sucursal</Label>
-            <div className="relative">
-              <MapPin className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                id="number-branch"
-                maxLength={60}
-                placeholder="Ej: 27 de Febrero, Pueblo Esther"
-                className="h-10 pl-9"
-                value={draft.branchName}
-                onChange={e => set('branchName', e.target.value)}
-              />
-            </div>
-            <p className="text-[12.5px] text-muted-foreground">
-              Como la conocen en la oficina. El panel la muestra junto al número en los filtros y listados para
-              reconocerlo sin memorizarlo.
-            </p>
-          </section>
+          <BranchNameField
+            id="number-branch"
+            required
+            number={assistant.number}
+            value={draft.branchName}
+            onChange={value => set('branchName', value)}
+          />
 
           <section className="flex flex-col gap-4">
             <SectionTitle
