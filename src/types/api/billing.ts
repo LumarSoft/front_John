@@ -150,7 +150,7 @@ export interface UpdatePlanRequest {
 
 /** The owner's month: billed vs what Meta really charged, OpenAI apart. */
 export interface OwnerBillingTotals {
-  /** Plan messages consumed: a template counts 2 from its start date. */
+  /** Plan messages consumed: a campaign (marketing) message counts 2 from its start date; every other, 1. */
   messages: number
   /** Messages sent, one each. Missing from an API older than the template weight. */
   sentMessages?: number
