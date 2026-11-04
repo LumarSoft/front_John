@@ -55,6 +55,7 @@ import { useRole } from '../hooks/use-role'
 import { PlanLimitActions } from './plan-limit-actions'
 import { PanelSwitch } from './panel-switch'
 import { HEAD, int, Kpi, MonthPicker, thisMonth, usd } from './billing-ui'
+import { LiquidacionTab } from './liquidacion-tab'
 
 const price = (n: number) => (n === 0 ? 'Gratis' : usd(n))
 const day = (iso: string) => new Date(iso).toLocaleDateString('es-AR', { day: 'numeric', month: 'numeric' })
@@ -861,7 +862,7 @@ function OwnerDashboardTab() {
 
 // ─── Main view ─────────────────────────────────────────────────────────────────
 
-type BillingTab = 'consumo' | 'planes' | 'tablero'
+type BillingTab = 'consumo' | 'planes' | 'tablero' | 'liquidacion'
 
 export function FacturacionView() {
   const { isOwner, isSuperAdmin, isAdmin, isLoading: roleLoading } = useRole()
@@ -885,7 +886,7 @@ export function FacturacionView() {
         <h1 className="mt-2 font-display text-[clamp(26px,3.5vw,36px)] tracking-[-0.035em] text-ink">Facturación</h1>
         <p className="mt-1.5 max-w-2xl text-[14px] text-muted-foreground">
           {isOwner
-            ? 'Lo que se factura a cada organización y lo que cobra Meta de verdad, y el catálogo de planes que ven todos.'
+            ? 'Lo que se factura a cada organización y lo que cobra Meta de verdad, cómo se reparte con el socio comercial y el catálogo de planes que ven todos.'
             : 'Cada número tiene un plan de mensajes por mes: cuenta cada mensaje que envía el asistente, la oficina desde el panel o un aviso. Cuando un número llega al límite de su plan, el asistente se pausa y elegís si pasa al siguiente. Se factura a mes vencido.'}
         </p>
       </div>
@@ -894,7 +895,10 @@ export function FacturacionView() {
         <Tabs value={current} onValueChange={v => setTab(v as BillingTab)} className="mb-5">
           <TabsList>
             {isOwner ? (
-              <TabsTrigger value="tablero">Tablero</TabsTrigger>
+              <>
+                <TabsTrigger value="tablero">Tablero</TabsTrigger>
+                <TabsTrigger value="liquidacion">Liquidación</TabsTrigger>
+              </>
             ) : (
               <TabsTrigger value="consumo">Consumo</TabsTrigger>
             )}
@@ -908,6 +912,8 @@ export function FacturacionView() {
       ) : isOwner ? (
         current === 'planes' ? (
           <OwnerPlansTab />
+        ) : current === 'liquidacion' ? (
+          <LiquidacionTab />
         ) : (
           <OwnerDashboardTab />
         )
