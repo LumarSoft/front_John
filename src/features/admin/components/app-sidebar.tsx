@@ -15,6 +15,7 @@ import {
   LayoutDashboard,
   Lock,
   LogOut,
+  Megaphone,
   MessageSquare,
   MessagesSquare,
   Palette,
@@ -93,6 +94,8 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Asegurados', href: '/admin/asegurados', icon: ShieldCheck },
   { label: 'Cobranzas', href: '/admin/cobranzas', icon: Wallet },
   { label: 'Rechazos', href: '/admin/rechazos', icon: BanknoteX },
+  // Nico's sales campaigns: the portfolio suggests whom to offer something to; each one a plan can leave out.
+  { label: 'Campañas', href: '/admin/campanas', icon: Megaphone },
   { label: 'Usuarios', href: '/admin/usuarios', icon: Users, superAdminOnly: true },
   // Admins see each number's messages; managing numbers stays with the SuperAdmin.
   { label: 'Números', href: '/admin/numeros', icon: Phone },
