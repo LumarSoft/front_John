@@ -14,6 +14,7 @@ import type { AdminClientSummary, ClientEstadoFilter, ClientSort, RiskType } fro
 import { useAdminClients } from '../hooks/use-admin-clients'
 import { ScopeFilter, type ScopeFilterValue } from './scope-filter'
 import { useScopeFilterState } from '../hooks/use-scope-filter-state'
+import { useLinkedClient } from '../hooks/use-linked-client'
 import {
   clientStatus,
   cuotaPaymentStatus,
@@ -157,7 +158,8 @@ export function AseguradosView() {
   // Opens on the office line for a SuperAdmin; see useScopeFilterState.
   const [scope, setScope] = useScopeFilterState()
   const [page, setPage] = useState(1)
-  const [selectedId, setSelectedId] = useState<number | null>(null)
+  // The open file; `?cliente=ID` (a link of the assistant) opens it too.
+  const { selectedId, open: setSelectedId, close: closeClient } = useLinkedClient()
 
   const handleScope = (value: ScopeFilterValue) => {
     setScope(value)
@@ -355,7 +357,7 @@ export function AseguradosView() {
         </div>
       )}
 
-      <AseguradoSheet clientId={selectedId} onClose={() => setSelectedId(null)} />
+      <AseguradoSheet clientId={selectedId} onClose={closeClient} />
     </div>
   )
 }
