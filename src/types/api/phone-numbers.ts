@@ -21,7 +21,6 @@ export interface PhoneNumberUsage {
   assignedPlan?: BilledPlan | null
   plan?: BilledPlan
   upgraded?: boolean
-  prorated?: boolean
   billedUsd?: number
   /** Its assistant is paused this month for reaching the plan. */
   planPaused?: boolean

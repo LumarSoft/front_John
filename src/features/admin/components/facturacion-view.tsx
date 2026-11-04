@@ -763,7 +763,6 @@ function OrganizationRows({ org }: { org: OwnerBillingOrganization }) {
               <div className="text-[11.5px] text-muted-foreground">
                 {n.plan.trial ? 'Prueba' : n.plan.name}
                 {n.upgraded && ' · subió de plan'}
-                {n.prorated && ' · prorrateado'}
                 {n.paused && ' · asistente en pausa'}
                 {(n.templateMessages ?? 0) > 0 && ` · ${int(n.templateMessages ?? 0)} plantillas`}
                 {n.metaBillableMessages > 0 && ` · ${int(n.metaBillableMessages)} cobrados por Meta`}
