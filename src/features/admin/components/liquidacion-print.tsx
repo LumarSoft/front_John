@@ -76,10 +76,7 @@ export function SettlementPrint({ month }: { month: SettlementMonth }) {
             ...org.numbers.map(n => (
               <tr key={n.id} className="border-b">
                 <td className="py-1 pl-3 font-mono">{n.number}</td>
-                <td className="py-1">
-                  {n.plan.name}
-                  {n.prorated ? ' (prorrateado)' : ''}
-                </td>
+                <td className="py-1">{n.plan.name}</td>
                 {COLUMNS.map(([label, key]) => (
                   <td key={label} className="py-1 text-right">
                     {value(n, key)}
