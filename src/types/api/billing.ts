@@ -1,5 +1,13 @@
 /** The panel functions a plan can include or leave out (api_john `src/plan-features/plan-features.ts`). */
-export type PlanFeatureKey = 'rejection_notices' | 'expiry_notices' | 'internal_chat'
+export type PlanFeatureKey =
+  | 'rejection_notices'
+  | 'expiry_notices'
+  | 'internal_chat'
+  | 'campaign_coverage_upgrade'
+  | 'campaign_quote_followup'
+  | 'campaign_renewal'
+  | 'campaign_winback'
+  | 'campaign_cross_sell'
 
 /** Whether a plan (or the organization's plans) includes each function. */
 export type PlanFeatures = Record<PlanFeatureKey, boolean>

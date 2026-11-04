@@ -44,6 +44,7 @@ import type {
 import { useAssignPlan, useBillingOverview, useOwnerBilling, useOwnerPlans, usePlanActions } from '../hooks/use-billing'
 import { useRole } from '../hooks/use-role'
 import { PlanLimitActions } from './plan-limit-actions'
+import { PanelSwitch } from './panel-switch'
 
 const int = (n: number) => n.toLocaleString('es-AR')
 const usd = (n: number) => `USD ${n.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
@@ -430,39 +431,6 @@ function PlanDialog({
   )
 }
 
-/** One function of one plan, on or off. */
-function FeatureSwitch({
-  on,
-  label,
-  disabled,
-  onChange,
-}: {
-  on: boolean
-  label: string
-  disabled: boolean
-  onChange: (on: boolean) => void
-}) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={on}
-      aria-label={label}
-      disabled={disabled}
-      onClick={() => onChange(!on)}
-      className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full border transition-colors disabled:cursor-wait disabled:opacity-60 ${
-        on ? 'border-ember bg-ember' : 'border-line-2 bg-secondary'
-      }`}
-    >
-      <span
-        className={`inline-block size-4 rounded-full bg-background shadow-sm transition-transform ${
-          on ? 'translate-x-4' : 'translate-x-0.5'
-        }`}
-      />
-    </button>
-  )
-}
-
 /** What each plan includes besides its messages: the owner turns each function on or off per plan. */
 function PlanFeaturesCard({ features, plans }: { features: PlanFeatureInfo[]; plans: CatalogPlan[] }) {
   const { updatePlan } = usePlanActions()
@@ -516,10 +484,10 @@ function PlanFeaturesCard({ features, plans }: { features: PlanFeatureInfo[]; pl
                   const on = plan.features?.[feature.key] ?? true
                   return (
                     <TableCell key={plan.id} className={`text-center ${plan.isActive ? '' : 'opacity-60'}`}>
-                      <FeatureSwitch
+                      <PanelSwitch
                         on={on}
                         label={`${feature.label} en el plan ${plan.name}`}
-                        disabled={pending === `${plan.id}:${feature.key}`}
+                        busy={pending === `${plan.id}:${feature.key}`}
                         onChange={value => flip(plan, feature, value)}
                       />
                     </TableCell>
