@@ -54,39 +54,13 @@ import {
 import { useRole } from '../hooks/use-role'
 import { PlanLimitActions } from './plan-limit-actions'
 import { PanelSwitch } from './panel-switch'
+import { HEAD, int, Kpi, MonthPicker, thisMonth, usd } from './billing-ui'
 
-const int = (n: number) => n.toLocaleString('es-AR')
-const usd = (n: number) => `USD ${n.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
 const price = (n: number) => (n === 0 ? 'Gratis' : usd(n))
 const day = (iso: string) => new Date(iso).toLocaleDateString('es-AR', { day: 'numeric', month: 'numeric' })
 
-const thisMonth = () => {
-  const now = new Date()
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
-}
-
-const HEAD = 'text-[11px] uppercase tracking-[0.12em] text-faint'
-
 function failed(error: unknown, fallback: string) {
   toast.error(error instanceof ApiError && error.status < 500 ? error.message : fallback)
-}
-
-function MonthPicker({ value, onChange }: { value: string; onChange: (period: string) => void }) {
-  return (
-    <div>
-      <Label htmlFor="billing-period">Mes</Label>
-      <Input
-        id="billing-period"
-        type="month"
-        value={value}
-        max={thisMonth()}
-        onChange={event => {
-          if (event.target.value) onChange(event.target.value)
-        }}
-        className="mt-1 w-48"
-      />
-    </div>
-  )
 }
 
 // ─── Consumption bar ──────────────────────────────────────────────────────────
@@ -739,18 +713,6 @@ function OwnerPlansTab() {
 }
 
 // ─── Dashboard (owner) ─────────────────────────────────────────────────────────
-
-function Kpi({ label, value, hint, tone }: { label: string; value: string; hint: string; tone?: 'good' | 'bad' }) {
-  const color =
-    tone === 'good' ? 'text-emerald-600 dark:text-emerald-400' : tone === 'bad' ? 'text-destructive' : 'text-ink'
-  return (
-    <Card className="flex flex-col gap-1 border-line-2 p-4 shadow-sm">
-      <span className="text-[11px] uppercase tracking-[0.12em] text-faint">{label}</span>
-      <span className={`font-display text-[24px] tracking-[-0.02em] ${color}`}>{value}</span>
-      <span className="text-[12px] text-muted-foreground">{hint}</span>
-    </Card>
-  )
-}
 
 function MoneyCells({ totals }: { totals: OwnerBillingTotals }) {
   return (
