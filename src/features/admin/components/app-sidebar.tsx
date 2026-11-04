@@ -13,8 +13,10 @@ import {
   ClipboardList,
   FileWarning,
   LayoutDashboard,
+  Lock,
   LogOut,
   MessageSquare,
+  MessagesSquare,
   Palette,
   Phone,
   ShieldCheck,
@@ -45,6 +47,7 @@ import {
   DropdownMenuTrigger,
 } from '@/src/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback } from '@/src/components/ui/avatar'
+import type { PlanFeatureKey } from '@/src/types/api/billing'
 import { useAuth } from '../context/auth-context'
 import { usePanelBrand } from '../hooks/use-panel-brand'
 import { OrgMark } from './org-mark'
@@ -56,6 +59,9 @@ import { useNewSolicitudesCount } from '../hooks/use-solicitudes'
 import { useImprovementsUnseenCount } from '../hooks/use-improvements'
 import { useNewProposalsCount } from '../hooks/use-proposals'
 import { useTaskStats } from '../hooks/use-tasks'
+import { useInternalChatUnread } from '../hooks/use-internal-chat'
+import { usePlanFeatures } from '../hooks/use-billing'
+import { useInternalChatNotifier } from '../hooks/use-internal-chat-notifier'
 import { useIntegrationStatus } from '../hooks/use-integration-status'
 import { failingNames } from '../lib/integration-status'
 import { AppearanceDialog } from './appearance-dialog'
@@ -71,12 +77,16 @@ interface NavItem {
   ownerOnly?: boolean
   // Visible to everyone, the OWNER included (it edits what the others read).
   everyone?: boolean
+  // A plan function: shown with a lock when the organization's plans leave it out.
+  feature?: PlanFeatureKey
 }
 
 const NAV_ITEMS: NavItem[] = [
   { label: 'Inicio', href: '/admin', icon: LayoutDashboard },
   { label: 'Asuntos pendientes', href: '/admin/novedades', icon: Bell },
   { label: 'Tareas', href: '/admin/tareas', icon: ListTodo },
+  // The office's own chat, apart from WhatsApp; a plan can leave it out.
+  { label: 'Chat interno', href: '/admin/chat-interno', icon: MessagesSquare, feature: 'internal_chat' },
   { label: 'Solicitudes', href: '/admin/solicitudes', icon: ClipboardList },
   { label: 'Whatsapp', href: '/admin/inbox', icon: MessageSquare },
   { label: 'Siniestros', href: '/admin/siniestros', icon: FileWarning },
@@ -120,12 +130,19 @@ export function AppSidebar() {
   const { data: improvementsUnseen } = useImprovementsUnseenCount(!!profile && !isOwner)
   const { data: newProposals } = useNewProposalsCount(isOwner)
   const { data: integrationStatus } = useIntegrationStatus({ refreshMs: 5 * 60 * 1000 })
+  // The internal chat is the office's (the OWNER takes no part in it), when its plans include it.
+  const { data: planFeatures } = usePlanFeatures()
+  const { data: internalChatUnread } = useInternalChatUnread(
+    !!profile && !isOwner && planFeatures?.features.internal_chat === true,
+  )
+  useInternalChatNotifier(internalChatUnread)
   const [appearanceOpen, setAppearanceOpen] = useState(false)
 
   // Count of items needing the advisor's attention, per sidebar section.
   const alertCount = (href: string): number => {
     if (href === '/admin/novedades') return novedadesStats?.actionableTotal ?? 0
     if (href === '/admin/tareas') return taskStats?.open ?? 0
+    if (href === '/admin/chat-interno') return internalChatUnread?.total ?? 0
     if (href === '/admin/solicitudes') return solicitudesNuevas
     if (href === '/admin/inbox') return inboxPending
     if (href === '/admin/mejoras') return (isOwner ? newProposals?.count : improvementsUnseen?.count) ?? 0
@@ -167,6 +184,7 @@ export function AppSidebar() {
           <SidebarMenu className="gap-1">
             {navItems.map(item => {
               const unread = alertCount(item.href)
+              const locked = !!item.feature && planFeatures?.features[item.feature] === false
               return (
                 <SidebarMenuItem key={item.href} className="relative">
                   <SidebarMenuButton
@@ -178,6 +196,12 @@ export function AppSidebar() {
                     <Link href={item.href}>
                       <item.icon />
                       <span>{item.label}</span>
+                      {locked && (
+                        <Lock
+                          aria-label="No incluido en el plan"
+                          className="ml-auto !size-3.5 text-muted-foreground group-data-[collapsible=icon]:hidden"
+                        />
+                      )}
                       {unread > 0 && (
                         // Pulsing count badge (expanded): the ping ring draws the eye
                         // from any section so a pending item isn't missed.
