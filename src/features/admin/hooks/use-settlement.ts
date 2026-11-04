@@ -1,10 +1,18 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { billingService } from '@/src/services/billing.service'
+import { ApiError } from '@/src/lib/api-client'
 import { QUERY_KEYS } from '@/src/lib/query-keys'
 import { useAuth } from '../context/auth-context'
 
 /** The running month moves with every delivery; a closed one never changes. */
 const LIVE_REFRESH_MS = 60_000
+
+/** The api answers 503 while the settlement rates are not set on the server: nothing to retry. */
+export function isSettlementNotConfigured(error: unknown): boolean {
+  return error instanceof ApiError && error.status === 503
+}
+
+const retry = (failureCount: number, error: Error) => !isSettlementNotConfigured(error) && failureCount < 3
 
 /** One month of the settlement with the commercial partner (owner). */
 export function useSettlement(period: string, live: boolean) {
@@ -16,6 +24,7 @@ export function useSettlement(period: string, live: boolean) {
     enabled: !!token,
     placeholderData: keepPreviousData,
     refetchInterval: live ? LIVE_REFRESH_MS : false,
+    retry,
   })
 }
 
@@ -27,6 +36,7 @@ export function useSettlementSeries() {
     queryKey: QUERY_KEYS.owner.settlementSeries,
     queryFn: () => billingService.settlementSeries(token as string),
     enabled: !!token,
+    retry,
   })
 }
 

@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { ApiError } from '@/src/lib/api-client'
 import { saveBlob } from '@/src/lib/download'
 import type { SettlementAmounts, SettlementMonth, SettlementOrganization } from '@/src/types/api/billing'
-import { useCloseMonth, useSettlement } from '../hooks/use-settlement'
+import { isSettlementNotConfigured, useCloseMonth, useSettlement } from '../hooks/use-settlement'
 import { monthLabel, settlementCsv, shareLabel } from '../lib/settlement-format'
 import { HEAD, int, Kpi, MonthPicker, thisMonth, usd } from './billing-ui'
 import { SettlementPrint } from './liquidacion-print'
@@ -137,10 +137,21 @@ function MonthStatus({ month }: { month: SettlementMonth }) {
 /** "Liquidación" (owner): how each month's billing splits between the platform and its commercial partner. */
 export function LiquidacionTab() {
   const [period, setPeriod] = useState(thisMonth)
-  const { data, isLoading, isError } = useSettlement(period, period === thisMonth())
+  const { data, isLoading, isError, error } = useSettlement(period, period === thisMonth())
   const [printing, setPrinting] = useState(false)
   const totals = data?.totals
   const ownerShare = data ? 1 - data.terms.partnerShare : 0
+
+  if (isSettlementNotConfigured(error))
+    return (
+      <Card className="border-line-2 p-6 text-[14px] shadow-sm">
+        <p className="font-medium text-ink">La liquidación no está configurada en el servidor.</p>
+        <p className="mt-1 text-[13px] text-muted-foreground">
+          Faltan el costo de servicio por mensaje y la parte del socio comercial en la configuración de la API. Mientras
+          tanto, los meses se siguen cerrando y la liquidación se calcula cuando se carguen.
+        </p>
+      </Card>
+    )
 
   const exportCsv = () => {
     if (!data) return

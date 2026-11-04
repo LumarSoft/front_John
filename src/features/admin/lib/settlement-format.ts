@@ -18,7 +18,7 @@ export function shortMonthLabel(period: string): string {
   return `${name} ${String(year).slice(2)}`
 }
 
-/** The partner's share as a percentage, "50 %". */
+/** A share as a percentage: 0.4 → "40 %". */
 export function shareLabel(share: number): string {
   return `${(share * 100).toLocaleString('es-AR', { maximumFractionDigits: 2 })} %`
 }
