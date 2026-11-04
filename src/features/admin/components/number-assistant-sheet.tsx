@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, type FormEvent } from 'react'
-import { Bot, Loader2, Power, PowerOff } from 'lucide-react'
+import { Bot, Loader2, MapPin, Power, PowerOff } from 'lucide-react'
 import { toast } from 'sonner'
 import {
   AlertDialog,
@@ -35,6 +35,7 @@ import {
   type CoverageDraft,
   type NumberAssistantDraft,
 } from '../lib/number-assistant-form'
+import { numberLabel } from '../lib/number-label'
 import { firstInvalidDay } from '../lib/weekly-schedule'
 import { BOT_PROFILE_GROUPS } from './bot-profile-section'
 import { NumberClosures } from './number-closures'
@@ -112,7 +113,7 @@ function NumberBotSwitch({ assistant, canEdit }: { assistant: NumberAssistant; c
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
-                    <AlertDialogTitle>¿Apagar el bot en {assistant.number}?</AlertDialogTitle>
+                    <AlertDialogTitle>¿Apagar el bot en {numberLabel(assistant)}?</AlertDialogTitle>
                     <AlertDialogDescription>
                       El corte es inmediato. El bot deja de responder en los chats de este número y la oficina contesta
                       desde Whatsapp sin tomar cada chat. Los demás números siguen igual.
@@ -190,6 +191,25 @@ function AssistantForm({ assistant, onDone }: { assistant: NumberAssistant; onDo
           </p>
         )}
         <fieldset disabled={!canEdit} className="flex flex-col gap-8">
+          <section className="flex flex-col gap-2">
+            <Label htmlFor="number-branch">Sucursal</Label>
+            <div className="relative">
+              <MapPin className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                id="number-branch"
+                maxLength={60}
+                placeholder="Ej: 27 de Febrero, Pueblo Esther"
+                className="h-10 pl-9"
+                value={draft.branchName}
+                onChange={e => set('branchName', e.target.value)}
+              />
+            </div>
+            <p className="text-[12.5px] text-muted-foreground">
+              Como la conocen en la oficina. El panel la muestra junto al número en los filtros y listados para
+              reconocerlo sin memorizarlo.
+            </p>
+          </section>
+
           <section className="flex flex-col gap-4">
             <SectionTitle
               title="El asistente"
@@ -358,7 +378,7 @@ function AssistantForm({ assistant, onDone }: { assistant: NumberAssistant; onDo
             type="button"
             variant="ghost"
             className="h-10 text-muted-foreground"
-            onClick={() => setDraft(emptyNumberAssistantDraft(assistant))}
+            onClick={() => setDraft(prev => emptyNumberAssistantDraft(assistant, prev.branchName))}
           >
             Usar todo lo de la organización
           </Button>
@@ -395,8 +415,8 @@ export function NumberAssistantSheet({
         <SheetHeader className="border-b border-line-2 px-5 py-4 pr-12">
           <SheetTitle className="font-display text-[18px]">Asistente del número</SheetTitle>
           <SheetDescription>
-            {data && data.id === numberId ? data.number : 'Cargando…'} · Para una sucursal o un productor que atiende
-            con su propio número.
+            {data && data.id === numberId ? numberLabel(data) : 'Cargando…'} · Para una sucursal o un productor que
+            atiende con su propio número.
           </SheetDescription>
         </SheetHeader>
         {isError && <p className="px-5 py-5 text-[14px] text-destructive">No se pudo cargar el asistente.</p>}
@@ -410,7 +430,12 @@ export function NumberAssistantSheet({
         {data && data.id === numberId && (
           <AssistantForm
             // Flipping the bot switch or changing a closure must not reset what is being edited.
-            key={JSON.stringify({ ...data.own, botEnabled: undefined, closures: undefined })}
+            key={JSON.stringify({
+              ...data.own,
+              branchName: data.branchName,
+              botEnabled: undefined,
+              closures: undefined,
+            })}
             assistant={data}
             onDone={() => onOpenChange(false)}
           />

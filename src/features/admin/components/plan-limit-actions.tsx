@@ -7,6 +7,7 @@ import { ApiError } from '@/src/lib/api-client'
 import type { BillingNumber } from '@/src/types/api/billing'
 import { useResolveLimit } from '../hooks/use-billing'
 import { resumeDay } from '../lib/plan-limit'
+import { numberLabel } from '../lib/number-label'
 
 const int = (n: number) => n.toLocaleString('es-AR')
 const usd = (n: number) => `USD ${n.toLocaleString('es-AR', { maximumFractionDigits: 2 })}`
@@ -41,7 +42,7 @@ export function PlanLimitActions({ row, showNumber = false }: { row: BillingNumb
     <div className="rounded-lg border border-amber/40 bg-amber/10 p-3.5">
       <p className="flex items-center gap-1.5 text-[13.5px] font-semibold text-ink">
         <PauseCircle className="size-4 shrink-0 text-amber" />
-        {showNumber ? `El asistente del ${row.number} está en pausa` : 'El asistente está en pausa'}
+        {showNumber ? `El asistente del ${numberLabel(row)} está en pausa` : 'El asistente está en pausa'}
       </p>
       <p className="mt-1 text-[12.5px] leading-relaxed text-ink-3">
         Llegó a los {int(row.includedMessages)} mensajes de su plan {row.plan.name} este mes. Los mensajes se siguen

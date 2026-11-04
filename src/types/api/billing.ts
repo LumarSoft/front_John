@@ -92,6 +92,8 @@ export interface PlanLimit {
 export interface BillingNumber {
   id: number
   number: string
+  /** The branch the number belongs to, as the office calls it ("27 de Febrero"); absent on older APIs. */
+  branchName?: string | null
   isActive: boolean
   responsibleCode: { id: number; code: string; holderName: string | null } | null
   /** The plan the number is on (the SuperAdmin's choice, or the smallest paid plan). */
@@ -163,6 +165,8 @@ export interface OwnerBillingTotals {
 export interface OwnerBillingNumber extends OwnerBillingTotals {
   id: number
   number: string
+  /** The branch the number belongs to, as the office calls it ("27 de Febrero"); absent on older APIs. */
+  branchName?: string | null
   isActive: boolean
   responsibleCode: { code: string; holderName: string | null } | null
   plan: BilledPlan

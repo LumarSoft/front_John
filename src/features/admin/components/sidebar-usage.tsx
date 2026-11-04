@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/src/components/ui/tooltip'
 import { useMonthUsage } from '../hooks/use-month-usage'
 import { NEAR_LIMIT_PERCENT } from '../lib/month-usage'
+import { numberLabel } from '../lib/number-label'
 
 const int = (n: number) => n.toLocaleString('es-AR')
 
@@ -56,7 +57,7 @@ export function SidebarUsage({ enabled }: { enabled: boolean }) {
           <ul className="space-y-0.5">
             {usage.numbers.map(n => (
               <li key={n.id} className="flex justify-between gap-3 tabular-nums">
-                <span>{n.number}</span>
+                <span>{numberLabel(n)}</span>
                 <span>
                   {int(n.used)} de {int(n.included)}
                 </span>

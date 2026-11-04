@@ -52,6 +52,7 @@ import {
   useUpdateFeatureRoles,
 } from '../hooks/use-billing'
 import { useRole } from '../hooks/use-role'
+import { numberLabel } from '../lib/number-label'
 import { PlanLimitActions } from './plan-limit-actions'
 import { PanelSwitch } from './panel-switch'
 
@@ -165,7 +166,7 @@ function NumberCard({ row, plans, canAssign }: { row: BillingNumber; plans: Plan
     <Card className="flex flex-col gap-4 border-line-2 p-4 shadow-sm">
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="font-mono text-[14px] font-semibold tracking-wide text-ink">{row.number}</span>
+          <span className="font-mono text-[14px] font-semibold tracking-wide text-ink">{numberLabel(row)}</span>
           {!row.isActive && (
             <Badge variant="outline" className="border-line-2 text-[10.5px] text-muted-foreground">
               Inactivo
@@ -794,7 +795,7 @@ function OrganizationRows({ org }: { org: OwnerBillingOrganization }) {
         org.numbers.map(n => (
           <TableRow key={n.id} className="bg-secondary/30">
             <TableCell className="pl-10 text-[13px] text-ink">
-              <span className="font-mono">{n.number}</span>
+              <span className="font-mono">{numberLabel(n)}</span>
               <div className="text-[11.5px] text-muted-foreground">
                 {n.plan.trial ? 'Prueba' : n.plan.name}
                 {n.upgraded && ' · subió de plan'}

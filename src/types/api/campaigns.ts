@@ -9,7 +9,7 @@ export type CampaignTemplateStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'NOT_
 export interface CampaignTemplate {
   /** Meta's name of the WhatsApp account. */
   wabaName: string | null
-  /** The numbers of that account, as displayed ("+54 9 341 275-7294"). */
+  /** The numbers of that account, as displayed ("+54 9 341 275-7294 · 27 de Febrero"). */
   numbers: string[]
   status: CampaignTemplateStatus
   /** Meta's rejection reason, or our own error. */

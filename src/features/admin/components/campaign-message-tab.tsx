@@ -51,7 +51,7 @@ function TemplateStatusList({ templates }: { templates: CampaignTemplate[] }) {
               <div className="truncate text-[13px] font-medium text-ink">
                 {template.wabaName ?? 'Cuenta de WhatsApp'}
               </div>
-              <div className="text-[11.5px] text-muted-foreground">{template.numbers.join(' · ') || 'Sin números'}</div>
+              <div className="text-[11.5px] text-muted-foreground">{template.numbers.join(', ') || 'Sin números'}</div>
             </div>
             <span
               className={`rounded-full border px-2 py-0.5 text-[11px] font-medium ${REVIEW_CLASSES[template.status]}`}
