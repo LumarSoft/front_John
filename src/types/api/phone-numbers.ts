@@ -167,12 +167,16 @@ export interface UpdateNumberAssistantRequest {
 export interface CreatePhoneNumberRequest {
   phoneNumberId: string
   number: string
+  /** What the office calls the branch; the panel shows it next to the number. */
+  branchName?: string
   responsibleProducerCodeId?: number
   servedCodeIds?: number[]
 }
 
 export interface UpdatePhoneNumberRequest {
   number?: string
+  /** Empty string clears it. */
+  branchName?: string
   responsibleProducerCodeId?: number
   servedCodeIds?: number[]
   isActive?: boolean
