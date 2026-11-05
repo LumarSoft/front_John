@@ -5,6 +5,7 @@ import { AlertTriangle, Bot, Loader2, Phone, Plus, PowerOff, Trash2 } from 'luci
 import { toast } from 'sonner'
 import { Card } from '@/src/components/ui/card'
 import { Button } from '@/src/components/ui/button'
+import { BranchNameField } from './branch-name-field'
 import { ConectarWhatsapp } from './conectar-whatsapp'
 import { Badge } from '@/src/components/ui/badge'
 import { Input } from '@/src/components/ui/input'
@@ -129,6 +130,7 @@ function NumberForm({ existing, onDone }: { existing: AdminPhoneNumber | null; o
 
   const [phoneNumberId, setPhoneNumberId] = useState(existing?.phoneNumberId ?? '')
   const [number, setNumber] = useState(existing?.number ?? '')
+  const [branchName, setBranchName] = useState(existing?.branchName ?? '')
   const [responsible, setResponsible] = useState<number | undefined>(existing?.responsibleCode?.id)
   const [served, setServed] = useState<number[]>(existing?.servedCodes.map(c => c.id) ?? [])
 
@@ -139,6 +141,7 @@ function NumberForm({ existing, onDone }: { existing: AdminPhoneNumber | null; o
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
     const body = {
+      branchName: branchName.trim(),
       responsibleProducerCodeId: responsible,
       servedCodeIds: served,
     }
@@ -192,6 +195,8 @@ function NumberForm({ existing, onDone }: { existing: AdminPhoneNumber | null; o
           onChange={e => setNumber(e.target.value)}
         />
       </div>
+
+      <BranchNameField id="number-form-branch" required number={number} value={branchName} onChange={setBranchName} />
 
       <div className="flex flex-col gap-2">
         <Label>Código responsable (facturación)</Label>
