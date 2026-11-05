@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import {
   ArrowUpRight,
   ChevronDown,
@@ -37,25 +38,14 @@ import { ApiError } from '@/src/lib/api-client'
 import type {
   BillingNumber,
   CatalogPlan,
-  FeatureRoleName,
   OwnerBillingOrganization,
   OwnerBillingTotals,
-  PlanFeatureInfo,
   PlanOffer,
 } from '@/src/types/api/billing'
-import {
-  useAssignPlan,
-  useBillingOverview,
-  useFeatureRoles,
-  useOwnerBilling,
-  useOwnerPlans,
-  usePlanActions,
-  useUpdateFeatureRoles,
-} from '../hooks/use-billing'
+import { useAssignPlan, useBillingOverview, useOwnerBilling, useOwnerPlans, usePlanActions } from '../hooks/use-billing'
 import { useRole } from '../hooks/use-role'
 import { numberLabel } from '../lib/number-label'
 import { PlanLimitActions } from './plan-limit-actions'
-import { PanelSwitch } from './panel-switch'
 import { HEAD, int, Kpi, MonthPicker, thisMonth, usd } from './billing-ui'
 import { LiquidacionTab } from './liquidacion-tab'
 
@@ -417,122 +407,6 @@ function PlanDialog({
   )
 }
 
-/** The roles a function can be turned off for, next to the plans. */
-const ROLE_COLUMNS: Array<{ role: FeatureRoleName; label: string }> = [
-  { role: 'ADMIN', label: 'Administradores' },
-  { role: 'SUPERADMIN', label: 'SuperAdmins' },
-]
-
-/** What each plan includes besides its messages: the owner turns each function on or off per plan and per role. */
-function PlanFeaturesCard({ features, plans }: { features: PlanFeatureInfo[]; plans: CatalogPlan[] }) {
-  const { updatePlan } = usePlanActions()
-  const { data: rolesData } = useFeatureRoles()
-  const updateRoles = useUpdateFeatureRoles()
-  const [pending, setPending] = useState<string | null>(null)
-
-  const flipRole = (feature: PlanFeatureInfo, role: FeatureRoleName, on: boolean) => {
-    setPending(`${role}:${feature.key}`)
-    updateRoles.mutate(
-      { key: feature.key, data: { [role]: on } },
-      {
-        onSuccess: () =>
-          toast.success(
-            `${feature.label}: ${on ? 'habilitada' : 'deshabilitada'} para ${role === 'ADMIN' ? 'administradores' : 'SuperAdmins'}`,
-          ),
-        onError: error => failed(error, 'No se pudo cambiar la función'),
-        onSettled: () => setPending(null),
-      },
-    )
-  }
-
-  const flip = (plan: CatalogPlan, feature: PlanFeatureInfo, on: boolean) => {
-    setPending(`${plan.id}:${feature.key}`)
-    updatePlan.mutate(
-      { id: plan.id, data: { features: { [feature.key]: on } } },
-      {
-        onSuccess: () =>
-          toast.success(
-            on
-              ? `${feature.label}: ahora en el plan ${plan.name}`
-              : `${feature.label}: ya no está en el plan ${plan.name}`,
-          ),
-        onError: error => failed(error, 'No se pudo cambiar la función'),
-        onSettled: () => setPending(null),
-      },
-    )
-  }
-
-  return (
-    <section className="mt-8">
-      <h2 className="font-display text-[20px] tracking-[-0.02em] text-ink">Funciones por plan</h2>
-      <p className="mt-1 mb-4 max-w-2xl text-[13px] text-muted-foreground">
-        Qué incluye cada plan además de los mensajes. Una organización puede usar una función si el plan de alguno de
-        sus números la incluye; si no, el panel la muestra bloqueada y dice desde qué plan está. Las columnas de roles
-        la apagan para todos los administradores o SuperAdmins, aunque su plan la incluya. Una función nueva arranca
-        apagada en todos los planes.
-      </p>
-      <Card className="overflow-hidden border-line-2 py-0 shadow-sm">
-        <Table>
-          <TableHeader>
-            <TableRow className="border-line-2 hover:bg-transparent">
-              <TableHead className={`h-11 pl-5 ${HEAD}`}>Función</TableHead>
-              {plans.map(plan => (
-                <TableHead key={plan.id} className={`text-center ${HEAD} ${plan.isActive ? '' : 'opacity-60'}`}>
-                  {plan.name}
-                </TableHead>
-              ))}
-              {ROLE_COLUMNS.map((column, index) => (
-                <TableHead
-                  key={column.role}
-                  className={`text-center ${HEAD} ${index === 0 ? 'border-l border-line-2' : ''} ${index === ROLE_COLUMNS.length - 1 ? 'pr-5' : ''}`}
-                >
-                  {column.label}
-                </TableHead>
-              ))}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {features.map(feature => (
-              <TableRow key={feature.key}>
-                <TableCell className="min-w-[220px] whitespace-normal pl-5">
-                  <div className="text-[14px] font-medium text-ink">{feature.label}</div>
-                  <div className="text-[12px] text-muted-foreground">{feature.description}</div>
-                </TableCell>
-                {plans.map(plan => {
-                  const on = plan.features?.[feature.key] ?? true
-                  return (
-                    <TableCell key={plan.id} className={`text-center ${plan.isActive ? '' : 'opacity-60'}`}>
-                      <PanelSwitch
-                        on={on}
-                        label={`${feature.label} en el plan ${plan.name}`}
-                        busy={pending === `${plan.id}:${feature.key}`}
-                        onChange={value => flip(plan, feature, value)}
-                      />
-                    </TableCell>
-                  )
-                })}
-                {ROLE_COLUMNS.map((column, index) => (
-                  <TableCell
-                    key={column.role}
-                    className={`text-center ${index === 0 ? 'border-l border-line-2' : ''} ${index === ROLE_COLUMNS.length - 1 ? 'pr-5' : ''}`}
-                  >
-                    <PanelSwitch
-                      on={rolesData?.roles[feature.key]?.[column.role] ?? true}
-                      label={`${feature.label} para ${column.label}`}
-                      busy={pending === `${column.role}:${feature.key}` || !rolesData}
-                      onChange={value => flipRole(feature, column.role, value)}
-                    />
-                  </TableCell>
-                ))}
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </Card>
-    </section>
-  )
-}
-
 function OwnerPlansTab() {
   const { data, isLoading } = useOwnerPlans()
   const { createPlan, updatePlan, removePlan } = usePlanActions()
@@ -582,7 +456,12 @@ function OwnerPlansTab() {
           El catálogo de toda la plataforma: lo que ven y pagan todas las organizaciones, y lo que muestra la landing.
           Cada SuperAdmin elige el plan de sus números. Al llegar al límite, el asistente del número se pausa hasta que
           la organización lo pase al plan siguiente o empiece el mes. Pasado el plan más grande, se suman bloques de{' '}
-          {int(data?.blockMessages ?? 1000)} mensajes al precio por mensaje de ese plan.
+          {int(data?.blockMessages ?? 1000)} mensajes al precio por mensaje de ese plan. Qué funciones incluye cada plan
+          se elige en{' '}
+          <Link href="/admin/funciones" className="font-medium text-ember-2 underline-offset-2 hover:underline">
+            Funciones por plan
+          </Link>
+          .
         </p>
         <Button type="button" size="sm" onClick={() => setCreating(true)} className="h-9 text-[12.5px]">
           <Plus className="size-4" />
@@ -677,10 +556,6 @@ function OwnerPlansTab() {
           </TableBody>
         </Table>
       </Card>
-
-      {data?.features && data.features.length > 0 && plans.length > 0 && (
-        <PlanFeaturesCard features={data.features} plans={plans} />
-      )}
 
       {(creating || editing) && (
         <PlanDialog

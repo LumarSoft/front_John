@@ -12,6 +12,7 @@ import {
   ChevronRight,
   ChevronsUpDown,
   ClipboardList,
+  FileText,
   FileWarning,
   LayoutDashboard,
   LifeBuoy,
@@ -23,6 +24,7 @@ import {
   Settings,
   ShieldCheck,
   Sparkles,
+  ToggleRight,
   TrendingUp,
   UserCog,
   Users,
@@ -67,6 +69,7 @@ import { useNewProposalsCount } from '../hooks/use-proposals'
 import { useTaskStats } from '../hooks/use-tasks'
 import { useIntegrationStatus } from '../hooks/use-integration-status'
 import { failingNames } from '../lib/integration-status'
+import { CAMPAIGN_PAGES, campaignHref } from '../lib/campaign-pages'
 import { AppearanceDialog } from './appearance-dialog'
 import { SidebarUsage } from './sidebar-usage'
 
@@ -114,12 +117,12 @@ const NAV: NavEntry[] = [
       { label: 'Balance mensual', href: '/admin/balance', icon: TrendingUp, superAdminOnly: true },
     ],
   },
-  // Its own group so each of Nico's campaigns can get its own page later.
+  // Each of Nico's campaigns has its own page.
   {
-    key: 'ventas',
-    label: 'Ventas',
+    key: 'campanas',
+    label: 'Campañas',
     icon: Megaphone,
-    items: [{ label: 'Campañas', href: '/admin/campanas', icon: Megaphone }],
+    items: CAMPAIGN_PAGES.map(page => ({ label: page.label, href: campaignHref(page), icon: page.icon })),
   },
   {
     key: 'administracion',
@@ -131,6 +134,10 @@ const NAV: NavEntry[] = [
       { label: 'Usuarios', href: '/admin/usuarios', icon: Users, superAdminOnly: true },
       // Each number's plan and month; the SuperAdmin assigns plans, the OWNER edits the catalog and sees the platform's month.
       { label: 'Facturación', href: '/admin/facturacion', icon: CreditCard, everyone: true },
+      // What each plan, and each role, can use: the OWNER's switches.
+      { label: 'Funciones por plan', href: '/admin/funciones', icon: ToggleRight, ownerOnly: true },
+      // Every organization's Meta templates, account by account: the OWNER's view.
+      { label: 'Plantillas', href: '/admin/plantillas', icon: FileText, ownerOnly: true },
       { label: 'Organizaciones', href: '/admin/organizaciones', icon: Building2, ownerOnly: true },
       { label: 'Configuración', href: '/admin/configuracion', icon: UserCog },
     ],
