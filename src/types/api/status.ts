@@ -1,8 +1,18 @@
-/** Every external service the Status section reports, in its order. */
+/**
+ * Every external service the Status section reports, in its order. Each PDF
+ * is its own download, by its Triunfo code; `triunfo.documentDownload` is any
+ * other document, and every PDF before 5/11/2026.
+ */
 export type IntegrationComponentKey =
   | 'triunfo.getTokenRest'
   | 'triunfo.RESTCotizadorAutV2'
   | 'triunfo.RESTDocumentosV2'
+  | 'triunfo.documentDownload.1050'
+  | 'triunfo.documentDownload.1000'
+  | 'triunfo.documentDownload.1040'
+  | 'triunfo.documentDownload.1060'
+  | 'triunfo.documentDownload.1020'
+  | 'triunfo.documentDownload.1030'
   | 'triunfo.documentDownload'
   | 'triunfo.RESTNovedadesCartera'
   | 'infoauto.cars'

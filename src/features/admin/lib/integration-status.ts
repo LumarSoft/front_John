@@ -1,5 +1,6 @@
 import type {
   IntegrationBlame,
+  IntegrationComponent,
   IntegrationComponentKey,
   IntegrationIncident,
   IntegrationState,
@@ -17,6 +18,19 @@ interface ComponentCopy {
   usedFor: string
   /** What stops working while it fails. */
   impact: string
+  /** For a PDF download, the document as listed under "Descarga de PDFs": "Constancia de pago". */
+  document?: string
+}
+
+/** One document's PDF download: each comes from its own TriunfoNet page and can fail alone. */
+function pdfCopy(document: string, ofDocument: string): ComponentCopy {
+  return {
+    provider: 'Triunfo',
+    name: `PDF ${ofDocument}`,
+    document,
+    usedFor: `Bajar el PDF ${ofDocument} desde TriunfoNet.`,
+    impact: `El bot no puede mandar el PDF ${ofDocument} y pasa el pedido a la oficina. Los demás documentos se siguen bajando.`,
+  }
 }
 
 export const COMPONENT_COPY: Record<IntegrationComponentKey, ComponentCopy> = {
@@ -38,11 +52,18 @@ export const COMPONENT_COPY: Record<IntegrationComponentKey, ComponentCopy> = {
     usedFor: 'Los documentos de cada póliza: certificado, póliza, tarjeta Mercosur, constancia de pago y cuponera.',
     impact: 'El bot no puede mandar documentación ni se puede bajar desde Asegurados: el pedido pasa a la oficina.',
   },
+  'triunfo.documentDownload.1050': pdfCopy('Tarjeta verde (Mercosur)', 'de la tarjeta verde'),
+  'triunfo.documentDownload.1000': pdfCopy('Certificado de cobertura', 'del certificado de cobertura'),
+  'triunfo.documentDownload.1040': pdfCopy('Constancia de pago', 'de la constancia de pago'),
+  'triunfo.documentDownload.1060': pdfCopy('Cuponera de pago', 'de la cuponera'),
+  'triunfo.documentDownload.1020': pdfCopy('Póliza', 'de la póliza'),
+  'triunfo.documentDownload.1030': pdfCopy('Cláusulas', 'de las cláusulas'),
   'triunfo.documentDownload': {
     provider: 'Triunfo',
     name: 'Descarga de PDFs',
-    usedFor: 'Bajar cada documento desde TriunfoNet.',
-    impact: 'La lista de documentos llega, pero los PDFs no se pueden bajar.',
+    document: 'Otros documentos',
+    usedFor: 'Bajar desde TriunfoNet los documentos que no tienen fila propia.',
+    impact: 'Esos PDFs no se pueden bajar: el pedido pasa a la oficina.',
   },
   'triunfo.RESTNovedadesCartera': {
     provider: 'Triunfo',
@@ -182,6 +203,17 @@ export function failingNames(overview: StatusOverview): string[] {
       .map(c => `${COMPONENT_COPY[c.key].name} (${COMPONENT_COPY[c.key].provider})`),
     ...overview.whatsapp.filter(n => n.status === 'failing').map(n => `WhatsApp ${numberLabel(n)}`),
   ]
+}
+
+/** Whether the service is one document's PDF download, listed together under "Descarga de PDFs". */
+export function isDocumentDownload(key: IntegrationComponentKey): boolean {
+  return key.startsWith('triunfo.documentDownload')
+}
+
+/** The PDF downloads as one row: failing when one fails, working when one has worked and none fails. */
+export function downloadsState(downloads: IntegrationComponent[]): IntegrationState {
+  if (downloads.some(d => d.status === 'failing')) return 'failing'
+  return downloads.some(d => d.status === 'operational') ? 'operational' : 'unknown'
 }
 
 /** Who is responsible, as the AI model says: "Triunfo", "la plataforma". */
