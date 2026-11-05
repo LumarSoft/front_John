@@ -12,6 +12,7 @@ import {
   ChevronRight,
   ChevronsUpDown,
   ClipboardList,
+  FileText,
   FileWarning,
   LayoutDashboard,
   LifeBuoy,
@@ -135,6 +136,8 @@ const NAV: NavEntry[] = [
       { label: 'Facturación', href: '/admin/facturacion', icon: CreditCard, everyone: true },
       // What each plan, and each role, can use: the OWNER's switches.
       { label: 'Funciones por plan', href: '/admin/funciones', icon: ToggleRight, ownerOnly: true },
+      // Every organization's Meta templates, account by account: the OWNER's view.
+      { label: 'Plantillas', href: '/admin/plantillas', icon: FileText, ownerOnly: true },
       { label: 'Organizaciones', href: '/admin/organizaciones', icon: Building2, ownerOnly: true },
       { label: 'Configuración', href: '/admin/configuracion', icon: UserCog },
     ],
