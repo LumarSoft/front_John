@@ -21,10 +21,12 @@ import {
   blameLabel,
   COMPONENT_COPY,
   diagnose,
+  downloadsState,
   failingNames,
   failuresLabel,
   formatDuration,
   formatWhen,
+  isDocumentDownload,
   STATE_LABELS,
   tokenExpiresSoon,
   usesTriunfo,
@@ -130,6 +132,8 @@ function Summary({ overview }: { overview: StatusOverview }) {
 
 function TriunfoGroup({ overview, isOwner }: { overview: StatusOverview; isOwner: boolean }) {
   const triunfo = usesTriunfo(overview)
+  const components = overview.components.filter(c => c.key.startsWith('triunfo.'))
+  const downloads = components.filter(c => isDocumentDownload(c.key))
   return (
     <Group title="Triunfo" description="La aseguradora: cotizaciones, documentación de pólizas y cartera.">
       {isOwner ? (
@@ -138,9 +142,13 @@ function TriunfoGroup({ overview, isOwner }: { overview: StatusOverview; isOwner
         overview.triunfoAccess.map(access => <OwnAccessRow key={access.producerId} access={access} />)
       )}
       {triunfo &&
-        overview.components
-          .filter(c => c.key.startsWith('triunfo.'))
-          .map(component => <ComponentRow key={component.key} component={component} isOwner={isOwner} />)}
+        components.map(component =>
+          !isDocumentDownload(component.key) ? (
+            <ComponentRow key={component.key} component={component} isOwner={isOwner} />
+          ) : component === downloads[0] ? (
+            <DownloadsRow key="downloads" downloads={downloads} isOwner={isOwner} />
+          ) : null,
+        )}
     </Group>
   )
 }
@@ -231,6 +239,60 @@ function ComponentRow({ component, isOwner }: { component: IntegrationComponent;
   )
 }
 
+/** Every PDF in one row, each document with its own state: one can fail while the rest come down. */
+function DownloadsRow({ downloads, isOwner }: { downloads: IntegrationComponent[]; isOwner: boolean }) {
+  const failing = downloads.filter(d => d.status === 'failing')
+  return (
+    <Row
+      name="Descarga de PDFs"
+      description="Cada documento se baja desde su propia página de TriunfoNet, así que puede fallar uno solo."
+      state={downloadsState(downloads)}
+      stateLabel={
+        failing.length === 0 ? undefined : `${failing.length} ${failing.length === 1 ? 'no funciona' : 'no funcionan'}`
+      }
+    >
+      <ul className="mt-3 grid gap-x-6 gap-y-1.5 pl-[18px] text-[12.5px] sm:grid-cols-2">
+        {downloads.map(download => (
+          <li key={download.key} className="flex items-baseline justify-between gap-3">
+            <span className="flex items-baseline gap-2 text-ink">
+              <span
+                className={cn(
+                  'size-1.5 shrink-0 translate-y-[-1px] rounded-full',
+                  download.status === 'operational' && 'bg-emerald-500 dark:bg-emerald-400',
+                  download.status === 'failing' && 'bg-red-500 dark:bg-red-400',
+                  download.status === 'unknown' && 'bg-faint',
+                )}
+              />
+              {COMPONENT_COPY[download.key].document}
+            </span>
+            <span
+              className={cn(
+                'text-right whitespace-nowrap text-muted-foreground',
+                download.status === 'failing' && 'font-medium text-red-700 dark:text-red-300',
+              )}
+            >
+              {download.status === 'operational' && download.lastSuccessAt
+                ? `Funciona · ${formatWhen(download.lastSuccessAt)}`
+                : STATE_LABELS[download.status]}
+            </span>
+          </li>
+        ))}
+      </ul>
+      {failing.map(
+        download =>
+          download.incident && (
+            <IncidentDetail
+              key={download.key}
+              incident={download.incident}
+              isOwner={isOwner}
+              lastSuccessAt={download.lastSuccessAt}
+            />
+          ),
+      )}
+    </Row>
+  )
+}
+
 function IncidentDetail({
   incident,
   isOwner,
@@ -245,7 +307,7 @@ function IncidentDetail({
   const explanation = incident.explanation
   return (
     <ProblemBox
-      title={diagnosis.title}
+      title={copy.document ? `${copy.document}: ${diagnosis.title.toLowerCase()}` : diagnosis.title}
       detail={explanation?.text ?? diagnosis.detail}
       aside={
         explanation && (
