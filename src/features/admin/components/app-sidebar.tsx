@@ -68,6 +68,7 @@ import { useNewProposalsCount } from '../hooks/use-proposals'
 import { useTaskStats } from '../hooks/use-tasks'
 import { useIntegrationStatus } from '../hooks/use-integration-status'
 import { failingNames } from '../lib/integration-status'
+import { CAMPAIGN_PAGES, campaignHref } from '../lib/campaign-pages'
 import { AppearanceDialog } from './appearance-dialog'
 import { SidebarUsage } from './sidebar-usage'
 
@@ -115,12 +116,12 @@ const NAV: NavEntry[] = [
       { label: 'Balance mensual', href: '/admin/balance', icon: TrendingUp, superAdminOnly: true },
     ],
   },
-  // Its own group so each of Nico's campaigns can get its own page later.
+  // Each of Nico's campaigns has its own page.
   {
-    key: 'ventas',
-    label: 'Ventas',
+    key: 'campanas',
+    label: 'Campañas',
     icon: Megaphone,
-    items: [{ label: 'Campañas', href: '/admin/campanas', icon: Megaphone }],
+    items: CAMPAIGN_PAGES.map(page => ({ label: page.label, href: campaignHref(page), icon: page.icon })),
   },
   {
     key: 'administracion',
