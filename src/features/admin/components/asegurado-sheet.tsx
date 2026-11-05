@@ -604,6 +604,7 @@ export function AseguradoSheet({ clientId, onClose, defaultTab = 'polizas' }: As
                   Pagos
                 </TabsTrigger>
                 <TabsTrigger
+                  data-help="asegurado-documentos"
                   value="documentos"
                   className="h-8 gap-1.5 rounded-md text-[12.5px] data-[state=active]:bg-background data-[state=active]:text-ink data-[state=active]:shadow-sm"
                 >

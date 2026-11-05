@@ -514,6 +514,7 @@ export function NumerosView() {
                           ? 'Nombre, personas, horario y datos propios de este número'
                           : 'Ver el asistente de este número'
                       }
+                      data-help="numero-asistente"
                       onClick={() => {
                         setAssistantId(n.id)
                         setAssistantOpen(true)

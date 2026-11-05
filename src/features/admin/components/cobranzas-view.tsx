@@ -183,6 +183,7 @@ function CobranzaRow({ client, onSelect }: { client: CobranzaCliente; onSelect: 
                     asChild
                     size="icon"
                     variant="ghost"
+                    data-help="cobranza-whatsapp"
                     className="size-8 rounded-full text-ink-3 hover:bg-ember-soft hover:text-ember-2"
                   >
                     <a
@@ -470,7 +471,9 @@ export function CobranzasView() {
       <Tabs value={tab} onValueChange={v => setTab(v as CobranzasTab)} className="mb-5">
         <TabsList>
           <TabsTrigger value="cuotas">Cuotas</TabsTrigger>
-          <TabsTrigger value="vencidas">Pólizas vencidas</TabsTrigger>
+          <TabsTrigger value="vencidas" data-help="cobranzas-vencidas">
+            Pólizas vencidas
+          </TabsTrigger>
         </TabsList>
       </Tabs>
 

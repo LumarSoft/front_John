@@ -1,9 +1,13 @@
+import { isTourId, type TourId } from './panel-tours'
+
 /** A piece of a line of the assistant's reply. */
 export interface ReplyInline {
   text: string
   bold: boolean
   /** Set when the piece is a link to a client's file (`asegurado:123`). */
   clientId?: number
+  /** Set when the piece is the button of an on-screen guide (`recorrido:cargar-rechazos`). */
+  tourId?: TourId
 }
 
 /** A paragraph (its lines, kept apart) or a bulleted list (one line per item). */
@@ -19,11 +23,13 @@ const LIST_ITEM = /^\s*(?:[-*•]|\d+[.)])\s+/
 const BOLD = /\*\*(.+?)\*\*/g
 const LINK = /\[([^\]]+)\]\(([^)\s]+)\)/g
 const CLIENT_LINK = /^asegurado:(\d+)$/
+const TOUR_LINK = /^recorrido:([a-z-]+)$/
 
 /**
  * The assistant's reply as blocks of plain pieces, so the panel renders it
  * with its own elements and never as HTML: `**negrita**`, `- ` lists, line
- * breaks and `[nombre](asegurado:ID)` links. Any other link is plain text.
+ * breaks, `[nombre](asegurado:ID)` links and `[Mostrame en pantalla](recorrido:ID)`
+ * guides the panel has. Any other link is plain text.
  */
 export function parseReply(reply: string): ReplyBlock[] {
   const blocks: ReplyBlock[] = []
@@ -61,12 +67,19 @@ function parseLinks(text: string, bold: boolean): ReplyInline[] {
   let last = 0
   for (const match of text.matchAll(LINK)) {
     pieces.push({ text: text.slice(last, match.index), bold })
-    const client = CLIENT_LINK.exec(match[2])
-    pieces.push(client ? { text: match[1], bold, clientId: Number(client[1]) } : { text: match[1], bold })
+    pieces.push(linkPiece(match[1], match[2], bold))
     last = match.index + match[0].length
   }
   pieces.push({ text: text.slice(last), bold })
   return pieces
+}
+
+function linkPiece(text: string, target: string, bold: boolean): ReplyInline {
+  const client = CLIENT_LINK.exec(target)
+  if (client) return { text, bold, clientId: Number(client[1]) }
+  const tour = TOUR_LINK.exec(target)?.[1]
+  if (tour && isTourId(tour)) return { text, bold, tourId: tour }
+  return { text, bold }
 }
 
 /** Where a client link of the reply goes: Asegurados with that client's file open. */

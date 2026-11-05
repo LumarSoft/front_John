@@ -43,7 +43,7 @@ export function RejectionsView() {
             if (file) void upload(file)
           }}
         />
-        <Button onClick={() => fileInput.current?.click()} disabled={busy}>
+        <Button data-help="rechazos-cargar" onClick={() => fileInput.current?.click()} disabled={busy}>
           {busy ? <Loader2 className="size-4 animate-spin" /> : <Upload className="size-4" />}
           Cargar Excel
         </Button>
@@ -100,7 +100,10 @@ export function RejectionsView() {
             })}
           </ul>
 
-          <section className="min-w-0 overflow-hidden rounded-xl border border-line-2 bg-card">
+          <section
+            data-help="rechazos-carga"
+            className="min-w-0 overflow-hidden rounded-xl border border-line-2 bg-card"
+          >
             {selectedId !== null && (
               <RejectionImportDetail key={selectedId} importId={selectedId} onDeleted={() => setPickedId(null)} />
             )}

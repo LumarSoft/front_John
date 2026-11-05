@@ -90,6 +90,7 @@ function NumberBotSwitch({ assistant, canEdit }: { assistant: NumberAssistant; c
         description="Apagado, los mensajes de este número entran a Whatsapp y los responde la oficina sin tomar cada chat. Los demás números siguen igual."
       />
       <div
+        data-help="numero-bot"
         className={cn(
           'flex flex-col gap-3 rounded-xl border p-3',
           on ? 'border-line-2' : 'border-destructive/40 bg-destructive/5',

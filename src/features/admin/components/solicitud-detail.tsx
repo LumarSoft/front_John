@@ -176,7 +176,7 @@ function SolicitudEditor({
         )}
       </section>
 
-      <section className="flex flex-col gap-2.5">
+      <section data-help="solicitud-gestion" className="flex flex-col gap-2.5">
         <h3 className="text-[10.5px] font-semibold uppercase tracking-[0.18em] text-faint">Estado</h3>
         <div className="flex flex-wrap gap-2">
           {STATUS_ORDER.map(s => (
@@ -212,7 +212,13 @@ function SolicitudEditor({
       </section>
 
       <div className="flex justify-end">
-        <Button type="button" onClick={handleSave} disabled={update.isPending} className="h-10 px-6">
+        <Button
+          type="button"
+          data-help="solicitud-guardar"
+          onClick={handleSave}
+          disabled={update.isPending}
+          className="h-10 px-6"
+        >
           {update.isPending ? (
             <>
               <Loader2 className="size-4 animate-spin" /> Guardando…

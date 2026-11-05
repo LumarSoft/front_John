@@ -45,6 +45,7 @@ function ProposalForm({ onCreated }: { onCreated: () => void }) {
 
   return (
     <form
+      data-help="propuesta-form"
       onSubmit={handleSubmit}
       className="flex flex-col gap-3 rounded-2xl border border-line-2 bg-card p-5 shadow-sm"
     >
@@ -74,7 +75,7 @@ function ProposalForm({ onCreated }: { onCreated: () => void }) {
         />
       </div>
       <div className="flex justify-end">
-        <Button type="submit" disabled={create.isPending} className="h-10">
+        <Button data-help="propuesta-enviar" type="submit" disabled={create.isPending} className="h-10">
           {create.isPending ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />} Enviar
           propuesta
         </Button>

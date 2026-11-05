@@ -71,7 +71,7 @@ export function TasksView() {
             Lo que el equipo se deja para hacer: llamados para devolver, envíos y pendientes que no pasan por el bot.
           </p>
         </div>
-        <Button onClick={() => setEditing('new')}>
+        <Button data-help="tareas-nueva" onClick={() => setEditing('new')}>
           <Plus className="size-4" /> Nueva tarea
         </Button>
       </header>

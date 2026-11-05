@@ -11,6 +11,7 @@ import { useRole } from '../hooks/use-role'
 import { CAMPAIGN_PAGES, campaignHref } from '../lib/campaign-pages'
 import { AppSidebar } from './app-sidebar'
 import { AssistantLauncher } from './assistant-launcher'
+import { TourOverlay } from './tour-overlay'
 import { TriunfoStatusBanner } from './triunfo-status-banner'
 
 const TITLES: Record<string, string> = {
@@ -90,6 +91,8 @@ export function AdminShell({ children }: { children: ReactNode }) {
           <TriunfoStatusBanner enabled={!roleLoading && !isOwner} />
           <div className="flex flex-1 flex-col">{children}</div>
         </SidebarInset>
+        {/* Outside the top bar: the guide carries on in Whatsapp, which has none. */}
+        <TourOverlay />
       </SidebarProvider>
     </TooltipProvider>
   )
