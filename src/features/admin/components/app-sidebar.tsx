@@ -437,6 +437,7 @@ export function AppSidebar() {
               <DropdownMenuTrigger asChild>
                 <SidebarMenuButton
                   size="lg"
+                  data-help="usuario-menu"
                   className="rounded-lg data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                 >
                   <Avatar className="size-8 rounded-lg">
@@ -466,7 +467,7 @@ export function AppSidebar() {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onSelect={() => setAppearanceOpen(true)}>
+                <DropdownMenuItem data-help="usuario-apariencia" onSelect={() => setAppearanceOpen(true)}>
                   <Palette />
                   Apariencia
                 </DropdownMenuItem>

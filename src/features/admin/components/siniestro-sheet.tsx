@@ -144,7 +144,7 @@ function SiniestroContent({ siniestro }: { siniestro: AdminSiniestroDetail }) {
           )}
 
           {/* ── Gestión ──────────────────────────────────────────── */}
-          <section className="rounded-xl border border-line-2 bg-secondary/20 p-4">
+          <section data-help="siniestro-gestion" className="rounded-xl border border-line-2 bg-secondary/20 p-4">
             <SectionTitle>Gestión del reclamo</SectionTitle>
 
             <div className="flex flex-col gap-1.5">
@@ -186,6 +186,7 @@ function SiniestroContent({ siniestro }: { siniestro: AdminSiniestroDetail }) {
 
             <Button
               type="button"
+              data-help="siniestro-guardar"
               className="mt-4 h-9 w-full"
               disabled={!dirty || update.isPending}
               onClick={handleSave}

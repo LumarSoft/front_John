@@ -2,15 +2,34 @@
 
 import { Fragment } from 'react'
 import Link from 'next/link'
+import { Pointer } from 'lucide-react'
 import { cn } from '@/src/lib/utils'
 import type { AssistantMessage as Message } from '@/src/types/api/assistant'
 import { clientHref, parseReply, type ReplyInline } from '../lib/assistant-format'
+import { tourStore } from '../lib/tour-store'
 
 function Inline({ pieces, onNavigate }: { pieces: ReplyInline[]; onNavigate: () => void }) {
   return (
     <>
       {pieces.map((piece, i) => {
         const text = piece.bold ? <strong className="font-semibold text-ink">{piece.text}</strong> : piece.text
+        const tourId = piece.tourId
+        if (tourId) {
+          return (
+            <button
+              key={i}
+              type="button"
+              onClick={() => {
+                onNavigate()
+                tourStore.start(tourId)
+              }}
+              className="my-0.5 inline-flex items-center gap-1.5 rounded-full border border-ember-ring bg-ember-soft px-3 py-1 text-[12.5px] font-medium text-ember-2 transition-colors hover:bg-ember hover:text-on-ember"
+            >
+              <Pointer className="size-3.5" />
+              {piece.text}
+            </button>
+          )
+        }
         return piece.clientId ? (
           <Link
             key={i}

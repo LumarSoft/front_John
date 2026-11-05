@@ -93,7 +93,7 @@ function ClientRow({ client, onSelect }: { client: AdminClientSummary; onSelect:
   const pagoStatus = cuotaPaymentStatus(client.installmentStats)
 
   return (
-    <TableRow className="group cursor-pointer hover:bg-ember-soft/40" onClick={onSelect}>
+    <TableRow data-help="asegurado-fila" className="group cursor-pointer hover:bg-ember-soft/40" onClick={onSelect}>
       <TableCell className="py-3 pl-5">
         <div className="flex items-center gap-3">
           <div className="relative shrink-0">
@@ -212,7 +212,7 @@ export function AseguradosView() {
         </div>
         <div className="flex w-full max-w-xl items-center gap-2">
           <ScopeFilter value={scope} onChange={handleScope} className="shrink-0" />
-          <div className="relative flex-1">
+          <div data-help="asegurados-buscar" className="relative flex-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Buscar nombre, DNI, email, patente…"

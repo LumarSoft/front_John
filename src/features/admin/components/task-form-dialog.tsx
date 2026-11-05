@@ -83,7 +83,7 @@ export function TaskFormDialog({ task, people, defaultAssigneeId, onClose }: Pro
 
   return (
     <Dialog open onOpenChange={open => !open && !saving && onClose()}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent data-help="tarea-form" className="sm:max-w-lg">
         <form onSubmit={handleSubmit} className="contents">
           <DialogHeader>
             <DialogTitle>{task ? 'Editar tarea' : 'Nueva tarea'}</DialogTitle>
@@ -202,7 +202,7 @@ export function TaskFormDialog({ task, people, defaultAssigneeId, onClose }: Pro
             <Button type="button" variant="outline" onClick={onClose} disabled={saving}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={saving || assigneeId === '' || !title.trim()}>
+            <Button data-help="tarea-crear" type="submit" disabled={saving || assigneeId === '' || !title.trim()}>
               {saving && <Loader2 className="size-4 animate-spin" />}
               {task ? 'Guardar cambios' : 'Crear tarea'}
             </Button>

@@ -41,6 +41,7 @@ function SiniestroRow({ siniestro, onSelect }: { siniestro: AdminSiniestroDetail
     <TableRow
       role="button"
       tabIndex={0}
+      data-help="siniestro-fila"
       aria-label={`Gestionar siniestro de ${fullName}`}
       className="group cursor-pointer hover:bg-ember-soft/40 focus-visible:bg-ember-soft/40 focus-visible:outline-none"
       onClick={onSelect}

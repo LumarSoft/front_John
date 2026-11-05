@@ -47,7 +47,7 @@ export function AppearanceDialog({ open, onOpenChange }: { open: boolean; onOpen
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="gap-5 sm:max-w-[560px]">
+      <DialogContent data-help="apariencia-opciones" className="gap-5 sm:max-w-[560px]">
         <DialogHeader>
           <DialogTitle className="font-display text-[17px] tracking-[-0.01em]">Apariencia</DialogTitle>
           <DialogDescription>

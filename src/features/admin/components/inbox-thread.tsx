@@ -286,6 +286,7 @@ export function InboxThread({ conversation, onOpenClient, onBack }: Props) {
             {!conversation.botPaused && (
               <button
                 type="button"
+                data-help="chat-tomar"
                 onClick={() => takeover.mutate()}
                 disabled={takeover.isPending}
                 className="flex h-9 items-center gap-1.5 rounded-full bg-(--wa-green) px-4 text-[14px] font-medium text-(--wa-on-green) transition-colors hover:bg-(--wa-green-dark) disabled:opacity-60"
@@ -308,6 +309,7 @@ export function InboxThread({ conversation, onOpenClient, onBack }: Props) {
             </button>
             <DropdownMenu>
               <DropdownMenuTrigger
+                data-help="chat-menu"
                 aria-label="Opciones del chat"
                 className="rounded-full p-2 text-(--wa-icon) outline-none hover:bg-(--wa-tint) data-[state=open]:bg-(--wa-tint-strong)"
               >
@@ -325,7 +327,11 @@ export function InboxThread({ conversation, onOpenClient, onBack }: Props) {
                 {conversation.botPaused && (
                   <>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onSelect={() => release.mutate()} disabled={release.isPending}>
+                    <DropdownMenuItem
+                      data-help="chat-devolver"
+                      onSelect={() => release.mutate()}
+                      disabled={release.isPending}
+                    >
                       <UserX className="size-4" /> Devolver al bot
                     </DropdownMenuItem>
                   </>
@@ -464,6 +470,7 @@ export function InboxThread({ conversation, onOpenClient, onBack }: Props) {
               />
               <textarea
                 ref={inputRef}
+                data-help="chat-escribir"
                 onPaste={handlePaste}
                 value={text}
                 onChange={e => setText(e.target.value)}
@@ -495,6 +502,7 @@ export function InboxThread({ conversation, onOpenClient, onBack }: Props) {
             <span className="text-[14px] text-(--wa-text-2)">El bot está atendiendo este chat.</span>
             <button
               type="button"
+              data-help="chat-tomar"
               onClick={() => takeover.mutate()}
               disabled={takeover.isPending}
               className="flex items-center gap-1.5 text-[14px] font-medium text-(--wa-green-dark) hover:underline disabled:opacity-60"
