@@ -13,6 +13,8 @@ export interface OnboardWhatsappRequest {
   /** May be omitted by Meta's Coexistence finish event; the API resolves it. */
   phoneNumberId?: string
   number?: string
+  /** What the office calls the branch; the panel always asks for it before connecting. */
+  branchName?: string
   isCoexistence?: boolean
   pin?: string
   responsibleProducerCodeId?: number
