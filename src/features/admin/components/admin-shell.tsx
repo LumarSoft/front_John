@@ -8,6 +8,7 @@ import { Separator } from '@/src/components/ui/separator'
 import { TooltipProvider } from '@/src/components/ui/tooltip'
 import { useAuth } from '../context/auth-context'
 import { useRole } from '../hooks/use-role'
+import { CAMPAIGN_PAGES, campaignHref } from '../lib/campaign-pages'
 import { AppSidebar } from './app-sidebar'
 import { AssistantLauncher } from './assistant-launcher'
 import { TriunfoStatusBanner } from './triunfo-status-banner'
@@ -27,6 +28,7 @@ const TITLES: Record<string, string> = {
   '/admin/configuracion': 'Configuración',
   '/admin/mejoras': 'Mejoras',
   '/admin/status': 'Status',
+  ...Object.fromEntries(CAMPAIGN_PAGES.map(page => [campaignHref(page), page.label])),
 }
 
 const OWNER_PATHS = [
