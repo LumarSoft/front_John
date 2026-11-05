@@ -330,7 +330,12 @@ export function SettingsView() {
       <Tabs defaultValue="cuenta">
         <TabsList variant="line" className="h-auto max-w-full flex-wrap justify-start gap-1">
           {TABS.map(tab => (
-            <TabsTrigger key={tab.value} value={tab.value} className="gap-1.5 px-3 py-1.5 text-[13.5px]">
+            <TabsTrigger
+              key={tab.value}
+              value={tab.value}
+              data-help={`config-${tab.value}`}
+              className="gap-1.5 px-3 py-1.5 text-[13.5px]"
+            >
               <tab.icon className="size-4" />
               {tab.label}
             </TabsTrigger>

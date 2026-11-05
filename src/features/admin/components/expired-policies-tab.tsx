@@ -573,7 +573,7 @@ export function ExpiredPoliciesTab({
               <TooltipProvider delayDuration={150}>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <span>
+                    <span data-help="vencidas-enviar">
                       <Button
                         type="button"
                         size="sm"
@@ -644,7 +644,7 @@ export function ExpiredPoliciesTab({
           <TableHeader>
             <TableRow className="border-line-2 hover:bg-transparent">
               {!showHidden && (
-                <TableHead className="h-11 w-10 pl-4 pr-0">
+                <TableHead data-help="vencidas-tildar" className="h-11 w-10 pl-4 pr-0">
                   <input
                     type="checkbox"
                     checked={allSelected}

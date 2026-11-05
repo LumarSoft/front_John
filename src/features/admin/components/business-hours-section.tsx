@@ -32,7 +32,7 @@ function ScheduleEditor({ initial, canEdit }: { initial: WeeklySchedule; canEdit
   }
 
   return (
-    <Card className="max-w-2xl border-line-2 shadow-sm">
+    <Card data-help="horarios-form" className="max-w-2xl border-line-2 shadow-sm">
       <CardHeader>
         <CardTitle className="font-display text-[18px]">Horarios de atención</CardTitle>
         <CardDescription>
