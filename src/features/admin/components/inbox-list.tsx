@@ -65,6 +65,7 @@ export function InboxList({ conversations, selectedId, onSelect, onDelete }: Pro
           <li key={conv.id} className="group relative">
             <button
               type="button"
+              data-help="chat-item"
               onClick={() => onSelect(conv.id)}
               className={cn(
                 'flex h-[72px] w-full items-center text-left transition-colors',

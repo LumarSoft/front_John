@@ -283,6 +283,7 @@ export function NovedadesView() {
                     ))}
                   </select>
                   <select
+                    data-help="asunto-estado"
                     aria-label={`Estado de ${matter.title}`}
                     className={selectClass}
                     value={matter.status}

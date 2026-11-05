@@ -11,7 +11,9 @@ export interface AskAssistantRequest {
 
 /**
  * The assistant's answer: Spanish with light markdown (`**negrita**`, `- ` lists,
- * line breaks) and links like `[Juan Pérez](asegurado:123)` to a client's file.
+ * line breaks), links like `[Juan Pérez](asegurado:123)` to a client's file and,
+ * after explaining a task, `[Mostrame en pantalla](recorrido:cargar-rechazos)` to
+ * run that on-screen guide.
  */
 export interface AskAssistantResponse {
   reply: string
