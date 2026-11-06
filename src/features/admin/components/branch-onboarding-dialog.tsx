@@ -207,8 +207,10 @@ function NumberStep({
   return (
     <div className="flex flex-col gap-4">
       <p className="text-[13px] text-muted-foreground">
-        El número de WhatsApp de la sucursal, facturado al código {code.code}, y el nombre con el que se va a ver en el
-        panel. Tiene que estar activo en la app WhatsApp Business del celular; Meta pide confirmarlo desde ahí.
+        El número de WhatsApp de la sucursal, facturado al código {code.code}. Antes de conectarlo, completá el nombre
+        con el que se va a ver en el panel y cómo atiende el bot: su nombre, de quién se presenta como asistente, las
+        personas de la oficina y el horario. Son obligatorios: sin ellos el número saluda como la casa central. El
+        número tiene que estar activo en la app WhatsApp Business del celular; Meta pide confirmarlo desde ahí.
       </p>
       <div className="rounded-lg border border-line-2 bg-secondary/40 p-4">
         <ConectarWhatsapp
@@ -235,9 +237,9 @@ function AssistantStep({ numberId, onNext }: { numberId: number; onNext: () => v
   return (
     <div className="flex flex-col gap-4">
       <p className="text-[13px] text-muted-foreground">
-        Cómo atiende el bot en este número: su nombre, las personas de la oficina a las que los clientes pueden
-        escribir, el horario y los feriados, los datos que da (grúa, denuncias, cuenta para transferir, dónde pagar) y
-        qué coberturas ofrece. Lo que no completes toma lo de la organización.
+        El nombre del bot, de quién es asistente, las personas y el horario ya quedaron guardados con el número. Acá
+        podés completar el resto: los feriados, los datos que da (grúa, denuncias, cuenta para transferir, dónde pagar)
+        y qué coberturas ofrece. Lo que no completes toma lo de la organización.
       </p>
       <div className="flex flex-wrap items-center gap-3">
         <Button
@@ -262,7 +264,7 @@ function AssistantStep({ numberId, onNext }: { numberId: number; onNext: () => v
           variant={configured ? 'default' : 'outline'}
           className={configured ? '' : 'border-line-2'}
         >
-          {configured ? 'Continuar' : 'Dejar como la organización'}
+          {configured ? 'Continuar' : 'Continuar sin más cambios'}
         </Button>
       </div>
       <NumberAssistantSheet
