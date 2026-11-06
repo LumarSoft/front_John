@@ -35,9 +35,11 @@ import { useRole } from '../hooks/use-role'
 import { useProducerCodes } from '../hooks/use-producer-codes'
 import { useOwnProducerCodes } from '../hooks/use-own-producer-codes'
 import { usePhoneNumbers, usePhoneNumberMutations } from '../hooks/use-phone-numbers'
+import { useNumberAssistant } from '../hooks/use-number-assistant'
 import { numberLabel } from '../lib/number-label'
 import { NumberAssistantSheet } from './number-assistant-sheet'
 import { MetaPortfolioLine } from './meta-portfolio-line'
+import { numberSetupFrom } from './number-setup-fields'
 
 const int = (n: number) => n.toLocaleString('es-AR')
 
@@ -77,10 +79,37 @@ function DisconnectedNotice({ numbers }: { numbers: AdminPhoneNumber[] }) {
 }
 
 /**
+ * Meta's signup with the branch and the assistant asked first. Reconnecting the
+ * only number Meta dropped, the form comes filled with what that number answers
+ * with today, so the office does not retype it and nothing it had is lost.
+ */
+function ConnectNumber({
+  dropped,
+  responsibleProducerCodeId,
+}: {
+  dropped: AdminPhoneNumber[]
+  responsibleProducerCodeId?: number
+}) {
+  const only = dropped.length === 1 ? dropped[0] : null
+  const { data } = useNumberAssistant(only?.id ?? null)
+  const initial =
+    only && data?.id === only.id ? { branchName: data.branchName ?? '', setup: numberSetupFrom(data) } : undefined
+  return (
+    <ConectarWhatsapp
+      // Remounted once the number's data arrives, so the form starts filled.
+      key={initial ? `reconnect-${only?.id}` : 'connect'}
+      initial={initial}
+      responsibleProducerCodeId={responsibleProducerCodeId}
+      label={dropped.length > 0 ? 'Reconectar número' : undefined}
+    />
+  )
+}
+
+/**
  * An admin connects numbers for their own codes: the API bills the number to the
  * code they pick here (their only one when they have a single code).
  */
-function AdminConnect({ reconnect }: { reconnect: boolean }) {
+function AdminConnect({ dropped }: { dropped: AdminPhoneNumber[] }) {
   const codes = useOwnProducerCodes()
   const [picked, setPicked] = useState<number | undefined>()
   const responsible = picked ?? codes[0]?.id
@@ -118,7 +147,7 @@ function AdminConnect({ reconnect }: { reconnect: boolean }) {
           El número queda a cargo de tu código <span className="font-medium text-ink">{codes[0].code}</span>.
         </p>
       )}
-      <ConectarWhatsapp responsibleProducerCodeId={responsible} label={reconnect ? 'Reconectar número' : undefined} />
+      <ConnectNumber dropped={dropped} responsibleProducerCodeId={responsible} />
     </div>
   )
 }
@@ -331,11 +360,7 @@ export function NumerosView() {
               </p>
             </div>
           )}
-          {isSuperAdmin ? (
-            <ConectarWhatsapp label={disconnected.length > 0 ? 'Reconectar número' : undefined} />
-          ) : (
-            <AdminConnect reconnect={disconnected.length > 0} />
-          )}
+          {isSuperAdmin ? <ConnectNumber dropped={disconnected} /> : <AdminConnect dropped={disconnected} />}
         </Card>
       )}
 
