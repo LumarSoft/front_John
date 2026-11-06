@@ -21,16 +21,24 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/src/components/ui/tooltip'
 import { useDebouncedValue } from '@/src/hooks/use-debounced-value'
 import { ApiError } from '@/src/lib/api-client'
-import type { Campaign, CampaignCandidate } from '@/src/types/api/campaigns'
+import type {
+  Campaign,
+  CampaignCandidate,
+  CampaignCandidatesResponse,
+  CampaignSort,
+  CancellationReason,
+} from '@/src/types/api/campaigns'
 import { useCampaignActions, useCampaignCandidates } from '../hooks/use-campaigns'
 import { useScopeFilterState } from '../hooks/use-scope-filter-state'
 import { formatDate } from '../lib/asegurados-ui'
-import { candidateMessage, sendBlockedReason, summarizeSend } from '../lib/campaigns-format'
+import { CANCELLATION_REASON_LABELS, candidateMessage, sendBlockedReason, summarizeSend } from '../lib/campaigns-format'
 import { ScopeFilter, type ScopeFilterValue } from './scope-filter'
 
 const PAGE_SIZE = 25
 const HEAD = 'text-[11px] uppercase tracking-[0.12em] text-faint'
 const COLUMNS = 5
+
+const SELECT = 'h-9 w-full min-w-0 rounded-md border border-line-2 bg-background px-2.5 text-[12.5px] text-ink-3'
 
 const failed = (error: unknown, fallback: string) =>
   toast.error(error instanceof ApiError && error.status < 500 ? error.message : fallback)
@@ -83,6 +91,78 @@ function LastMessageCell({ candidate }: { candidate: CampaignCandidate }) {
         </TooltipProvider>
       )
   }
+}
+
+/** Who goes first: the newest by default; in Renovaciones, by when the policy ends. */
+function sortLabels(campaign: Campaign): Record<CampaignSort, string> {
+  return campaign.kind === 'renewal'
+    ? { recent: 'Vencen más tarde', oldest: 'Vencen antes' }
+    : { recent: 'Más recientes', oldest: 'Más antiguos' }
+}
+
+/**
+ * The campaign's own filter, with how many clients each choice has: coverage in
+ * Mejora de coberturas and Venta cruzada, the reason in Bajas y anulaciones.
+ */
+function CampaignFilterSelect({
+  campaign,
+  filters,
+  coverage,
+  reason,
+  onCoverage,
+  onReason,
+}: {
+  campaign: Campaign
+  filters: CampaignCandidatesResponse['filters']
+  coverage: string
+  reason: CancellationReason | ''
+  onCoverage: (value: string) => void
+  onReason: (value: CancellationReason | '') => void
+}) {
+  if (campaign.filters?.includes('coverage')) {
+    const options = filters?.coverages ?? []
+    // Keep the chosen one listed while another scope loads.
+    const choices =
+      coverage && !options.some(o => o.value === coverage) ? [{ value: coverage, count: 0 }, ...options] : options
+    return (
+      <select
+        value={coverage}
+        onChange={e => onCoverage(e.target.value)}
+        className={SELECT}
+        aria-label="Filtrar por cobertura"
+      >
+        <option value="">Todas las coberturas</option>
+        {choices.map(option => (
+          <option key={option.value} value={option.value}>
+            {option.count ? `Cobertura ${option.value} (${option.count})` : `Cobertura ${option.value}`}
+          </option>
+        ))}
+      </select>
+    )
+  }
+  if (campaign.filters?.includes('reason')) {
+    const options = filters?.reasons ?? []
+    const choices =
+      reason && !options.some(o => o.value === reason)
+        ? [{ value: reason, label: CANCELLATION_REASON_LABELS[reason], count: 0 }, ...options]
+        : options
+    return (
+      <select
+        value={reason}
+        onChange={e => onReason(e.target.value as CancellationReason | '')}
+        className={SELECT}
+        aria-label="Filtrar por motivo"
+      >
+        <option value="">Todos los motivos</option>
+        {choices.map(option => (
+          <option key={option.value} value={option.value}>
+            {option.count ? `${option.label} (${option.count})` : option.label}
+          </option>
+        ))}
+      </select>
+    )
+  }
+  return null
 }
 
 /** "Enviar": how many go out, and the message as the first client will read it. */
@@ -138,6 +218,9 @@ export function CampaignClientsTab({ campaign }: { campaign: Campaign }) {
   const [searchInput, setSearchInput] = useState('')
   const search = useDebouncedValue(searchInput, 350)
   const [scope, setScope] = useScopeFilterState()
+  const [coverage, setCoverage] = useState('')
+  const [reason, setReason] = useState<CancellationReason | ''>('')
+  const [sort, setSort] = useState<CampaignSort>('recent')
   const [page, setPage] = useState(1)
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
   const [confirmSend, setConfirmSend] = useState(false)
@@ -145,7 +228,15 @@ export function CampaignClientsTab({ campaign }: { campaign: Campaign }) {
 
   const { data, isLoading, isError, isFetching } = useCampaignCandidates(
     campaign.kind,
-    { ...scope, search, page, pageSize: PAGE_SIZE },
+    {
+      ...scope,
+      search,
+      coverage: coverage || undefined,
+      reason: reason || undefined,
+      sort,
+      page,
+      pageSize: PAGE_SIZE,
+    },
     campaign.plan.included,
   )
   const { send, mark, optOut } = useCampaignActions(campaign.kind)
@@ -170,6 +261,11 @@ export function CampaignClientsTab({ campaign }: { campaign: Campaign }) {
   }
   const changeScope = (value: ScopeFilterValue) => resetAnd(() => setScope(value))
   const changeSearch = (value: string) => resetAnd(() => setSearchInput(value))
+  const changeCoverage = (value: string) => resetAnd(() => setCoverage(value))
+  const changeReason = (value: CancellationReason | '') => resetAnd(() => setReason(value))
+  const changeSort = (value: CampaignSort) => resetAnd(() => setSort(value))
+  const filtered = !!(search || coverage || reason)
+  const labels = sortLabels(campaign)
   const changePage = (next: number) => {
     setPage(next)
     setSelectedIds(new Set())
@@ -232,6 +328,28 @@ export function CampaignClientsTab({ campaign }: { campaign: Campaign }) {
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
         <div className="flex w-full flex-col gap-2 sm:max-w-sm">
           <ScopeFilter value={scope} onChange={changeScope} className="w-full" />
+          <div className="flex gap-2">
+            <CampaignFilterSelect
+              campaign={campaign}
+              filters={data?.filters}
+              coverage={coverage}
+              reason={reason}
+              onCoverage={changeCoverage}
+              onReason={changeReason}
+            />
+            <select
+              value={sort}
+              onChange={e => changeSort(e.target.value as CampaignSort)}
+              className={SELECT}
+              aria-label="Ordenar"
+            >
+              {(['recent', 'oldest'] as const).map(value => (
+                <option key={value} value={value}>
+                  {labels[value]}
+                </option>
+              ))}
+            </select>
+          </div>
           <div className="relative">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-faint" />
             <Input
@@ -339,8 +457,8 @@ export function CampaignClientsTab({ campaign }: { campaign: Campaign }) {
             {!isLoading && !isError && rows.length === 0 && (
               <TableRow>
                 <TableCell colSpan={COLUMNS} className="py-16 text-center text-[14px] text-muted-foreground">
-                  {search
-                    ? 'No se encontraron clientes para esa búsqueda.'
+                  {filtered
+                    ? 'No se encontraron clientes con esa búsqueda o filtro.'
                     : 'Por ahora la campaña no encuentra a quién escribirle.'}
                 </TableCell>
               </TableRow>
