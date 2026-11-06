@@ -208,9 +208,10 @@ function NumberStep({
     <div className="flex flex-col gap-4">
       <p className="text-[13px] text-muted-foreground">
         El número de WhatsApp de la sucursal, facturado al código {code.code}. Antes de conectarlo, completá el nombre
-        con el que se va a ver en el panel y cómo atiende el bot: su nombre, de quién se presenta como asistente, las
-        personas de la oficina y el horario. Son obligatorios: sin ellos el número saluda como la casa central. El
-        número tiene que estar activo en la app WhatsApp Business del celular; Meta pide confirmarlo desde ahí.
+        con el que se va a ver en el panel y cómo atiende el bot: su nombre, de quién se presenta como asistente, el
+        alias para transferencias, las personas de la oficina y el horario. Son obligatorios: sin ellos el número saluda
+        como la casa central. El número tiene que estar activo en la app WhatsApp Business del celular; Meta pide
+        confirmarlo desde ahí.
       </p>
       <div className="rounded-lg border border-line-2 bg-secondary/40 p-4">
         <ConectarWhatsapp
@@ -237,9 +238,9 @@ function AssistantStep({ numberId, onNext }: { numberId: number; onNext: () => v
   return (
     <div className="flex flex-col gap-4">
       <p className="text-[13px] text-muted-foreground">
-        El nombre del bot, de quién es asistente, las personas y el horario ya quedaron guardados con el número. Acá
-        podés completar el resto: los feriados, los datos que da (grúa, denuncias, cuenta para transferir, dónde pagar)
-        y qué coberturas ofrece. Lo que no completes toma lo de la organización.
+        El nombre del bot, de quién es asistente, el alias, las personas y el horario ya quedaron guardados con el
+        número. Acá podés completar el resto: los feriados, el CBU, titular y banco de la cuenta, los datos que da
+        (grúa, denuncias, dónde pagar) y qué coberturas ofrece. Lo que no completes toma lo de la organización.
       </p>
       <div className="flex flex-wrap items-center gap-3">
         <Button

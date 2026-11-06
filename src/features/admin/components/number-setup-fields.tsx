@@ -1,6 +1,6 @@
 'use client'
 
-import { Bot, Clock, Users } from 'lucide-react'
+import { Bot, Clock, Landmark, Users } from 'lucide-react'
 import { Input } from '@/src/components/ui/input'
 import { Label } from '@/src/components/ui/label'
 import { WEEKDAY_LABEL, WEEKDAYS, type WeeklySchedule } from '@/src/types/api/business-hours'
@@ -13,6 +13,8 @@ export interface NumberSetup {
   botName: string
   /** Whose assistant the bot says it is ("Vanesa Aguilar"). */
   presentationName: string
+  /** The alias customers transfer to. */
+  transferAlias: string
   /** Comma-separated names of the people of this office. */
   staff: string
   weekly: WeeklySchedule
@@ -22,12 +24,19 @@ export type NumberSetupField = keyof NumberSetup
 
 export const EMPTY_WEEK: WeeklySchedule = { mon: [], tue: [], wed: [], thu: [], fri: [], sat: [], sun: [] }
 
-export const EMPTY_NUMBER_SETUP: NumberSetup = { botName: '', presentationName: '', staff: '', weekly: EMPTY_WEEK }
+export const EMPTY_NUMBER_SETUP: NumberSetup = {
+  botName: '',
+  presentationName: '',
+  transferAlias: '',
+  staff: '',
+  weekly: EMPTY_WEEK,
+}
 
 /** The inputs' ids, so the form that embeds the fields can focus the first one in error. */
 export const NUMBER_SETUP_INPUT_IDS: Record<Exclude<NumberSetupField, 'weekly'>, string> = {
   botName: 'setup-bot-name',
   presentationName: 'setup-presentation',
+  transferAlias: 'setup-transfer-alias',
   staff: 'setup-staff',
 }
 
@@ -41,6 +50,7 @@ export function numberSetupErrors(setup: NumberSetup): Partial<Record<NumberSetu
   const errors: Partial<Record<NumberSetupField, string>> = {}
   if (!setup.botName.trim()) errors.botName = 'Escribí cómo se llama el bot en este número.'
   if (!setup.presentationName.trim()) errors.presentationName = 'Escribí de quién se presenta como asistente.'
+  if (!setup.transferAlias.trim()) errors.transferAlias = 'Escribí el alias al que transfieren los clientes.'
   if (splitNames(setup.staff).length === 0) errors.staff = 'Escribí al menos una persona de la oficina.'
   const invalid = firstInvalidDay(setup.weekly)
   if (invalid) errors.weekly = `Revisá ${WEEKDAY_LABEL[invalid]}: el inicio debe ser anterior al fin.`
@@ -53,6 +63,7 @@ export function numberSetupPayload(setup: NumberSetup) {
   return {
     botName: setup.botName.trim(),
     presentationName: setup.presentationName.trim(),
+    transferAlias: setup.transferAlias.trim(),
     staffNames: splitNames(setup.staff),
     businessHours: setup.weekly,
   }
@@ -128,6 +139,28 @@ export function NumberSetupFields({ value, onChange, errors = {} }: Props) {
           </Hint>
         )}
         <FieldError message={errors.presentationName} />
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="setup-transfer-alias">Alias para transferencias</Label>
+        <div className="relative">
+          <Landmark className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            id={NUMBER_SETUP_INPUT_IDS.transferAlias}
+            required
+            maxLength={60}
+            placeholder="Ej: TRUENO.VUELO.DELTA"
+            className="h-10 pl-9"
+            aria-invalid={errors.transferAlias ? true : undefined}
+            value={value.transferAlias}
+            onChange={e => set('transferAlias', e.target.value)}
+          />
+        </div>
+        <Hint>
+          El alias que el bot da cuando un cliente quiere pagar por transferencia. El CBU, el titular y el banco se
+          completan después en Asistente.
+        </Hint>
+        <FieldError message={errors.transferAlias} />
       </div>
 
       <div className="flex flex-col gap-2">
