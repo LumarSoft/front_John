@@ -70,11 +70,14 @@ function BubbleTail({ outgoing }: { outgoing: boolean }) {
 
 export function InboxMessageBubble({
   message,
+  contact,
   first,
   highlight,
   flash,
 }: {
   message: InboxMessage
+  /** Who the chat is with, for the avatar on their voice notes. */
+  contact?: { name: string; seed: string }
   first: boolean
   highlight: string
   flash: boolean
@@ -160,7 +163,12 @@ export function InboxMessageBubble({
           ) : (
             <div className="relative">
               {isAudio && message.media ? (
-                <InboxAudio src={mediaUrl(message.media)} transcript={caption} highlight={highlight} />
+                <InboxAudio
+                  src={mediaUrl(message.media)}
+                  transcript={caption}
+                  highlight={highlight}
+                  sender={message.role === 'user' ? contact : undefined}
+                />
               ) : message.media ? (
                 <>
                   <a
