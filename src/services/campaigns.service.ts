@@ -19,6 +19,7 @@ function buildQuery(params: CampaignCandidatesQuery): string {
   if (params.coverage) search.set('coverage', params.coverage)
   if (params.reason) search.set('reason', params.reason)
   if (params.sort) search.set('sort', params.sort)
+  if (params.order) search.set('order', params.order)
   if (params.page) search.set('page', String(params.page))
   if (params.pageSize) search.set('pageSize', String(params.pageSize))
   const qs = search.toString()

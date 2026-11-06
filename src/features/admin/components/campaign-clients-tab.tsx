@@ -1,5 +1,18 @@
 import { useState } from 'react'
-import { AlertCircle, Ban, CheckCheck, ChevronLeft, ChevronRight, Loader2, Search, Send, UserX } from 'lucide-react'
+import {
+  AlertCircle,
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
+  Ban,
+  CheckCheck,
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
+  Search,
+  Send,
+  UserX,
+} from 'lucide-react'
 import { toast } from 'sonner'
 import {
   AlertDialog,
@@ -26,6 +39,8 @@ import type {
   CampaignCandidate,
   CampaignCandidatesResponse,
   CampaignSort,
+  CampaignSortField,
+  CampaignSortOrder,
   CancellationReason,
 } from '@/src/types/api/campaigns'
 import { useCampaignActions, useCampaignCandidates } from '../hooks/use-campaigns'
@@ -93,11 +108,44 @@ function LastMessageCell({ candidate }: { candidate: CampaignCandidate }) {
   }
 }
 
-/** Who goes first: the newest by default; in Renovaciones, by when the policy ends. */
-function sortLabels(campaign: Campaign): Record<CampaignSort, string> {
-  return campaign.kind === 'renewal'
-    ? { recent: 'Vencen más tarde', oldest: 'Vencen antes' }
-    : { recent: 'Más recientes', oldest: 'Más antiguos' }
+/** The first order of a column: A to Z for names, newest first for dates; in Renovaciones, the soonest to end. */
+function firstOrder(campaign: Campaign, by: CampaignSortField): CampaignSortOrder {
+  if (by === 'name' || by === 'item') return 'asc'
+  return by === 'date' && campaign.kind === 'renewal' ? 'asc' : 'desc'
+}
+
+/** A column header that sorts the list by it; tapping it again turns the order around. */
+function SortableHead({
+  label,
+  by,
+  sort,
+  onSort,
+  className,
+}: {
+  label: string
+  by: CampaignSortField
+  sort: CampaignSort | null
+  onSort: (by: CampaignSortField) => void
+  className: string
+}) {
+  const order = sort?.by === by ? sort.order : null
+  const Icon = order === 'asc' ? ArrowUp : order === 'desc' ? ArrowDown : ArrowUpDown
+  return (
+    <TableHead
+      className={className}
+      aria-sort={order === 'asc' ? 'ascending' : order === 'desc' ? 'descending' : 'none'}
+    >
+      <button
+        type="button"
+        onClick={() => onSort(by)}
+        title={`Ordenar por ${label.toLowerCase()}`}
+        className={`inline-flex items-center gap-1 uppercase tracking-[0.12em] transition-colors hover:text-ink ${order ? 'text-ink-3' : ''}`}
+      >
+        {label}
+        <Icon className={order ? 'size-3.5' : 'size-3.5 opacity-40'} />
+      </button>
+    </TableHead>
+  )
 }
 
 /**
@@ -220,7 +268,8 @@ export function CampaignClientsTab({ campaign }: { campaign: Campaign }) {
   const [scope, setScope] = useScopeFilterState()
   const [coverage, setCoverage] = useState('')
   const [reason, setReason] = useState<CancellationReason | ''>('')
-  const [sort, setSort] = useState<CampaignSort>('recent')
+  // Null: the API's default order, which it reports back in `data.sort`.
+  const [sort, setSort] = useState<CampaignSort | null>(null)
   const [page, setPage] = useState(1)
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
   const [confirmSend, setConfirmSend] = useState(false)
@@ -233,7 +282,8 @@ export function CampaignClientsTab({ campaign }: { campaign: Campaign }) {
       search,
       coverage: coverage || undefined,
       reason: reason || undefined,
-      sort,
+      sort: sort?.by,
+      order: sort?.order,
       page,
       pageSize: PAGE_SIZE,
     },
@@ -263,9 +313,16 @@ export function CampaignClientsTab({ campaign }: { campaign: Campaign }) {
   const changeSearch = (value: string) => resetAnd(() => setSearchInput(value))
   const changeCoverage = (value: string) => resetAnd(() => setCoverage(value))
   const changeReason = (value: CancellationReason | '') => resetAnd(() => setReason(value))
-  const changeSort = (value: CampaignSort) => resetAnd(() => setSort(value))
+  const shownSort = sort ?? data?.sort ?? null
+  const changeSort = (by: CampaignSortField) =>
+    resetAnd(() =>
+      setSort(
+        shownSort?.by === by
+          ? { by, order: shownSort.order === 'asc' ? 'desc' : 'asc' }
+          : { by, order: firstOrder(campaign, by) },
+      ),
+    )
   const filtered = !!(search || coverage || reason)
-  const labels = sortLabels(campaign)
   const changePage = (next: number) => {
     setPage(next)
     setSelectedIds(new Set())
@@ -328,28 +385,14 @@ export function CampaignClientsTab({ campaign }: { campaign: Campaign }) {
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
         <div className="flex w-full flex-col gap-2 sm:max-w-sm">
           <ScopeFilter value={scope} onChange={changeScope} className="w-full" />
-          <div className="flex gap-2">
-            <CampaignFilterSelect
-              campaign={campaign}
-              filters={data?.filters}
-              coverage={coverage}
-              reason={reason}
-              onCoverage={changeCoverage}
-              onReason={changeReason}
-            />
-            <select
-              value={sort}
-              onChange={e => changeSort(e.target.value as CampaignSort)}
-              className={SELECT}
-              aria-label="Ordenar"
-            >
-              {(['recent', 'oldest'] as const).map(value => (
-                <option key={value} value={value}>
-                  {labels[value]}
-                </option>
-              ))}
-            </select>
-          </div>
+          <CampaignFilterSelect
+            campaign={campaign}
+            filters={data?.filters}
+            coverage={coverage}
+            reason={reason}
+            onCoverage={changeCoverage}
+            onReason={changeReason}
+          />
           <div className="relative">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-faint" />
             <Input
@@ -419,10 +462,22 @@ export function CampaignClientsTab({ campaign }: { campaign: Campaign }) {
                   className="size-4 accent-ember"
                 />
               </TableHead>
-              <TableHead className={`pl-3 ${HEAD}`}>Cliente</TableHead>
-              <TableHead className={HEAD}>Bien</TableHead>
-              <TableHead className={`hidden md:table-cell ${HEAD}`}>Motivo</TableHead>
-              <TableHead className={`pr-5 ${HEAD}`}>Último mensaje</TableHead>
+              <SortableHead label="Cliente" by="name" sort={shownSort} onSort={changeSort} className={`pl-3 ${HEAD}`} />
+              <SortableHead label="Bien" by="item" sort={shownSort} onSort={changeSort} className={HEAD} />
+              <SortableHead
+                label="Motivo"
+                by="date"
+                sort={shownSort}
+                onSort={changeSort}
+                className={`hidden md:table-cell ${HEAD}`}
+              />
+              <SortableHead
+                label="Último mensaje"
+                by="lastMessage"
+                sort={shownSort}
+                onSort={changeSort}
+                className={`pr-5 ${HEAD}`}
+              />
             </TableRow>
           </TableHeader>
           <TableBody className={isFetching && !isLoading ? 'opacity-60 transition-opacity' : 'transition-opacity'}>

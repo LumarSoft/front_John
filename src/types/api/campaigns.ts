@@ -30,8 +30,15 @@ export type CancellationReason =
   | 'rescision'
   | 'otros'
 
-/** `recent`: who entered the list last first (the renewal that ends last, in Renovaciones). */
-export type CampaignSort = 'recent' | 'oldest'
+/** The column a campaign's client list is sorted by: its date (Motivo), the client, the vehicle or the last message. */
+export type CampaignSortField = 'date' | 'name' | 'item' | 'lastMessage'
+
+export type CampaignSortOrder = 'asc' | 'desc'
+
+export interface CampaignSort {
+  by: CampaignSortField
+  order: CampaignSortOrder
+}
 
 export interface CampaignSettingField {
   key: string
@@ -112,7 +119,9 @@ export interface CampaignCandidatesQuery extends Omit<CobranzasScopeQuery, 'paym
   /** A coverage code ("A", "C2 Full"). */
   coverage?: string
   reason?: CancellationReason
-  sort?: CampaignSort
+  /** Default: the date, newest first (in Renovaciones, the one that ends soonest). */
+  sort?: CampaignSortField
+  order?: CampaignSortOrder
   page?: number
   pageSize?: number
 }
@@ -128,6 +137,8 @@ export interface CampaignCandidatesResponse {
   page: number
   pageSize: number
   totalPages: number
+  /** The column and direction applied: the default when none was asked. Missing from an older API. */
+  sort?: CampaignSort
   /** The choices of the campaign's filters in the scope, with how many each has; null when it has none. */
   filters?: {
     coverages: CampaignFilterOption[] | null
