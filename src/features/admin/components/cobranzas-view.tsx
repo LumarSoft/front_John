@@ -41,6 +41,7 @@ import {
 import { AseguradoSheet } from './asegurado-sheet'
 import { ExpiredPoliciesTab } from './expired-policies-tab'
 import { Tabs, TabsList, TabsTrigger } from '@/src/components/ui/tabs'
+import { useUrlTab } from '../hooks/use-panel-link'
 
 const PAGE_SIZE = 25
 
@@ -392,7 +393,7 @@ export function CobranzasView() {
   const [page, setPage] = useState(1)
   const [selectedId, setSelectedId] = useState<number | null>(null)
   // "Cuotas" is the debt worklist; "Pólizas vencidas" the renewals one. Both share the filters above.
-  const [tab, setTab] = useState<CobranzasTab>('cuotas')
+  const [tab, setTab] = useUrlTab<CobranzasTab>(['cuotas', 'vencidas'], 'cuotas')
 
   const handleSearch = (value: string) => {
     setSearchInput(value)

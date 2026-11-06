@@ -201,7 +201,7 @@ function AssistantForm({ assistant, onDone }: { assistant: NumberAssistant; onDo
             onChange={value => set('branchName', value)}
           />
 
-          <section className="flex flex-col gap-4">
+          <section data-help="numero-datos" className="flex flex-col gap-4">
             <SectionTitle
               title="El asistente"
               description="Lo que dejes vacío usa lo de la organización, que se ve en gris."
@@ -245,7 +245,7 @@ function AssistantForm({ assistant, onDone }: { assistant: NumberAssistant; onDo
 
           <NumberBotSwitch assistant={assistant} canEdit={canEdit} />
 
-          <section className="flex flex-col gap-4">
+          <section data-help="numero-horario" className="flex flex-col gap-4">
             <SectionTitle title="Horario de atención" description="Con el que el bot dice si están atendiendo." />
             <div className="flex gap-2">
               <button type="button" className={choiceClasses(!draft.ownHours)} onClick={() => set('ownHours', false)}>
@@ -258,7 +258,7 @@ function AssistantForm({ assistant, onDone }: { assistant: NumberAssistant; onDo
             {draft.ownHours && <WeeklyScheduleFields value={draft.weekly} onChange={weekly => set('weekly', weekly)} />}
           </section>
 
-          <section className="flex flex-col gap-4">
+          <section data-help="numero-feriados" className="flex flex-col gap-4">
             <SectionTitle
               title="Feriados y pausas"
               description="Solo de este número: cerrarlo no cierra los demás. Los feriados nacionales se cargan solos; si este número atiende uno, quitalo. Se guardan al agregarlos o quitarlos."
@@ -267,7 +267,7 @@ function AssistantForm({ assistant, onDone }: { assistant: NumberAssistant; onDo
           </section>
 
           {BOT_PROFILE_GROUPS.map(group => (
-            <section key={group.title} className="flex flex-col gap-4">
+            <section key={group.title} data-help={group.help && `numero-${group.help}`} className="flex flex-col gap-4">
               <SectionTitle title={group.title} description={group.description} />
               {group.fields.map(field => (
                 <div key={field.key} className="flex flex-col gap-2">
@@ -293,7 +293,7 @@ function AssistantForm({ assistant, onDone }: { assistant: NumberAssistant; onDo
           ))}
 
           {organization.coverages && organization.coverages.length > 0 && (
-            <section className="flex flex-col gap-4">
+            <section data-help="numero-coberturas" className="flex flex-col gap-4">
               <SectionTitle
                 title="Coberturas que ofrece este número"
                 description="Las coberturas y sus textos son los de la organización (Configuración → Coberturas). Acá elegís cuáles ofrece este número, cuál recomienda y en qué orden; lo que dejes «como la organización» sigue sus cambios."

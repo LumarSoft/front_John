@@ -1,48 +1,52 @@
 'use client'
 
 import { useState } from 'react'
-import { Sparkles } from 'lucide-react'
-import { Button } from '@/src/components/ui/button'
-import { useAssistant } from '../hooks/use-assistant'
-import { usePlanFeature } from '../hooks/use-billing'
-import { AssistantSheet } from './assistant-sheet'
+import { cn } from '@/src/lib/utils'
+import { useAssistantPanel } from '../context/assistant-context'
+import { AssistantLogo } from './assistant-logo'
 
 /**
- * The AI assistant's button in the panel's top bar. The conversation lives
- * here, so it carries on while the user moves between sections.
+ * Opens the AI assistant. The pill in the panel's top bar, or a round icon
+ * (`compact`) where a section has its own header, like Whatsapp.
  */
-export function AssistantLauncher() {
-  const [open, setOpen] = useState(false)
-  const assistant = useAssistant()
-  const plan = usePlanFeature('ai_assistant')
+export function AssistantLauncher({ compact = false, className }: { compact?: boolean; className?: string }) {
+  const { available, setOpen } = useAssistantPanel()
+  const [mac] = useState(() => typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform))
+  if (!available) return null
 
-  // No plan includes it yet (it starts off): no button that only says it is not available.
-  if (plan.nowhere) return null
+  if (compact) {
+    return (
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        title={`Asistente (${mac ? '⌘' : 'Ctrl+'}K)`}
+        className={cn(
+          'grid size-9 shrink-0 place-items-center rounded-full transition-transform hover:scale-105',
+          className,
+        )}
+      >
+        <AssistantLogo size={26} />
+        <span className="sr-only">Abrir el asistente</span>
+      </button>
+    )
+  }
 
   return (
-    <>
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        onClick={() => setOpen(true)}
-        className="ml-auto h-8 gap-1.5 rounded-full border-line-2 px-2.5 text-[12.5px] text-ink-3 hover:border-ember hover:bg-ember-soft hover:text-ember-2 sm:px-3"
-      >
-        <Sparkles className="size-4 text-ember-2" />
-        <span className="hidden sm:inline">Asistente</span>
-        <span className="sr-only sm:hidden">Abrir el asistente</span>
-      </Button>
-      <AssistantSheet
-        open={open}
-        onOpenChange={setOpen}
-        messages={assistant.messages}
-        pending={assistant.pending}
-        error={assistant.error}
-        onSend={assistant.send}
-        onRetry={assistant.retry}
-        onReset={assistant.reset}
-        plan={plan}
-      />
-    </>
+    <button
+      type="button"
+      onClick={() => setOpen(true)}
+      className={cn(
+        'group ml-auto flex h-8 items-center gap-2 rounded-full border border-line-2 bg-background py-1 pr-1.5 pl-1 text-[12.5px] text-ink-3 shadow-xs transition-colors',
+        'hover:border-ember-ring hover:bg-ember-soft hover:text-ember-2',
+        className,
+      )}
+    >
+      <AssistantLogo size={22} />
+      <span className="hidden font-medium sm:inline">Asistente</span>
+      <kbd className="hidden rounded-md border border-line-2 bg-secondary px-1.5 py-px font-sans text-[10.5px] text-faint group-hover:border-ember-ring md:inline">
+        {mac ? '⌘K' : 'Ctrl K'}
+      </kbd>
+      <span className="sr-only sm:hidden">Abrir el asistente</span>
+    </button>
   )
 }

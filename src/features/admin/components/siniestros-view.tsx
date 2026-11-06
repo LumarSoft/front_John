@@ -27,6 +27,7 @@ import { useAdminSiniestrosStats } from '../hooks/use-admin-siniestros-stats'
 import { SiniestroSheet } from './siniestro-sheet'
 import { ScopeFilter, type ScopeFilterValue } from './scope-filter'
 import { useScopeFilterState } from '../hooks/use-scope-filter-state'
+import { useLinkedId } from '../hooks/use-panel-link'
 
 const PAGE_SIZE = 25
 
@@ -211,6 +212,8 @@ export function SiniestrosView() {
   const [scope, setScope] = useScopeFilterState()
   const [page, setPage] = useState(1)
   const [selectedId, setSelectedId] = useState<number | null>(null)
+  // ?siniestro=ID (the assistant's links) opens that claim.
+  const clearLinkedClaim = useLinkedId('siniestro', setSelectedId)
 
   const handleSearch = (value: string) => {
     setSearchInput(value)
@@ -420,7 +423,13 @@ export function SiniestrosView() {
         </div>
       )}
 
-      <SiniestroSheet siniestroId={selectedId} onClose={() => setSelectedId(null)} />
+      <SiniestroSheet
+        siniestroId={selectedId}
+        onClose={() => {
+          setSelectedId(null)
+          clearLinkedClaim()
+        }}
+      />
     </div>
   )
 }

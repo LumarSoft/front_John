@@ -1,6 +1,5 @@
 'use client'
 
-import { useState } from 'react'
 import Link from 'next/link'
 import { Info } from 'lucide-react'
 import { Skeleton } from '@/src/components/ui/skeleton'
@@ -13,6 +12,7 @@ import { sendBlockedReason } from '../lib/campaigns-format'
 import { CampaignChips, CampaignSwitch } from './campaign-controls'
 import { CampaignClientsTab } from './campaign-clients-tab'
 import { CampaignMessageTab } from './campaign-message-tab'
+import { useUrlTab } from '../hooks/use-panel-link'
 
 type DetailTab = 'clientes' | 'mensaje'
 
@@ -20,7 +20,7 @@ type DetailTab = 'clientes' | 'mensaje'
 export function CampaignView({ kind }: { kind: CampaignKind }) {
   const { isOwner, isLoading: roleLoading } = useRole()
   const { data, isLoading, isError } = useCampaigns()
-  const [tab, setTab] = useState<DetailTab>('clientes')
+  const [tab, setTab] = useUrlTab<DetailTab>(['clientes', 'mensaje'], 'clientes')
 
   const campaign = data?.campaigns.find(c => c.kind === kind) ?? null
   const blocked = campaign ? sendBlockedReason(campaign) : null

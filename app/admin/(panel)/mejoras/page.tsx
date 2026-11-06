@@ -8,10 +8,12 @@ import { OwnerProposalsView } from '@/src/features/admin/components/owner-propos
 import { ProposalsBoard } from '@/src/features/admin/components/proposals-board'
 import { useNewProposalsCount } from '@/src/features/admin/hooks/use-proposals'
 import { useRole } from '@/src/features/admin/hooks/use-role'
+import { useUrlTab } from '@/src/features/admin/hooks/use-panel-link'
 
 export default function MejorasPage() {
   const { isOwner, isLoading } = useRole()
   const { data: newProposals } = useNewProposalsCount(isOwner)
+  const [tab, setTab] = useUrlTab(['mejoras', 'propuestas'] as const, 'mejoras')
 
   if (isLoading) {
     return (
@@ -27,7 +29,7 @@ export default function MejorasPage() {
         <Sparkles className="size-5 text-ember-2" />
         Mejoras
       </h1>
-      <Tabs defaultValue="mejoras">
+      <Tabs value={tab} onValueChange={value => setTab(value as typeof tab)}>
         <TabsList variant="line" className="h-auto justify-start gap-1">
           <TabsTrigger value="mejoras" className="gap-1.5 px-3 py-1.5 text-[13.5px]">
             <Sparkles className="size-4" /> Mejoras

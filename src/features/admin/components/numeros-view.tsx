@@ -40,6 +40,7 @@ import { numberLabel } from '../lib/number-label'
 import { NumberAssistantSheet } from './number-assistant-sheet'
 import { MetaPortfolioLine } from './meta-portfolio-line'
 import { numberSetupFrom } from './number-setup-fields'
+import { useLinkedId } from '../hooks/use-panel-link'
 
 const int = (n: number) => n.toLocaleString('es-AR')
 
@@ -299,6 +300,11 @@ export function NumerosView() {
   const [deleteTarget, setDeleteTarget] = useState<AdminPhoneNumber | null>(null)
   const [assistantId, setAssistantId] = useState<number | null>(null)
   const [assistantOpen, setAssistantOpen] = useState(false)
+  // ?numero=ID (the assistant's links) opens that number's assistant.
+  const clearLinkedNumber = useLinkedId('numero', id => {
+    setAssistantId(id)
+    setAssistantOpen(true)
+  })
 
   if (!roleLoading && !canView) {
     return (
@@ -596,7 +602,14 @@ export function NumerosView() {
         </DialogContent>
       </Dialog>
 
-      <NumberAssistantSheet numberId={assistantId} open={assistantOpen} onOpenChange={setAssistantOpen} />
+      <NumberAssistantSheet
+        numberId={assistantId}
+        open={assistantOpen}
+        onOpenChange={open => {
+          setAssistantOpen(open)
+          if (!open) clearLinkedNumber()
+        }}
+      />
 
       <AlertDialog open={!!deleteTarget} onOpenChange={open => !open && setDeleteTarget(null)}>
         <AlertDialogContent>
