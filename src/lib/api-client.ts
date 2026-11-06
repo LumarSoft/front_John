@@ -71,6 +71,55 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   return res.json() as Promise<T>
 }
 
+interface StreamOptions {
+  token: string
+  body: unknown
+  signal?: AbortSignal
+}
+
+/**
+ * A POST whose answer is a stream of server-sent events (the assistant): each
+ * event goes to `onEvent` as it arrives. An HTTP error before the stream
+ * starts throws an ApiError, like apiRequest.
+ */
+export async function apiStream<E extends { event: string; data: unknown }>(
+  path: string,
+  { token, body, signal }: StreamOptions,
+  onEvent: (event: E) => void,
+): Promise<void> {
+  const res = await fetch(`${API_URL}${path}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream', Authorization: `Bearer ${token}` },
+    body: JSON.stringify(body),
+    signal,
+  })
+  if (!res.ok || !res.body) {
+    notifyUnauthorized(res, token)
+    throw new ApiError(res.status, await extractErrorMessage(res))
+  }
+
+  const reader = res.body.getReader()
+  const decoder = new TextDecoder()
+  let buffer = ''
+  for (;;) {
+    const { done, value } = await reader.read()
+    if (done) break
+    buffer += decoder.decode(value, { stream: true })
+    let end: number
+    while ((end = buffer.indexOf('\n\n')) >= 0) {
+      const chunk = buffer.slice(0, end)
+      buffer = buffer.slice(end + 2)
+      let event = 'message'
+      const data: string[] = []
+      for (const line of chunk.split('\n')) {
+        if (line.startsWith('event:')) event = line.slice(6).trim()
+        else if (line.startsWith('data:')) data.push(line.slice(5).trimStart())
+      }
+      if (data.length) onEvent({ event, data: JSON.parse(data.join('\n')) as unknown } as E)
+    }
+  }
+}
+
 /** Downloads a file the API serves (a PDF) with the panel's token. */
 export async function apiDownload(path: string, token: string): Promise<Blob> {
   const res = await fetch(`${API_URL}${path}`, { headers: { Authorization: `Bearer ${token}` } })

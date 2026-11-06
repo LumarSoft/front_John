@@ -26,6 +26,7 @@ import { BusinessHoursSection } from './business-hours-section'
 import { CoverageSettingsSection } from './coverage-settings-section'
 import { SuperAdminOnlyNote } from './super-admin-only-note'
 import { splitNames } from '../lib/number-assistant-form'
+import { useUrlTab } from '../hooks/use-panel-link'
 
 function SettingsForm({ initialEmail, initialName }: { initialEmail: string; initialName: string }) {
   const updateProfile = useUpdateProfile()
@@ -198,7 +199,7 @@ function BotConfigForm({
     : `Soy el asistente de ${org.name}${org.shortName ? ` (${org.shortName})` : ''}`
 
   return (
-    <Card className="max-w-xl border-line-2 shadow-sm">
+    <Card data-help="config-bot" className="max-w-xl border-line-2 shadow-sm">
       <form onSubmit={handleSubmit} className="contents">
         <CardHeader>
           <CardTitle className="font-display text-[18px]">Asistente de WhatsApp</CardTitle>
@@ -274,6 +275,8 @@ const TABS = [
   { value: 'coberturas', label: 'Coberturas', icon: ShieldCheck },
 ] as const
 
+const TAB_VALUES = TABS.map(tab => tab.value)
+
 /** The organization's logo: the panel's sidebar and the printable policy card. Only the SuperAdmin changes it. */
 function LogoCard({ canEdit }: { canEdit: boolean }) {
   const brand = usePanelBrand()
@@ -316,6 +319,7 @@ export function SettingsView() {
   const { isSuperAdmin, isAdmin } = useRole()
   // Since 28/10 every admin changes the organization settings, not only the SuperAdmin.
   const canEditOrg = isSuperAdmin || isAdmin
+  const [tab, setTab] = useUrlTab(TAB_VALUES, 'cuenta')
 
   return (
     <div className="mx-auto w-full max-w-5xl px-5 py-8 md:px-8 md:py-10">
@@ -327,7 +331,7 @@ export function SettingsView() {
         </p>
       </div>
 
-      <Tabs defaultValue="cuenta">
+      <Tabs value={tab} onValueChange={value => setTab(value as (typeof TAB_VALUES)[number])}>
         <TabsList variant="line" className="h-auto max-w-full flex-wrap justify-start gap-1">
           {TABS.map(tab => (
             <TabsTrigger

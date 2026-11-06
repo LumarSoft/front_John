@@ -232,6 +232,31 @@ export const TOURS = {
       },
     ],
   },
+  'datos-de-pago': {
+    route: '/admin/configuracion',
+    steps: [
+      { target: 'config-asistente', text: 'Tocá «Asistente».', waitFor: 'config-asistente' },
+      {
+        target: 'config-pagos',
+        text: 'Acá están la cuenta para transferir (alias, CBU, titular y banco) y dónde se paga en efectivo: es lo que el bot les da a los clientes. Cambialos y tocá «Guardar cambios».',
+      },
+    ],
+  },
+  'datos-de-pago-numero': {
+    route: '/admin/numeros',
+    steps: [
+      {
+        target: 'numero-asistente',
+        text: 'Tocá «Asistente» en el número.',
+        waitFor: 'numero-asistente',
+        missing: 'No hay números cargados todavía.',
+      },
+      {
+        target: 'numero-pagos',
+        text: 'La cuenta propia de este número. Vacía, usa la de la organización (la ves de gris). Con un dato propio, usa solo su cuenta.',
+      },
+    ],
+  },
 } satisfies Record<string, Tour>
 
 export type TourId = keyof typeof TOURS

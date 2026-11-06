@@ -48,6 +48,7 @@ import { numberLabel } from '../lib/number-label'
 import { PlanLimitActions } from './plan-limit-actions'
 import { HEAD, int, Kpi, MonthPicker, thisMonth, usd } from './billing-ui'
 import { LiquidacionTab } from './liquidacion-tab'
+import { useUrlTab } from '../hooks/use-panel-link'
 
 const price = (n: number) => (n === 0 ? 'Gratis' : usd(n))
 const day = (iso: string) => new Date(iso).toLocaleDateString('es-AR', { day: 'numeric', month: 'numeric' })
@@ -751,8 +752,9 @@ type BillingTab = 'consumo' | 'planes' | 'tablero' | 'liquidacion'
 
 export function FacturacionView() {
   const { isOwner, isSuperAdmin, isAdmin, isLoading: roleLoading } = useRole()
-  const [tab, setTab] = useState<BillingTab | null>(null)
-  const current: BillingTab = tab ?? (isOwner ? 'tablero' : 'consumo')
+  // `?tab=` (the assistant's links) or the role's first tab.
+  const [tab, setTab] = useUrlTab<BillingTab | 'auto'>(['consumo', 'planes', 'tablero', 'liquidacion'], 'auto')
+  const current: BillingTab = tab === 'auto' ? (isOwner ? 'tablero' : 'consumo') : tab
 
   if (!roleLoading && !isOwner && !isSuperAdmin && !isAdmin) {
     return (
