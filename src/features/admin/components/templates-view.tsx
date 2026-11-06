@@ -51,7 +51,16 @@ function TemplateLine({ template }: { template: TemplateRow }) {
         <span className={`${CHIP} ${status.classes}`}>{status.label}</span>
         {template.reason && <div className="mt-1 text-[12px] text-red-700 dark:text-red-400">{template.reason}</div>}
         {template.status === 'MISSING' && (
-          <div className="mt-1 text-[12px] text-muted-foreground">Los números de esta cuenta no pueden enviarla.</div>
+          <div className="mt-1 text-[12px] text-muted-foreground">
+            {template.managed
+              ? 'Se crea sola en la próxima hora. Hasta que Meta la apruebe, los números de esta cuenta no pueden enviarla.'
+              : 'Los números de esta cuenta no pueden enviarla.'}
+          </div>
+        )}
+        {template.inUse && template.use?.endsWith('(texto anterior)') && (
+          <div className="mt-1 text-[12px] text-muted-foreground">
+            Se sigue mandando hasta que Meta apruebe el texto nuevo.
+          </div>
         )}
       </TableCell>
     </TableRow>
@@ -132,7 +141,10 @@ export function TemplatesView() {
           <h1 className="mt-2 font-display text-[clamp(26px,3.5vw,36px)] tracking-[-0.035em] text-ink">Plantillas</h1>
           <p className="mt-1.5 text-[14px] text-muted-foreground">
             Las plantillas de Meta de cada cuenta de WhatsApp: si están aprobadas, para qué las usa la plataforma y
-            cuáles le faltan. Cada plantilla vive en una sola cuenta, y un número solo puede enviar las de la suya.
+            cuáles le faltan. Cada plantilla vive en una sola cuenta, y un número solo puede enviar las de la suya. Los
+            avisos y los textos de las campañas se crean solos en cada cuenta, al conectar un número y una vez por hora;
+            Meta revisa cada copia. Cuando cambia el texto de un aviso, mientras Meta revisa el nuevo se sigue mandando
+            el anterior.
           </p>
         </div>
         <div className="flex items-center gap-3">

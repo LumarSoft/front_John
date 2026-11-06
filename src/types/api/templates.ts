@@ -12,8 +12,10 @@ export interface TemplateRow {
   quality: string | null
   /** What the platform uses it for; null when it does not use it. */
   use: string | null
-  /** The platform sends it now. */
+  /** The platform sends it now (an earlier notice text, while Meta reviews the new one, too). */
   inUse: boolean
+  /** The platform creates it by itself in every account (absent on older APIs). */
+  managed?: boolean
 }
 
 export interface TemplatesNumber {

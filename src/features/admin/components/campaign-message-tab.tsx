@@ -207,6 +207,10 @@ export function CampaignMessageTab({ campaign }: { campaign: Campaign }) {
             </Button>
           </div>
           <TemplateStatusList templates={campaign.templates} />
+          <p className="text-[11.5px] text-muted-foreground">
+            Es un solo texto para todos los números de la organización. Un número que se conecta después lo recibe solo
+            en menos de una hora, y Meta lo revisa en su cuenta.
+          </p>
         </div>
       </div>
 
