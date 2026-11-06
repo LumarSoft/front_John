@@ -4,6 +4,7 @@ import { Bot, Clock, Landmark, Users } from 'lucide-react'
 import { Input } from '@/src/components/ui/input'
 import { Label } from '@/src/components/ui/label'
 import { WEEKDAY_LABEL, WEEKDAYS, type WeeklySchedule } from '@/src/types/api/business-hours'
+import type { NumberAssistant } from '@/src/types/api/phone-numbers'
 import { splitNames } from '../lib/number-assistant-form'
 import { firstInvalidDay } from '../lib/weekly-schedule'
 import { WeeklyScheduleFields } from './weekly-schedule-fields'
@@ -56,6 +57,24 @@ export function numberSetupErrors(setup: NumberSetup): Partial<Record<NumberSetu
   if (invalid) errors.weekly = `Revisá ${WEEKDAY_LABEL[invalid]}: el inicio debe ser anterior al fin.`
   else if (!WEEKDAYS.some(day => setup.weekly[day].length > 0)) errors.weekly = 'Abrí al menos un día con su horario.'
   return errors
+}
+
+/**
+ * What a number answers with today (its own values, the organization's where it
+ * has none), to fill the form when it is reconnected: sent back unchanged, the
+ * API changes nothing on the number.
+ */
+export function numberSetupFrom({ own, organization }: NumberAssistant): NumberSetup {
+  const p = own.botProfile
+  // The transfer account goes as a whole: with any field of its own, the number uses only its own.
+  const ownAccount = Boolean(p.transferAlias || p.transferCbu || p.transferHolder || p.transferBank)
+  return {
+    botName: own.botName ?? organization.botName ?? '',
+    presentationName: p.orgName ?? organization.botProfile.orgName ?? organization.name,
+    transferAlias: (ownAccount ? p.transferAlias : organization.botProfile.transferAlias) ?? '',
+    staff: (own.staffNames.length ? own.staffNames : organization.staffNames).join(', '),
+    weekly: own.businessHours ?? organization.businessHours,
+  }
 }
 
 /** The setup as the API takes it. */

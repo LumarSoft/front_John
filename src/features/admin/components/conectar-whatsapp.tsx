@@ -75,6 +75,8 @@ interface Props {
   onConnected?: (result: OnboardWhatsappResponse) => void
   /** Button text; "Reconectar número" when Meta dropped a number. */
   label?: string
+  /** What the form starts with: the number being reconnected, as it answers today. */
+  initial?: { branchName: string; setup: NumberSetup }
 }
 
 export function ConectarWhatsapp({
@@ -83,16 +85,17 @@ export function ConectarWhatsapp({
   responsibleProducerCodeId,
   onConnected,
   label = 'Conectar número de WhatsApp',
+  initial,
 }: Props) {
   const { data: config, isLoading: loadingConfig } = useEmbeddedSignupConfig()
   const onboard = useOnboardWhatsapp()
 
   const [sdkReady, setSdkReady] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [branchName, setBranchName] = useState('')
+  const [branchName, setBranchName] = useState(initial?.branchName ?? '')
   const [branchError, setBranchError] = useState<string | null>(null)
   const branchInput = useRef<HTMLInputElement>(null)
-  const [setup, setSetup] = useState<NumberSetup>(EMPTY_NUMBER_SETUP)
+  const [setup, setSetup] = useState<NumberSetup>(initial?.setup ?? EMPTY_NUMBER_SETUP)
   const [setupErrors, setSetupErrors] = useState<Partial<Record<NumberSetupField, string>>>({})
   const session = useRef<SessionInfo>({ finished: false })
 
@@ -284,6 +287,12 @@ export function ConectarWhatsapp({
   return (
     <div className="flex flex-col gap-2">
       <div className="mb-2 flex max-w-xl flex-col gap-6">
+        {initial && (
+          <p className="text-[13px] text-muted-foreground">
+            Los datos vienen cargados con lo que el número usa hoy. Cambiá solo lo que haga falta: lo demás queda como
+            estaba (CBU, titular, banco, líneas y feriados incluidos).
+          </p>
+        )}
         <BranchNameField
           id="connect-branch-name"
           inputRef={branchInput}
