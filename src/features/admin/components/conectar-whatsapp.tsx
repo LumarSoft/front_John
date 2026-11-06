@@ -5,6 +5,15 @@ import type { OnboardWhatsappResponse } from '@/src/types/api/whatsapp-onboardin
 import { Button } from '@/src/components/ui/button'
 import { useEmbeddedSignupConfig, useOnboardWhatsapp } from '../hooks/use-whatsapp-onboarding'
 import { BranchNameField } from './branch-name-field'
+import {
+  EMPTY_NUMBER_SETUP,
+  NUMBER_SETUP_INPUT_IDS,
+  NumberSetupFields,
+  numberSetupErrors,
+  numberSetupPayload,
+  type NumberSetup,
+  type NumberSetupField,
+} from './number-setup-fields'
 
 /**
  * Launches Meta's Embedded Signup and hands the result to the API.
@@ -17,7 +26,8 @@ import { BranchNameField } from './branch-name-field'
  *
  * The code expires 30 SECONDS after the popup closes, so the callback posts it
  * to the backend immediately — no confirmation step in between. That is why
- * the branch's name is asked BEFORE the popup opens.
+ * the branch's name and the number's assistant (bot name, whose assistant it
+ * is, people, hours) are asked BEFORE the popup opens, all of them required.
  */
 
 const COEXISTENCE_FEATURE = 'whatsapp_business_app_onboarding'
@@ -82,6 +92,8 @@ export function ConectarWhatsapp({
   const [branchName, setBranchName] = useState('')
   const [branchError, setBranchError] = useState<string | null>(null)
   const branchInput = useRef<HTMLInputElement>(null)
+  const [setup, setSetup] = useState<NumberSetup>(EMPTY_NUMBER_SETUP)
+  const [setupErrors, setSetupErrors] = useState<Partial<Record<NumberSetupField, string>>>({})
   const session = useRef<SessionInfo>({ finished: false })
 
   // ── SDK ──
@@ -179,6 +191,16 @@ export function ConectarWhatsapp({
       branchInput.current?.focus()
       return
     }
+    // Everything about the assistant is required before Meta opens: a number
+    // that starts without it greets as the head office.
+    const errors = numberSetupErrors(setup)
+    setSetupErrors(errors)
+    if (Object.keys(errors).length) {
+      const first = (Object.keys(errors) as NumberSetupField[])[0]
+      if (first !== 'weekly') document.getElementById(NUMBER_SETUP_INPUT_IDS[first])?.focus()
+      setError('Completá los datos del asistente antes de conectar el número.')
+      return
+    }
     setError(null)
     session.current = { finished: false }
 
@@ -221,6 +243,7 @@ export function ConectarWhatsapp({
               pin,
               responsibleProducerCodeId,
               branchName: name,
+              ...numberSetupPayload(setup),
             },
             {
               onSuccess: result => onConnected?.(result),
@@ -242,7 +265,7 @@ export function ConectarWhatsapp({
         },
       },
     )
-  }, [config, branchName, coexistence, pin, responsibleProducerCodeId, onboard, onConnected])
+  }, [config, branchName, setup, coexistence, pin, responsibleProducerCodeId, onboard, onConnected])
 
   if (loadingConfig) return null
 
@@ -260,7 +283,7 @@ export function ConectarWhatsapp({
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="mb-2 max-w-md">
+      <div className="mb-2 flex max-w-xl flex-col gap-6">
         <BranchNameField
           id="connect-branch-name"
           inputRef={branchInput}
@@ -269,6 +292,14 @@ export function ConectarWhatsapp({
           onChange={value => {
             setBranchName(value)
             if (value.trim()) setBranchError(null)
+          }}
+        />
+        <NumberSetupFields
+          value={setup}
+          errors={setupErrors}
+          onChange={value => {
+            setSetup(value)
+            if (Object.keys(setupErrors).length) setSetupErrors(numberSetupErrors(value))
           }}
         />
       </div>
