@@ -16,6 +16,23 @@ export interface CampaignTemplate {
   reason: string | null
 }
 
+/** What a campaign's client list can be narrowed by besides the scope and the search. */
+export type CampaignFilter = 'coverage' | 'reason'
+
+/** Why Triunfo cancelled a policy (Bajas y anulaciones). */
+export type CancellationReason =
+  | 'falta_pago'
+  | 'venta'
+  | 'desistimiento'
+  | 'costo'
+  | 'cambio_compania'
+  | 'siniestro'
+  | 'rescision'
+  | 'otros'
+
+/** `recent`: who entered the list last first (the renewal that ends last, in Renovaciones). */
+export type CampaignSort = 'recent' | 'oldest'
+
 export interface CampaignSettingField {
   key: string
   label: string
@@ -45,6 +62,8 @@ export interface Campaign {
   placeholders: CampaignPlaceholder[]
   settings: Record<string, number | string[]>
   settingFields: CampaignSettingField[]
+  /** Missing from an older API. */
+  filters?: CampaignFilter[]
   /** One per WhatsApp account of the organization. */
   templates: CampaignTemplate[]
   /** Some sending number has this message approved by Meta. */
@@ -90,8 +109,17 @@ export interface CampaignCandidate {
 
 export interface CampaignCandidatesQuery extends Omit<CobranzasScopeQuery, 'paymentMethod'> {
   search?: string
+  /** A coverage code ("A", "C2 Full"). */
+  coverage?: string
+  reason?: CancellationReason
+  sort?: CampaignSort
   page?: number
   pageSize?: number
+}
+
+export interface CampaignFilterOption<T extends string = string> {
+  value: T
+  count: number
 }
 
 export interface CampaignCandidatesResponse {
@@ -100,6 +128,11 @@ export interface CampaignCandidatesResponse {
   page: number
   pageSize: number
   totalPages: number
+  /** The choices of the campaign's filters in the scope, with how many each has; null when it has none. */
+  filters?: {
+    coverages: CampaignFilterOption[] | null
+    reasons: Array<CampaignFilterOption<CancellationReason> & { label: string }> | null
+  }
 }
 
 export type CampaignSkipReason = 'NO_PHONE' | 'ALREADY_SENT' | 'SENDING' | 'OPTED_OUT'

@@ -4,8 +4,21 @@ import type {
   CampaignPlaceholder,
   CampaignSkipReason,
   CampaignTemplate,
+  CancellationReason,
   SendCampaignResponse,
 } from '@/src/types/api/campaigns'
+
+/** The reasons of Bajas y anulaciones, for a chosen one the scope no longer has (the API names the rest). */
+export const CANCELLATION_REASON_LABELS: Record<CancellationReason, string> = {
+  falta_pago: 'Falta de pago',
+  venta: 'Venta del bien',
+  desistimiento: 'La pidió el asegurado',
+  costo: 'Aumento de costo',
+  cambio_compania: 'Cambio de compañía',
+  siniestro: 'Siniestro',
+  rescision: 'Rescisión',
+  otros: 'Otros motivos',
+}
 
 /** What the office reads of Meta's review of a campaign's message. */
 export type CampaignReview = 'APPROVED' | 'PENDING' | 'REJECTED' | 'ERROR' | 'NOT_SUBMITTED'
