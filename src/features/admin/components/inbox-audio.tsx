@@ -15,6 +15,8 @@ interface Props {
   transcript: string
   /** Words of an in-chat search to mark in the transcription. */
   highlight?: string
+  /** The contact who sent the note; omitted for notes sent by the office. */
+  sender?: { name: string; seed: string }
 }
 
 function clock(seconds: number): string {
@@ -27,7 +29,7 @@ function clock(seconds: number): string {
  * answered. Stored audio is deleted after a retention period, so a missing
  * file falls back to the transcription alone.
  */
-export function InboxAudio({ src, transcript, highlight }: Props) {
+export function InboxAudio({ src, transcript, highlight, sender }: Props) {
   const { audioProps, playing, current, duration, unavailable, toggle, seek } = useAudioPlayer()
   const bars = useAudioWaveform(src) ?? FLAT_BARS
   const progress = duration ? current / duration : 0
@@ -80,7 +82,7 @@ export function InboxAudio({ src, transcript, highlight }: Props) {
             </span>
           </div>
           <span className="relative shrink-0">
-            <InboxAvatar className="size-[46px]" />
+            <InboxAvatar name={sender?.name} seed={sender?.seed} className="size-[46px]" />
             <Mic className="absolute -bottom-0.5 -left-1 size-4 text-(--wa-green)" strokeWidth={2.5} />
           </span>
         </div>

@@ -275,7 +275,7 @@ export function InboxThread({ conversation, onOpenClient, onBack }: Props) {
             title={client ? 'Ver ficha del asegurado' : 'Editar contacto'}
             className="flex min-w-0 flex-1 items-center gap-[15px] text-left"
           >
-            <InboxAvatar className="size-10" />
+            <InboxAvatar name={contactName} seed={conversation.waId} className="size-10" />
             <span className="min-w-0">
               <span className="block truncate text-[16px] leading-[21px] text-(--wa-text)">{contactName}</span>
               <span className="block truncate text-[13px] leading-5 text-(--wa-text-2)">{subtitle}</span>
@@ -379,6 +379,7 @@ export function InboxThread({ conversation, onOpenClient, onBack }: Props) {
                     )}
                     <InboxMessageBubble
                       message={msg}
+                      contact={{ name: contactName, seed: conversation.waId }}
                       first={first}
                       highlight={searching || flashId !== null ? query : ''}
                       flash={msg.id === flashId}
