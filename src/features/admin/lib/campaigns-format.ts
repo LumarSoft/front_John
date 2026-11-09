@@ -5,6 +5,8 @@ import type {
   CampaignSkipReason,
   CampaignTemplate,
   CancellationReason,
+  OpportunityLostReason,
+  OpportunityStatus,
   SendCampaignResponse,
 } from '@/src/types/api/campaigns'
 
@@ -18,6 +20,51 @@ export const CANCELLATION_REASON_LABELS: Record<CancellationReason, string> = {
   siniestro: 'Siniestro',
   rescision: 'Rescisión',
   otros: 'Otros motivos',
+}
+
+/** Where an opportunity stands, as the list and the filter name it. */
+export const OPPORTUNITY_STATUS_LABELS: Record<OpportunityStatus, string> = {
+  NEW: 'Sin contactar',
+  CONTACTED: 'Contactado',
+  REPLIED: 'Respondió',
+  QUOTED: 'Cotizado',
+  WON: 'Ganada',
+  LOST: 'Perdida',
+}
+
+export const OPPORTUNITY_STATUS_ORDER: OpportunityStatus[] = ['NEW', 'CONTACTED', 'REPLIED', 'QUOTED', 'WON', 'LOST']
+
+export const OPPORTUNITY_STATUS_CLASSES: Record<OpportunityStatus, string> = {
+  NEW: 'border-line-2 bg-secondary text-muted-foreground',
+  CONTACTED: 'border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-900 dark:bg-sky-950/40 dark:text-sky-400',
+  REPLIED: 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-400',
+  QUOTED:
+    'border-violet-200 bg-violet-50 text-violet-700 dark:border-violet-900 dark:bg-violet-950/40 dark:text-violet-400',
+  WON: 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-400',
+  LOST: 'border-red-200 bg-red-50 text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-400',
+}
+
+export const LOST_REASON_LABELS: Record<OpportunityLostReason, string> = {
+  PRICE: 'Precio',
+  OTHER_INSURER: 'Se fue a otra compañía',
+  NO_ANSWER: 'No contesta',
+  SOLD_ASSET: 'Vendió el bien',
+  OTHER: 'Otro motivo',
+}
+
+export const LOST_REASON_ORDER: OpportunityLostReason[] = ['PRICE', 'OTHER_INSURER', 'NO_ANSWER', 'SOLD_ASSET', 'OTHER']
+
+const pesos = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 })
+
+/** "$ 512.000": the premium of what was sold. */
+export function formatPremium(amount: number): string {
+  return pesos.format(amount)
+}
+
+/** "42 %" of a whole, or "—" when there is nothing to divide by. */
+export function formatRate(part: number, whole: number): string {
+  if (!whole) return '—'
+  return `${Math.round((part / whole) * 100)} %`
 }
 
 /** What the office reads of Meta's review of a campaign's message. */

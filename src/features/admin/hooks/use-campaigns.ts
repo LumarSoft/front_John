@@ -1,7 +1,14 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { campaignsService } from '@/src/services/campaigns.service'
 import { QUERY_KEYS } from '@/src/lib/query-keys'
-import type { CampaignCandidatesQuery, CampaignKind, UpdateCampaignRequest } from '@/src/types/api/campaigns'
+import type {
+  AssignOpportunitiesRequest,
+  CampaignCandidatesQuery,
+  CampaignKind,
+  CampaignResultsQuery,
+  UpdateCampaignRequest,
+  UpdateOpportunityRequest,
+} from '@/src/types/api/campaigns'
 import { useAuth } from '../context/auth-context'
 
 /** While a campaign message waits for Meta, the list asks again every minute. */
@@ -34,6 +41,18 @@ export function useCampaignCandidates(kind: CampaignKind, params: CampaignCandid
   })
 }
 
+/** How the campaigns did in a period (one campaign, or all of them). */
+export function useCampaignResults(params: CampaignResultsQuery, enabled = true) {
+  const { token } = useAuth()
+
+  return useQuery({
+    queryKey: QUERY_KEYS.admin.campaignResults(params),
+    queryFn: () => campaignsService.results(token as string, params),
+    enabled: !!token && enabled,
+    placeholderData: keepPreviousData,
+  })
+}
+
 /** Turn a campaign on or off, change its message, percentage or settings, or ask Meta about its review. */
 export function useCampaignSettingsActions() {
   const { token } = useAuth()
@@ -56,7 +75,10 @@ export function useCampaignSettingsActions() {
   return { update, refreshTemplates }
 }
 
-/** Send a campaign to the ticked clients, mark them contacted or leave them out for good; lists refresh after each. */
+/**
+ * Send a campaign to the ticked clients, mark them contacted, leave them out
+ * for good, assign them to someone or say what came of one; lists refresh after each.
+ */
 export function useCampaignActions(kind: CampaignKind) {
   const { token } = useAuth()
   const queryClient = useQueryClient()
@@ -79,5 +101,16 @@ export function useCampaignActions(kind: CampaignKind) {
     onSuccess: refresh,
   })
 
-  return { send, mark, optOut }
+  const assign = useMutation({
+    mutationFn: (data: AssignOpportunitiesRequest) => campaignsService.assign(token as string, kind, data),
+    onSuccess: refresh,
+  })
+
+  const updateOpportunity = useMutation({
+    mutationFn: ({ targetId, data }: { targetId: number; data: UpdateOpportunityRequest }) =>
+      campaignsService.updateOpportunity(token as string, kind, targetId, data),
+    onSuccess: refresh,
+  })
+
+  return { send, mark, optOut, assign, updateOpportunity }
 }
