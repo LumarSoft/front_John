@@ -13,10 +13,11 @@ import { sendBlockedReason } from '../lib/campaigns-format'
 import { CampaignChips, CampaignSwitch } from './campaign-controls'
 import { CampaignClientsTab } from './campaign-clients-tab'
 import { CampaignMessageTab } from './campaign-message-tab'
+import { CampaignResultsTab } from './campaign-results-tab'
 
-type DetailTab = 'clientes' | 'mensaje'
+type DetailTab = 'clientes' | 'mensaje' | 'resultados'
 
-/** One campaign's page: the portfolio suggests whom to offer something to, and the office picks whom to write. */
+/** One campaign's page: the portfolio suggests whom to offer something to, the office picks whom to write and follows each one. */
 export function CampaignView({ kind }: { kind: CampaignKind }) {
   const { isOwner, isLoading: roleLoading } = useRole()
   const { data, isLoading, isError } = useCampaigns()
@@ -74,12 +75,16 @@ export function CampaignView({ kind }: { kind: CampaignKind }) {
             <TabsList>
               <TabsTrigger value="clientes">Clientes</TabsTrigger>
               <TabsTrigger value="mensaje">Mensaje</TabsTrigger>
+              <TabsTrigger value="resultados">Resultados</TabsTrigger>
             </TabsList>
             <TabsContent value="clientes" className="mt-4">
               <CampaignClientsTab campaign={campaign} />
             </TabsContent>
             <TabsContent value="mensaje" className="mt-4">
               <CampaignMessageTab key={campaign.updatedAt ?? ''} campaign={campaign} />
+            </TabsContent>
+            <TabsContent value="resultados" className="mt-4">
+              <CampaignResultsTab campaign={campaign} />
             </TabsContent>
           </Tabs>
         </>

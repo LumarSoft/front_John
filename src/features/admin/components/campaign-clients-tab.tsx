@@ -9,9 +9,15 @@ import {
   ChevronLeft,
   ChevronRight,
   Loader2,
+  MoreVertical,
+  RotateCcw,
   Search,
   Send,
+  StickyNote,
+  Trophy,
+  UserPlus,
   UserX,
+  XCircle,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import {
@@ -28,6 +34,12 @@ import { WhatsAppIcon } from '@/src/components/ui/brand-icons'
 import { Button } from '@/src/components/ui/button'
 import { Card } from '@/src/components/ui/card'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/src/components/ui/dialog'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/src/components/ui/dropdown-menu'
 import { Input } from '@/src/components/ui/input'
 import { Skeleton } from '@/src/components/ui/skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/src/components/ui/table'
@@ -38,22 +50,41 @@ import type {
   Campaign,
   CampaignCandidate,
   CampaignCandidatesResponse,
+  CampaignOpportunity,
   CampaignSort,
   CampaignSortField,
   CampaignSortOrder,
   CancellationReason,
+  OpportunityFilter,
+  OpportunityLostReason,
+  UpdateOpportunityRequest,
 } from '@/src/types/api/campaigns'
+import type { TaskPerson } from '@/src/types/api/tasks'
 import { useCampaignActions, useCampaignCandidates } from '../hooks/use-campaigns'
 import { useScopeFilterState } from '../hooks/use-scope-filter-state'
+import { useTaskPeople } from '../hooks/use-tasks'
 import { formatDate } from '../lib/asegurados-ui'
-import { CANCELLATION_REASON_LABELS, candidateMessage, sendBlockedReason, summarizeSend } from '../lib/campaigns-format'
+import {
+  CANCELLATION_REASON_LABELS,
+  candidateMessage,
+  formatPremium,
+  LOST_REASON_LABELS,
+  LOST_REASON_ORDER,
+  OPPORTUNITY_STATUS_CLASSES,
+  OPPORTUNITY_STATUS_LABELS,
+  OPPORTUNITY_STATUS_ORDER,
+  sendBlockedReason,
+  summarizeSend,
+} from '../lib/campaigns-format'
 import { ScopeFilter, type ScopeFilterValue } from './scope-filter'
 
 const PAGE_SIZE = 25
 const HEAD = 'text-[11px] uppercase tracking-[0.12em] text-faint'
-const COLUMNS = 5
+const COLUMNS = 7
 
 const SELECT = 'h-9 w-full min-w-0 rounded-md border border-line-2 bg-background px-2.5 text-[12.5px] text-ink-3'
+const TEXTAREA =
+  'min-h-20 w-full rounded-md border border-line-2 bg-background px-2.5 py-2 text-[13px] text-ink-3 outline-none focus:border-ember-ring'
 
 const failed = (error: unknown, fallback: string) =>
   toast.error(error instanceof ApiError && error.status < 500 ? error.message : fallback)
@@ -106,6 +137,41 @@ function LastMessageCell({ candidate }: { candidate: CampaignCandidate }) {
         </TooltipProvider>
       )
   }
+}
+
+/** Where the client's opportunity stands and who follows it. */
+function OpportunityCell({ opportunity }: { opportunity: CampaignOpportunity | null | undefined }) {
+  const status = opportunity?.status ?? 'NEW'
+  const when =
+    opportunity &&
+    (status === 'WON'
+      ? opportunity.wonAt
+      : status === 'LOST'
+        ? opportunity.lostAt
+        : status === 'QUOTED'
+          ? opportunity.quotedAt
+          : status === 'REPLIED'
+            ? opportunity.repliedAt
+            : opportunity.contactedAt)
+  return (
+    <div className="space-y-1">
+      <span
+        className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-medium ${OPPORTUNITY_STATUS_CLASSES[status]}`}
+      >
+        {OPPORTUNITY_STATUS_LABELS[status]}
+        {when && status !== 'NEW' && <span className="ml-1 font-normal opacity-80">{formatDate(when)}</span>}
+      </span>
+      {opportunity?.assignedTo && (
+        <div className="truncate text-[11.5px] text-ink-3">{opportunity.assignedTo.name ?? 'Sin nombre'}</div>
+      )}
+      {status === 'LOST' && opportunity?.lostReasonLabel && (
+        <div className="text-[11px] text-muted-foreground">{opportunity.lostReasonLabel}</div>
+      )}
+      {status === 'WON' && opportunity?.wonPremium != null && (
+        <div className="text-[11px] text-muted-foreground">Prima {formatPremium(opportunity.wonPremium)}</div>
+      )}
+    </div>
+  )
 }
 
 /** The first order of a column: A to Z for names, newest first for dates; in Renovaciones, the soonest to end. */
@@ -261,19 +327,167 @@ function SendDialog({
   )
 }
 
-/** "Clientes": who the campaign finds, so the office ticks whom to write to. */
+/** "Asignar a…": one person of the office for the chosen clients, or nobody. */
+function AssignDialog({
+  count,
+  people,
+  current,
+  pending,
+  onConfirm,
+  onClose,
+}: {
+  count: number
+  people: TaskPerson[]
+  current: number | null
+  pending: boolean
+  onConfirm: (assignedToId: number | null) => void
+  onClose: () => void
+}) {
+  const [chosen, setChosen] = useState<string>(current ? String(current) : '')
+  return (
+    <Dialog open={count > 0} onOpenChange={open => !open && onClose()}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>{count === 1 ? 'Asignar la oportunidad' : `Asignar ${count} oportunidades`}</DialogTitle>
+          <DialogDescription>Quien la sigue la ve en «Solo las mías» y en los resultados.</DialogDescription>
+        </DialogHeader>
+        <select value={chosen} onChange={e => setChosen(e.target.value)} className={SELECT} aria-label="Asesor">
+          <option value="">Sin asignar</option>
+          {people.map(person => (
+            <option key={person.id} value={person.id}>
+              {person.name ?? person.email}
+            </option>
+          ))}
+        </select>
+        <div className="flex justify-end gap-2">
+          <Button type="button" variant="outline" onClick={onClose} className="border-line-2">
+            Cancelar
+          </Button>
+          <Button type="button" disabled={pending} onClick={() => onConfirm(chosen ? Number(chosen) : null)}>
+            {pending ? <Loader2 className="size-4 animate-spin" /> : <UserPlus className="size-4" />}
+            Asignar
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+type CloseMode = 'won' | 'lost' | 'note'
+
+/** What came of one client's opportunity: won (and for how much), lost (and why), or just a note. */
+function OutcomeDialog({
+  mode,
+  candidate,
+  pending,
+  onConfirm,
+  onClose,
+}: {
+  mode: CloseMode | null
+  candidate: CampaignCandidate | null
+  pending: boolean
+  onConfirm: (data: UpdateOpportunityRequest) => void
+  onClose: () => void
+}) {
+  const [premium, setPremium] = useState('')
+  const [reason, setReason] = useState<OpportunityLostReason>('PRICE')
+  const [note, setNote] = useState(candidate?.opportunity?.note ?? '')
+  const titles: Record<CloseMode, string> = {
+    won: 'Marcar como ganada',
+    lost: 'Marcar como perdida',
+    note: 'Nota de la oportunidad',
+  }
+  const submit = () => {
+    const trimmed = note.trim()
+    if (mode === 'won') {
+      const value = premium.replace(/\./g, '').replace(',', '.').trim()
+      onConfirm({ status: 'WON', wonPremium: value ? Number(value) : null, ...(trimmed ? { note: trimmed } : {}) })
+    } else if (mode === 'lost') onConfirm({ status: 'LOST', lostReason: reason, ...(trimmed ? { note: trimmed } : {}) })
+    else onConfirm({ note: trimmed || null })
+  }
+  return (
+    <Dialog open={mode !== null && candidate !== null} onOpenChange={open => !open && onClose()}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>{mode ? titles[mode] : ''}</DialogTitle>
+          <DialogDescription>
+            {candidate?.client.name}
+            {candidate?.item ? ` · ${candidate.item}` : ''}
+          </DialogDescription>
+        </DialogHeader>
+        {mode === 'won' && (
+          <label className="block text-[12.5px] text-ink-3">
+            Prima de la venta (opcional)
+            <Input
+              value={premium}
+              onChange={e => setPremium(e.target.value)}
+              inputMode="decimal"
+              placeholder="Por ejemplo 85000"
+              className="mt-1 h-9 border-line-2 text-[13px]"
+            />
+            <span className="mt-1 block text-[11.5px] text-muted-foreground">
+              Si la póliza nueva ya figura en la cartera, el sistema la toma solo.
+            </span>
+          </label>
+        )}
+        {mode === 'lost' && (
+          <label className="block text-[12.5px] text-ink-3">
+            Por qué se perdió
+            <select
+              value={reason}
+              onChange={e => setReason(e.target.value as OpportunityLostReason)}
+              className={`mt-1 ${SELECT}`}
+            >
+              {LOST_REASON_ORDER.map(value => (
+                <option key={value} value={value}>
+                  {LOST_REASON_LABELS[value]}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
+        <label className="block text-[12.5px] text-ink-3">
+          {mode === 'note' ? 'Nota' : 'Nota (opcional)'}
+          <textarea
+            value={note}
+            onChange={e => setNote(e.target.value)}
+            maxLength={2000}
+            placeholder="Qué dijo el cliente, qué quedó pendiente…"
+            className={`mt-1 ${TEXTAREA}`}
+          />
+        </label>
+        <div className="flex justify-end gap-2">
+          <Button type="button" variant="outline" onClick={onClose} className="border-line-2">
+            Cancelar
+          </Button>
+          <Button type="button" disabled={pending} onClick={submit}>
+            {pending ? <Loader2 className="size-4 animate-spin" /> : null}
+            Guardar
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+/** "Clientes": who the campaign finds, so the office ticks whom to write to and follows each one. */
 export function CampaignClientsTab({ campaign }: { campaign: Campaign }) {
   const [searchInput, setSearchInput] = useState('')
   const search = useDebouncedValue(searchInput, 350)
   const [scope, setScope] = useScopeFilterState()
   const [coverage, setCoverage] = useState('')
   const [reason, setReason] = useState<CancellationReason | ''>('')
+  const [status, setStatus] = useState<OpportunityFilter | ''>('')
+  const [mine, setMine] = useState(false)
   // Null: the API's default order, which it reports back in `data.sort`.
   const [sort, setSort] = useState<CampaignSort | null>(null)
   const [page, setPage] = useState(1)
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
   const [confirmSend, setConfirmSend] = useState(false)
   const [confirmOptOut, setConfirmOptOut] = useState(false)
+  // Who to assign: the ticked rows, or one row from its menu.
+  const [assigning, setAssigning] = useState<number[]>([])
+  const [outcome, setOutcome] = useState<{ mode: CloseMode; candidate: CampaignCandidate } | null>(null)
 
   const { data, isLoading, isError, isFetching } = useCampaignCandidates(
     campaign.kind,
@@ -282,6 +496,8 @@ export function CampaignClientsTab({ campaign }: { campaign: Campaign }) {
       search,
       coverage: coverage || undefined,
       reason: reason || undefined,
+      status: status || undefined,
+      mine: mine || undefined,
       sort: sort?.by,
       order: sort?.order,
       page,
@@ -289,7 +505,8 @@ export function CampaignClientsTab({ campaign }: { campaign: Campaign }) {
     },
     campaign.plan.included,
   )
-  const { send, mark, optOut } = useCampaignActions(campaign.kind)
+  const { send, mark, optOut, assign, updateOpportunity } = useCampaignActions(campaign.kind)
+  const { data: people = [] } = useTaskPeople()
   const blocked = sendBlockedReason(campaign)
 
   const rows = data?.data ?? []
@@ -313,6 +530,8 @@ export function CampaignClientsTab({ campaign }: { campaign: Campaign }) {
   const changeSearch = (value: string) => resetAnd(() => setSearchInput(value))
   const changeCoverage = (value: string) => resetAnd(() => setCoverage(value))
   const changeReason = (value: CancellationReason | '') => resetAnd(() => setReason(value))
+  const changeStatus = (value: OpportunityFilter | '') => resetAnd(() => setStatus(value))
+  const changeMine = (value: boolean) => resetAnd(() => setMine(value))
   const shownSort = sort ?? data?.sort ?? null
   const changeSort = (by: CampaignSortField) =>
     resetAnd(() =>
@@ -322,7 +541,7 @@ export function CampaignClientsTab({ campaign }: { campaign: Campaign }) {
           : { by, order: firstOrder(campaign, by) },
       ),
     )
-  const filtered = !!(search || coverage || reason)
+  const filtered = !!(search || coverage || reason || status || mine)
   const changePage = (next: number) => {
     setPage(next)
     setSelectedIds(new Set())
@@ -370,6 +589,44 @@ export function CampaignClientsTab({ campaign }: { campaign: Campaign }) {
       },
       onError: error => failed(error, 'No se pudo guardar'),
     })
+  const assignTo = (assignedToId: number | null) =>
+    assign.mutate(
+      { ids: assigning, assignedToId },
+      {
+        onSuccess: result => {
+          const who = assignedToId ? (people.find(p => p.id === assignedToId)?.name ?? 'esa persona') : 'nadie'
+          toast.success(
+            result.assigned === 1
+              ? `1 oportunidad asignada a ${who}`
+              : `${result.assigned} oportunidades asignadas a ${who}`,
+          )
+          setAssigning([])
+          setSelectedIds(new Set())
+        },
+        onError: error => failed(error, 'No se pudo asignar'),
+      },
+    )
+  const saveOutcome = (candidate: CampaignCandidate, update: UpdateOpportunityRequest) =>
+    updateOpportunity.mutate(
+      { targetId: candidate.id, data: update },
+      {
+        onSuccess: result => {
+          toast.success(
+            update.status === 'WON'
+              ? `Oportunidad ganada: ${candidate.client.name}`
+              : update.status === 'LOST'
+                ? `Oportunidad perdida: ${candidate.client.name}`
+                : update.status === 'CONTACTED'
+                  ? `Oportunidad reabierta: ${OPPORTUNITY_STATUS_LABELS[result.status]}`
+                  : 'Nota guardada',
+          )
+          setOutcome(null)
+        },
+        onError: error => failed(error, 'No se pudo guardar la oportunidad'),
+      },
+    )
+  const assigningCurrent =
+    assigning.length === 1 ? (rows.find(r => r.id === assigning[0])?.opportunity?.assignedTo?.id ?? null) : null
 
   if (!campaign.plan.included) {
     return (
@@ -393,6 +650,30 @@ export function CampaignClientsTab({ campaign }: { campaign: Campaign }) {
             onCoverage={changeCoverage}
             onReason={changeReason}
           />
+          <div className="flex items-center gap-2">
+            <select
+              value={status}
+              onChange={e => changeStatus(e.target.value as OpportunityFilter | '')}
+              className={SELECT}
+              aria-label="Filtrar por estado"
+            >
+              <option value="">Todos los estados</option>
+              {OPPORTUNITY_STATUS_ORDER.map(value => (
+                <option key={value} value={value === 'NEW' ? 'none' : value}>
+                  {OPPORTUNITY_STATUS_LABELS[value]}
+                </option>
+              ))}
+            </select>
+            <label className="flex shrink-0 items-center gap-1.5 text-[12.5px] text-ink-3">
+              <input
+                type="checkbox"
+                checked={mine}
+                onChange={e => changeMine(e.target.checked)}
+                className="size-4 accent-ember"
+              />
+              Solo las mías
+            </label>
+          </div>
           <div className="relative">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-faint" />
             <Input
@@ -438,6 +719,17 @@ export function CampaignClientsTab({ campaign }: { campaign: Campaign }) {
             type="button"
             size="sm"
             variant="outline"
+            disabled={selected.length === 0 || assign.isPending}
+            onClick={() => setAssigning(ids)}
+            className="h-9 border-line-2 text-[12.5px]"
+          >
+            <UserPlus className="size-4" />
+            Asignar a…{selected.length > 0 ? ` (${selected.length})` : ''}
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
             disabled={selected.length === 0 || optOut.isPending}
             onClick={() => setConfirmOptOut(true)}
             className="h-9 border-line-2 text-[12.5px]"
@@ -476,8 +768,10 @@ export function CampaignClientsTab({ campaign }: { campaign: Campaign }) {
                 by="lastMessage"
                 sort={shownSort}
                 onSort={changeSort}
-                className={`pr-5 ${HEAD}`}
+                className={HEAD}
               />
+              <TableHead className={HEAD}>Seguimiento</TableHead>
+              <TableHead className="w-10 pr-3" />
             </TableRow>
           </TableHeader>
           <TableBody className={isFetching && !isLoading ? 'opacity-60 transition-opacity' : 'transition-opacity'}>
@@ -495,9 +789,13 @@ export function CampaignClientsTab({ campaign }: { campaign: Campaign }) {
                   <TableCell className="hidden md:table-cell">
                     <Skeleton className="h-4 w-28" />
                   </TableCell>
-                  <TableCell className="pr-5">
+                  <TableCell>
                     <Skeleton className="h-4 w-20" />
                   </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-4 w-24" />
+                  </TableCell>
+                  <TableCell className="pr-3" />
                 </TableRow>
               ))}
 
@@ -522,6 +820,7 @@ export function CampaignClientsTab({ campaign }: { campaign: Campaign }) {
             {!isLoading &&
               rows.map(row => {
                 const canTick = row.lastMessage?.status !== 'SENDING' && !row.optedOut
+                const closed = row.opportunity?.status === 'WON' || row.opportunity?.status === 'LOST'
                 return (
                   <TableRow key={row.id} className={selectedIds.has(row.id) ? 'bg-ember-soft/30' : ''}>
                     <TableCell className="w-10 pl-4 pr-0">
@@ -551,14 +850,64 @@ export function CampaignClientsTab({ campaign }: { campaign: Campaign }) {
                       <div className="truncate text-[13px] text-ink-3">{row.item}</div>
                       <div className="truncate text-[11.5px] text-muted-foreground md:hidden">{row.detail}</div>
                     </TableCell>
-                    <TableCell className="hidden md:table-cell">
+                    <TableCell className="hidden max-w-[260px] md:table-cell">
                       <div className="text-[12.5px] text-ink-3">{row.detail}</div>
                       {row.producerCode && (
                         <div className="text-[11px] text-muted-foreground">Código {row.producerCode.code}</div>
                       )}
+                      {row.customerReason && (
+                        <div className="mt-0.5 truncate text-[11.5px] text-ink-3" title={row.customerReason}>
+                          El cliente dijo: «{row.customerReason}»
+                        </div>
+                      )}
+                      {row.opportunity?.note && (
+                        <div
+                          className="mt-0.5 flex items-start gap-1 truncate text-[11.5px] text-muted-foreground"
+                          title={row.opportunity.note}
+                        >
+                          <StickyNote className="mt-0.5 size-3 shrink-0" />
+                          <span className="truncate">{row.opportunity.note}</span>
+                        </div>
+                      )}
                     </TableCell>
-                    <TableCell className="pr-5">
+                    <TableCell>
                       <LastMessageCell candidate={row} />
+                    </TableCell>
+                    <TableCell className="max-w-[180px]">
+                      <OpportunityCell opportunity={row.opportunity} />
+                    </TableCell>
+                    <TableCell className="w-10 pr-3">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger
+                          aria-label={`Seguimiento de ${row.client.name}`}
+                          className="rounded-full p-1.5 text-muted-foreground outline-none hover:bg-secondary data-[state=open]:bg-secondary"
+                        >
+                          <MoreVertical className="size-4" />
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-auto min-w-44">
+                          <DropdownMenuItem onSelect={() => setAssigning([row.id])}>
+                            <UserPlus className="size-4" /> Asignar a…
+                          </DropdownMenuItem>
+                          {!closed && (
+                            <DropdownMenuItem onSelect={() => setOutcome({ mode: 'won', candidate: row })}>
+                              <Trophy className="size-4" /> Marcar como ganada…
+                            </DropdownMenuItem>
+                          )}
+                          {!closed && (
+                            <DropdownMenuItem onSelect={() => setOutcome({ mode: 'lost', candidate: row })}>
+                              <XCircle className="size-4" /> Marcar como perdida…
+                            </DropdownMenuItem>
+                          )}
+                          {closed && (
+                            <DropdownMenuItem onSelect={() => saveOutcome(row, { status: 'CONTACTED' })}>
+                              <RotateCcw className="size-4" /> Reabrir
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuItem onSelect={() => setOutcome({ mode: 'note', candidate: row })}>
+                            <StickyNote className="size-4" /> {row.opportunity?.note ? 'Editar la nota…' : 'Nota…'}
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </TableCell>
                   </TableRow>
                 )
@@ -615,6 +964,28 @@ export function CampaignClientsTab({ campaign }: { campaign: Campaign }) {
         onConfirm={sendSelected}
         onClose={() => setConfirmSend(false)}
       />
+
+      {assigning.length > 0 && (
+        <AssignDialog
+          count={assigning.length}
+          people={people}
+          current={assigningCurrent}
+          pending={assign.isPending}
+          onConfirm={assignTo}
+          onClose={() => setAssigning([])}
+        />
+      )}
+
+      {outcome && (
+        <OutcomeDialog
+          key={`${outcome.mode}-${outcome.candidate.id}`}
+          mode={outcome.mode}
+          candidate={outcome.candidate}
+          pending={updateOpportunity.isPending}
+          onConfirm={update => saveOutcome(outcome.candidate, update)}
+          onClose={() => setOutcome(null)}
+        />
+      )}
 
       <AlertDialog open={confirmOptOut} onOpenChange={open => !open && setConfirmOptOut(false)}>
         <AlertDialogContent>
