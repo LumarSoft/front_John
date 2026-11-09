@@ -1,14 +1,20 @@
 import { apiRequest } from '@/src/lib/api-client'
 import type {
+  AssignOpportunitiesRequest,
+  AssignOpportunitiesResponse,
   Campaign,
   CampaignCandidatesQuery,
   CampaignCandidatesResponse,
   CampaignKind,
+  CampaignOpportunity,
+  CampaignResultsQuery,
+  CampaignResultsResponse,
   CampaignsResponse,
   MarkCampaignResponse,
   OptOutCampaignResponse,
   SendCampaignResponse,
   UpdateCampaignRequest,
+  UpdateOpportunityRequest,
 } from '@/src/types/api/campaigns'
 
 function buildQuery(params: CampaignCandidatesQuery): string {
@@ -18,10 +24,25 @@ function buildQuery(params: CampaignCandidatesQuery): string {
   if (params.phoneNumberId) search.set('phoneNumberId', String(params.phoneNumberId))
   if (params.coverage) search.set('coverage', params.coverage)
   if (params.reason) search.set('reason', params.reason)
+  if (params.status) search.set('status', params.status)
+  if (params.assignedToId) search.set('assignedToId', String(params.assignedToId))
+  if (params.mine) search.set('mine', 'true')
   if (params.sort) search.set('sort', params.sort)
   if (params.order) search.set('order', params.order)
   if (params.page) search.set('page', String(params.page))
   if (params.pageSize) search.set('pageSize', String(params.pageSize))
+  const qs = search.toString()
+  return qs ? `?${qs}` : ''
+}
+
+function buildResultsQuery(params: CampaignResultsQuery): string {
+  const search = new URLSearchParams()
+  if (params.kind) search.set('kind', params.kind)
+  if (params.from) search.set('from', params.from)
+  if (params.to) search.set('to', params.to)
+  if (params.producerCodeId) search.set('producerCodeId', String(params.producerCodeId))
+  if (params.phoneNumberId) search.set('phoneNumberId', String(params.phoneNumberId))
+  if (params.assignedToId) search.set('assignedToId', String(params.assignedToId))
   const qs = search.toString()
   return qs ? `?${qs}` : ''
 }
@@ -63,5 +84,33 @@ export const campaignsService = {
       token,
       body: { ids },
     })
+  },
+
+  /** "Asignar a…": the ticked clients' opportunities go to one person of the office (or to nobody). */
+  assign(token: string, kind: CampaignKind, data: AssignOpportunitiesRequest): Promise<AssignOpportunitiesResponse> {
+    return apiRequest<AssignOpportunitiesResponse>(`/admin/campaigns/${kind}/assign`, {
+      method: 'POST',
+      token,
+      body: data,
+    })
+  },
+
+  /** Closes, reopens, annotates or reassigns one client's opportunity. */
+  updateOpportunity(
+    token: string,
+    kind: CampaignKind,
+    targetId: number,
+    data: UpdateOpportunityRequest,
+  ): Promise<CampaignOpportunity> {
+    return apiRequest<CampaignOpportunity>(`/admin/campaigns/${kind}/opportunities/${targetId}`, {
+      method: 'PATCH',
+      token,
+      body: data,
+    })
+  },
+
+  /** How the campaigns did in a period: sent, answered, quoted, won, lost and the premium. */
+  results(token: string, params: CampaignResultsQuery): Promise<CampaignResultsResponse> {
+    return apiRequest<CampaignResultsResponse>(`/admin/campaigns/results${buildResultsQuery(params)}`, { token })
   },
 }

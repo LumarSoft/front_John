@@ -97,8 +97,40 @@ export interface UpdateCampaignRequest {
 
 export type CampaignMessageStatus = 'SENDING' | 'SENT' | 'FAILED' | 'MARKED'
 
+/**
+ * Where a client's opportunity stands: opened by a send or "ya lo contactamos",
+ * moved forward by the platform (the customer answered, a quote, a new policy)
+ * and closed by the office as won or lost.
+ */
+export type OpportunityStatus = 'NEW' | 'CONTACTED' | 'REPLIED' | 'QUOTED' | 'WON' | 'LOST'
+
+export type OpportunityLostReason = 'PRICE' | 'OTHER_INSURER' | 'NO_ANSWER' | 'SOLD_ASSET' | 'OTHER'
+
+export interface OpportunityPerson {
+  id: number
+  name: string | null
+}
+
+export interface CampaignOpportunity {
+  id: number
+  status: OpportunityStatus
+  statusLabel: string
+  assignedTo: OpportunityPerson | null
+  assignedAt: string | null
+  contactedAt: string | null
+  repliedAt: string | null
+  quotedAt: string | null
+  wonAt: string | null
+  lostAt: string | null
+  lostReason: OpportunityLostReason | null
+  lostReasonLabel: string | null
+  note: string | null
+  /** The premium of the sale, when known. */
+  wonPremium: number | null
+}
+
 export interface CampaignCandidate {
-  /** Policy id (quote id in `quote_followup`): what send, mark and opt-out take. */
+  /** Policy id (quote id in `quote_followup`): what send, mark, opt-out, assign and the opportunity take. */
   id: number
   client: { id: number | null; name: string; dni: string | null; phone: string | null }
   /** "Ford Ka 2015 · AB123CD", or the product. */
@@ -112,13 +144,24 @@ export interface CampaignCandidate {
   values?: Record<string, string>
   lastMessage: { status: CampaignMessageStatus; sentAt: string | null; createdAt: string; error: string | null } | null
   optedOut: boolean
+  /** Who follows it and where it stands; null until somebody contacts or assigns it (missing from an older API). */
+  opportunity?: CampaignOpportunity | null
+  /** Bajas y anulaciones: what the client told the bot when asking to cancel (missing from an older API). */
+  customerReason?: string | null
 }
+
+/** Where the opportunity stands, or `none`: nobody contacted or assigned yet. */
+export type OpportunityFilter = 'none' | OpportunityStatus
 
 export interface CampaignCandidatesQuery extends Omit<CobranzasScopeQuery, 'paymentMethod'> {
   search?: string
   /** A coverage code ("A", "C2 Full"). */
   coverage?: string
   reason?: CancellationReason
+  status?: OpportunityFilter
+  assignedToId?: number
+  /** Only the opportunities the user follows. */
+  mine?: boolean
   /** Default: the date, newest first (in Renovaciones, the one that ends soonest). */
   sort?: CampaignSortField
   order?: CampaignSortOrder
@@ -159,4 +202,58 @@ export interface MarkCampaignResponse {
 
 export interface OptOutCampaignResponse {
   optedOut: number
+}
+
+export interface AssignOpportunitiesRequest {
+  ids: number[]
+  /** null takes the assignee off. */
+  assignedToId: number | null
+}
+
+export interface AssignOpportunitiesResponse {
+  assigned: number
+}
+
+/** What the office says about one opportunity; what is left out stays. */
+export interface UpdateOpportunityRequest {
+  /** WON, LOST or CONTACTED (reopened). */
+  status?: 'WON' | 'LOST' | 'CONTACTED'
+  lostReason?: OpportunityLostReason
+  wonPremium?: number | null
+  note?: string | null
+  assignedToId?: number | null
+}
+
+export interface CampaignResultsQuery extends Omit<CobranzasScopeQuery, 'paymentMethod'> {
+  kind?: CampaignKind
+  /** ISO day (YYYY-MM-DD) or instant; a day covers the whole day. */
+  from?: string
+  to?: string
+  assignedToId?: number
+}
+
+export interface CampaignResultCounts {
+  contacted: number
+  replied: number
+  quoted: number
+  won: number
+  lost: number
+  open: number
+  /** The premium of what was sold, in pesos. */
+  premium: number
+}
+
+export interface CampaignResultRow extends CampaignResultCounts {
+  kind: CampaignKind
+  label: string
+  sent: number
+  marked: number
+}
+
+export interface CampaignResultsResponse {
+  from: string
+  to: string
+  campaigns: CampaignResultRow[]
+  totals: CampaignResultCounts & { sent: number; marked: number }
+  byAssignee: Array<CampaignResultCounts & { user: OpportunityPerson | null }>
 }
