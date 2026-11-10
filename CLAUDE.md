@@ -99,7 +99,7 @@ Polisend (`../polisend`, its `/admin`) is the panel every organization is moving
   cd polisend/src && for f in $(git ls-files features/admin services types lib/api-client.ts lib/query-keys.ts hooks); do diff -q <(sed "s#'@/src/#'@/#g" ../../front_John/src/$f 2>/dev/null) $f >/dev/null || echo "$f"; done
   ```
 
-- Polisend has no Prettier config: format its panel files with `prettier --single-quote --no-semi --print-width 120 --arrow-parens avoid`, never a bare `prettier --write`.
+- Polisend has no Prettier config. A panel file that exists in both repos is ported by copying it, already formatted, from here with the import `sed`, and Prettier is not run on it again in Polisend: with the shorter `@/` imports and another Prettier version (`npx` fetches the latest there) it rewraps lines and the drift check above stops matching. Only a file that exists in Polisend alone is formatted, with this repo's Prettier: `../front_John/node_modules/.bin/prettier --single-quote --no-semi --print-width 120 --arrow-parens avoid` (a bare `prettier --write` turns it into double quotes and semicolons).
 
 ## Admin panel themes
 
