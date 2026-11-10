@@ -11,6 +11,27 @@ export function tipoLabel(tipo: string): string {
   return TIPO_LABELS[tipo] ?? tipo
 }
 
+/**
+ * The day of the incident. It is stored as a calendar date at midnight UTC
+ * ("2026-11-09" → 2026-11-09T00:00:00Z), so it is formatted in UTC: in
+ * Argentina's time zone it would show the day before.
+ */
+export function formatOccurredDate(iso: string | null | undefined): string {
+  if (!iso) return '—'
+  return new Date(iso).toLocaleDateString('es-AR', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    timeZone: 'UTC',
+  })
+}
+
+/** The time of the incident, from the "Hora: …" line the bot writes into the description. */
+export function occurredHour(description: string): string | null {
+  const hour = /^Hora:\s*(.+)$/im.exec(description)?.[1]?.trim()
+  return hour || null
+}
+
 export const ESTADO_ORDER: SiniestroEstado[] = ['pending', 'in_progress', 'resolved']
 
 interface EstadoMeta {
