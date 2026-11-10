@@ -27,6 +27,7 @@ export const QUERY_KEYS = {
     profile: ['admin', 'profile'] as const,
     config: ['admin', 'config'] as const,
     botProfile: ['admin', 'config', 'profile'] as const,
+    quoteInsurers: ['admin', 'config', 'insurers'] as const,
     users: ['admin', 'users'] as const,
     producerCodes: ['admin', 'producer-codes'] as const,
     phoneNumbers: ['admin', 'phone-numbers'] as const,

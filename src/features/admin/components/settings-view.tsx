@@ -2,7 +2,19 @@
 
 import { useState, type FormEvent } from 'react'
 import Link from 'next/link'
-import { Bot, Clock, ImageIcon, KeyRound, Loader2, Mail, ShieldCheck, Smartphone, Tags, UserRound } from 'lucide-react'
+import {
+  Bot,
+  Building2,
+  Clock,
+  ImageIcon,
+  KeyRound,
+  Loader2,
+  Mail,
+  ShieldCheck,
+  Smartphone,
+  Tags,
+  UserRound,
+} from 'lucide-react'
 import { toast } from 'sonner'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/src/components/ui/card'
 import { Button } from '@/src/components/ui/button'
@@ -24,6 +36,7 @@ import { BotProfileSection } from './bot-profile-section'
 import { PricingPlansSection } from './pricing-plans-section'
 import { BusinessHoursSection } from './business-hours-section'
 import { CoverageSettingsSection } from './coverage-settings-section'
+import { QuoteInsurersSection } from './quote-insurers-section'
 import { SuperAdminOnlyNote } from './super-admin-only-note'
 import { splitNames } from '../lib/number-assistant-form'
 import { useUrlTab } from '../hooks/use-panel-link'
@@ -273,6 +286,7 @@ const TABS = [
   { value: 'horarios', label: 'Horarios', icon: Clock },
   { value: 'precios', label: 'Precios', icon: Tags },
   { value: 'coberturas', label: 'Coberturas', icon: ShieldCheck },
+  { value: 'aseguradoras', label: 'Aseguradoras', icon: Building2 },
 ] as const
 
 const TAB_VALUES = TABS.map(tab => tab.value)
@@ -383,6 +397,10 @@ export function SettingsView() {
 
         <TabsContent value="coberturas" className="mt-6">
           <CoverageSettingsSection canEdit={canEditOrg} />
+        </TabsContent>
+
+        <TabsContent value="aseguradoras" className="mt-6">
+          <QuoteInsurersSection canEdit={isSuperAdmin} />
         </TabsContent>
 
         <TabsContent value="precios" className="mt-6">
