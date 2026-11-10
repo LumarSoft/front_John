@@ -196,7 +196,7 @@ export function OrganizacionDetalleView({ orgId }: { orgId: number }) {
       <OrganizacionTriunfo orgId={orgId} />
       <OrganizacionTriunfoErrores orgId={orgId} />
 
-      <UsersSection orgId={orgId} users={org.users} />
+      <UsersSection orgId={orgId} users={org.users} codes={org.codes} />
 
       <p className="flex items-center gap-1.5 text-[12px] text-muted-foreground">
         <KeyRound className="size-3.5" />

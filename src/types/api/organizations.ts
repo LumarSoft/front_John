@@ -71,6 +71,8 @@ export interface OrganizationUser {
   email: string
   role: AdminRole
   createdAt: string
+  /** Codes granted to an ADMIN (empty for a SUPERADMIN, who sees them all); absent on older APIs. */
+  codes?: Array<{ id: number; code: string; holderName: string | null }>
 }
 
 export interface OrganizationSummary {
@@ -137,6 +139,8 @@ export interface CreateOrgUserRequest {
   email: string
   password: string
   role: AssignableRole
+  /** Codes of the organization an ADMIN will see; ignored for a SUPERADMIN. */
+  producerCodeIds?: number[]
 }
 
 export interface UpdateOrgUserRequest {
