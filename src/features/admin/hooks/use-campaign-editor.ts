@@ -35,8 +35,9 @@ function settingValue(field: CampaignSettingField, text: string): SettingValue {
   return Number(text)
 }
 
+/** Lists compare without case: the API stores coverage codes in capitals ("C2 FULL" for "C2 Full"). */
 function sameSetting(a: SettingValue | undefined, b: SettingValue): boolean {
-  return Array.isArray(a) && Array.isArray(b) ? a.join(',') === b.join(',') : a === b
+  return Array.isArray(a) && Array.isArray(b) ? a.join(',').toUpperCase() === b.join(',').toUpperCase() : a === b
 }
 
 /** Why a setting cannot be saved as typed, or null. */
