@@ -3,7 +3,7 @@ import path from 'node:path'
 
 // The admin panel now lives in Polisend, the one panel for every organization (same API, same users).
 // Temporary redirects (307): browsers don't cache them, so going back is just reverting this change.
-const POLISEND_URL = (process.env.POLISEND_URL ?? 'https://polisend.vercel.app').replace(/\/$/, '')
+const POLISEND_URL = (process.env.POLISEND_URL ?? 'https://polisend.com.ar').replace(/\/$/, '')
 
 const nextConfig: NextConfig = {
   turbopack: {
