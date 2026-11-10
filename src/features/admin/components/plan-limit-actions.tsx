@@ -10,7 +10,6 @@ import { resumeDay } from '../lib/plan-limit'
 import { numberLabel } from '../lib/number-label'
 
 const int = (n: number) => n.toLocaleString('es-AR')
-const usd = (n: number) => `USD ${n.toLocaleString('es-AR', { maximumFractionDigits: 2 })}`
 
 /**
  * A number whose assistant paused at its plan's limit: continue on the next plan (it answers again) or keep it
@@ -55,7 +54,7 @@ export function PlanLimitActions({ row, showNumber = false }: { row: BillingNumb
         {row.nextPlan && (
           <Button size="sm" disabled={resolve.isPending} onClick={() => choose('continue')}>
             {resolve.isPending && resolve.variables?.choice === 'continue' && <Loader2 className="animate-spin" />}
-            Pasar a {row.nextPlan.name} · {usd(row.nextPlan.priceUsd)} por mes
+            Pasar a {row.nextPlan.name} · {int(row.nextPlan.messages)} mensajes por mes
           </Button>
         )}
         {!limit.confirmed && (
