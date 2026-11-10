@@ -6,6 +6,7 @@ import type {
   CampaignCandidatesQuery,
   CampaignKind,
   CampaignResultsQuery,
+  CreateCampaignTasksRequest,
   UpdateCampaignRequest,
   UpdateOpportunityRequest,
 } from '@/src/types/api/campaigns'
@@ -77,7 +78,8 @@ export function useCampaignSettingsActions() {
 
 /**
  * Send a campaign to the ticked clients, mark them contacted, leave them out
- * for good, assign them to someone or say what came of one; lists refresh after each.
+ * for good (or back in), assign them to someone, create their tasks or say what
+ * came of one; lists refresh after each.
  */
 export function useCampaignActions(kind: CampaignKind) {
   const { token } = useAuth()
@@ -101,6 +103,19 @@ export function useCampaignActions(kind: CampaignKind) {
     onSuccess: refresh,
   })
 
+  const optIn = useMutation({
+    mutationFn: (ids: number[]) => campaignsService.optIn(token as string, kind, ids),
+    onSuccess: refresh,
+  })
+
+  const createTasks = useMutation({
+    mutationFn: (data: CreateCampaignTasksRequest) => campaignsService.createTasks(token as string, kind, data),
+    onSuccess: () => {
+      refresh()
+      void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.admin.tasksAll })
+    },
+  })
+
   const assign = useMutation({
     mutationFn: (data: AssignOpportunitiesRequest) => campaignsService.assign(token as string, kind, data),
     onSuccess: refresh,
@@ -112,5 +127,5 @@ export function useCampaignActions(kind: CampaignKind) {
     onSuccess: refresh,
   })
 
-  return { send, mark, optOut, assign, updateOpportunity }
+  return { send, mark, optOut, optIn, createTasks, assign, updateOpportunity }
 }
