@@ -31,6 +31,20 @@ export interface CoverageSetting {
   firstSeenAt: string
 }
 
+/**
+ * A coverage of the motorcycle catalog (GET /admin/coberturas/motos). The
+ * catalog is fixed, with Triunfo's names and texts: the only choice is whether
+ * the organization offers it, kept apart from the car coverage of the same code.
+ */
+export interface MotoCoverage {
+  code: string
+  name: string
+  tagline: string | null
+  benefits: string[]
+  exclusions: string[]
+  isActive: boolean
+}
+
 export interface UpdateCoverageSettingRequest {
   name?: string
   tagline?: string

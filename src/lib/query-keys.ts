@@ -57,6 +57,7 @@ export const QUERY_KEYS = {
     pricingPlans: ['admin', 'pricing'] as const,
     businessHours: ['admin', 'business-hours'] as const,
     coverageSettings: ['admin', 'coverage-settings'] as const,
+    motoCoverages: ['admin', 'moto-coverages'] as const,
     improvements: (params?: ImprovementsQuery) => ['admin', 'improvements', 'list', params ?? {}] as const,
     improvementsUnseen: ['admin', 'improvements', 'unseen'] as const,
     proposalsAll: ['admin', 'improvement-proposals'] as const,
