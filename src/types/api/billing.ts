@@ -36,18 +36,20 @@ export interface FeatureRolesResponse {
   roles: Record<PlanFeatureKey, FeatureRoles>
 }
 
-/** A plan of the platform's catalog as the organizations see it: messages a month for a price. */
+/** A plan of the platform's catalog: messages a month. Its price comes only for the OWNER. */
 export interface PlanOffer {
   id: number
   name: string
   messages: number
-  priceUsd: number
+  /** OWNER only: the organizations never see plan prices. */
+  priceUsd?: number
   /** The free first-month plan of a new account's number. */
   isTrial: boolean
 }
 
 /** A plan of the catalog as the owner edits it. */
 export interface CatalogPlan extends PlanOffer {
+  priceUsd: number
   /** Off: the numbers on it keep it, but no number moves to it. */
   isActive: boolean
   sortOrder: number
@@ -75,6 +77,9 @@ export interface BilledPlan {
   extraBlocks: number
 }
 
+/** A plan as `GET /admin/billing` and `GET /admin/phone-numbers` send it: the price only to the OWNER. */
+export type UnpricedPlan<T extends { priceUsd: number }> = Omit<T, 'priceUsd'> & { priceUsd?: number }
+
 /** Where a number stands against its plan's limit this month. */
 export interface PlanLimit {
   /** The month's messages reached what the plan includes. */
@@ -97,9 +102,9 @@ export interface BillingNumber {
   isActive: boolean
   responsibleCode: { id: number; code: string; holderName: string | null } | null
   /** The plan the number is on (the SuperAdmin's choice, or the smallest paid plan). */
-  assignedPlan: BilledPlan | null
+  assignedPlan: UnpricedPlan<BilledPlan> | null
   /** The plan the month is billed on. */
-  plan: BilledPlan
+  plan: UnpricedPlan<BilledPlan>
   /** Past its plan this month, or already moved up on its own this month. */
   upgraded: boolean
   /** When it moved up on its own this month (ISO), or null. */
@@ -109,9 +114,9 @@ export interface BillingNumber {
   remainingMessages: number
   percentUsed: number
   /** Where the number goes past this plan: the next of the catalog, or the next block. */
-  nextPlan: { name: string; messages: number; priceUsd: number } | null
-  /** The whole plan: the calendar month is always charged whole. */
-  billedUsd: number
+  nextPlan: { name: string; messages: number; priceUsd?: number } | null
+  /** OWNER only. The whole plan: the calendar month is always charged whole. */
+  billedUsd?: number
   /** Missing from an API older than the plan limit pause. */
   limit?: PlanLimit
   /** When the month's counters last moved (ISO), null before the first message. */
@@ -124,7 +129,7 @@ export interface BillingOverview {
   /** The active plans of the catalog. */
   plans: PlanOffer[]
   numbers: BillingNumber[]
-  /** SuperAdmin and owner: what the organization pays this month. */
+  /** OWNER only: what the organization pays this month. */
   totalBilledUsd?: number
 }
 
@@ -148,7 +153,7 @@ export interface UpdatePlanRequest {
   features?: Partial<PlanFeatures>
 }
 
-/** The owner's month: billed vs what Meta really charged, OpenAI apart. */
+/** The owner's month: billed vs what its messages cost, and what Meta and OpenAI really charged. */
 export interface OwnerBillingTotals {
   /** Plan messages consumed: a campaign (marketing) message counts 2 from its start date; every other, 1. */
   messages: number
@@ -156,9 +161,17 @@ export interface OwnerBillingTotals {
   sentMessages?: number
   /** Of the messages sent, the templates. Missing from an API older than the template weight. */
   templateMessages?: number
+  /** Of the messages sent, the bot's, the office's and the notices (each at `messageCost.messageUsd`). */
+  botMessages?: number
+  /** Of the messages sent, the campaign ones (each at `messageCost.campaignMessageUsd`). */
+  campaignMessages?: number
   /** Messages Meta charged for (past the free service messages, and every template). */
   metaBillableMessages: number
   billedUsd: number
+  /** Bot messages × the message rate + campaign messages × the campaign rate. Missing from an older API. */
+  messageCostUsd?: number
+  /** billedUsd − messageCostUsd: what the plan leaves over its messages. */
+  marginUsd?: number
   metaCostUsd: number
   /** Prepaid: shown apart, outside the profit. */
   openaiCostUsd: number
@@ -195,6 +208,8 @@ export interface OwnerBilling {
   closedAt?: string | null
   /** Closed after the 1st of the next month, with the plans of that day. */
   backfilled?: boolean
+  /** What a message costs; null when the rate is not configured in the API. Missing from an older API. */
+  messageCost?: { messageUsd: number; campaignMessageUsd: number } | null
   organizations: OwnerBillingOrganization[]
   totals: OwnerBillingTotals & {
     organizations: number
