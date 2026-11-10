@@ -10,7 +10,9 @@ export function useNovedadesStats(scope: { producerCodeId?: number; phoneNumberI
     queryKey: [...QUERY_KEYS.admin.novedadesStats, scope],
     queryFn: () => novedadesService.stats(token as string, scope),
     enabled: !!token,
-    // Poll so the sidebar alert appears even while the admin is on another section.
-    refetchInterval: 20_000,
+    // Poll so the sidebar alert appears even while the admin is on another section,
+    // and keep it current while the panel sits in a background tab.
+    refetchInterval: 5_000,
+    refetchIntervalInBackground: true,
   })
 }

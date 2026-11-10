@@ -34,6 +34,7 @@ import { ScopeFilter } from './scope-filter'
 import { useScopeFilterState } from '../hooks/use-scope-filter-state'
 import { SiniestroSheet } from './siniestro-sheet'
 import { AseguradoSheet } from './asegurado-sheet'
+import { BlockedClaimBadge } from './blocked-claim-badge'
 import { inboxConversationHref } from './inbox-view'
 
 const categories = Object.keys(MATTER_LABELS) as MatterCategory[]
@@ -86,7 +87,10 @@ export function NovedadesView() {
 
   const handleOpen = (matter: NovedadItem) => {
     if (!matter.readAt) markRead.mutate(matter.id, { onError: () => toast.error('No se pudo marcar como leído') })
+    // A Triunfo outage has nothing to open: the notice says it all and resolves itself when it ends.
+    if (matter.type === 'triunfo') return
     if (matter.type === 'siniestro') setSelectedSiniestroId(matter.refId)
+    else if (matter.type === 'plan') router.push('/admin/facturacion')
     else if (matter.type === 'handoff' || matter.type === 'baja_poliza')
       router.push(inboxConversationHref(matter.refId))
     else router.push(`/admin/solicitudes?kind=${matter.type === 'lead' ? 'lead' : 'cotizacion'}&id=${matter.refId}`)
@@ -237,6 +241,11 @@ export function NovedadesView() {
                     )}
                     {matter.title}
                   </button>
+                  {matter.blockedClaimReason && (
+                    <div className="mt-1.5">
+                      <BlockedClaimBadge reason={matter.blockedClaimReason} />
+                    </div>
+                  )}
                   <p className="mt-1 line-clamp-3 max-w-2xl whitespace-pre-wrap break-words text-[13px] text-muted-foreground">
                     {matter.body || 'Pidió atención de un asesor. Revisar la conversación para precisar el motivo.'}
                   </p>
@@ -274,6 +283,7 @@ export function NovedadesView() {
                     ))}
                   </select>
                   <select
+                    data-help="asunto-estado"
                     aria-label={`Estado de ${matter.title}`}
                     className={selectClass}
                     value={matter.status}
@@ -286,9 +296,15 @@ export function NovedadesView() {
                       </option>
                     ))}
                   </select>
-                  <Button size="sm" variant="outline" onClick={() => handleOpen(matter)}>
-                    {matter.type === 'handoff' || matter.type === 'baja_poliza' ? 'Ver chat' : 'Ver detalle'}
-                  </Button>
+                  {matter.type !== 'triunfo' && (
+                    <Button size="sm" variant="outline" onClick={() => handleOpen(matter)}>
+                      {matter.type === 'handoff' || matter.type === 'baja_poliza'
+                        ? 'Ver chat'
+                        : matter.type === 'plan'
+                          ? 'Ver facturación'
+                          : 'Ver detalle'}
+                    </Button>
+                  )}
                 </div>
               </li>
             ))}

@@ -5,6 +5,7 @@ import { AlertTriangle, Bot, Loader2, Phone, Plus, PowerOff, Trash2 } from 'luci
 import { toast } from 'sonner'
 import { Card } from '@/src/components/ui/card'
 import { Button } from '@/src/components/ui/button'
+import { BranchNameField } from './branch-name-field'
 import { ConectarWhatsapp } from './conectar-whatsapp'
 import { Badge } from '@/src/components/ui/badge'
 import { Input } from '@/src/components/ui/input'
@@ -34,7 +35,12 @@ import { useRole } from '../hooks/use-role'
 import { useProducerCodes } from '../hooks/use-producer-codes'
 import { useOwnProducerCodes } from '../hooks/use-own-producer-codes'
 import { usePhoneNumbers, usePhoneNumberMutations } from '../hooks/use-phone-numbers'
+import { useNumberAssistant } from '../hooks/use-number-assistant'
+import { numberLabel } from '../lib/number-label'
 import { NumberAssistantSheet } from './number-assistant-sheet'
+import { MetaPortfolioLine } from './meta-portfolio-line'
+import { numberSetupFrom } from './number-setup-fields'
+import { useLinkedId } from '../hooks/use-panel-link'
 
 const int = (n: number) => n.toLocaleString('es-AR')
 
@@ -57,7 +63,7 @@ function DisconnectedNotice({ numbers }: { numbers: AdminPhoneNumber[] }) {
         <ul className="mt-1 flex flex-col gap-1 text-[13px] text-ink-3">
           {numbers.map(n => (
             <li key={n.id}>
-              <span className="font-medium text-ink">{n.number}</span> se desconectó el{' '}
+              <span className="font-medium text-ink">{numberLabel(n)}</span> se desconectó el{' '}
               {formatMoment(n.disconnectedAt as string)}. Motivo: {n.disconnectReasonLabel ?? n.disconnectReason}.
             </li>
           ))}
@@ -74,10 +80,37 @@ function DisconnectedNotice({ numbers }: { numbers: AdminPhoneNumber[] }) {
 }
 
 /**
+ * Meta's signup with the branch and the assistant asked first. Reconnecting the
+ * only number Meta dropped, the form comes filled with what that number answers
+ * with today, so the office does not retype it and nothing it had is lost.
+ */
+function ConnectNumber({
+  dropped,
+  responsibleProducerCodeId,
+}: {
+  dropped: AdminPhoneNumber[]
+  responsibleProducerCodeId?: number
+}) {
+  const only = dropped.length === 1 ? dropped[0] : null
+  const { data } = useNumberAssistant(only?.id ?? null)
+  const initial =
+    only && data?.id === only.id ? { branchName: data.branchName ?? '', setup: numberSetupFrom(data) } : undefined
+  return (
+    <ConectarWhatsapp
+      // Remounted once the number's data arrives, so the form starts filled.
+      key={initial ? `reconnect-${only?.id}` : 'connect'}
+      initial={initial}
+      responsibleProducerCodeId={responsibleProducerCodeId}
+      label={dropped.length > 0 ? 'Reconectar número' : undefined}
+    />
+  )
+}
+
+/**
  * An admin connects numbers for their own codes: the API bills the number to the
  * code they pick here (their only one when they have a single code).
  */
-function AdminConnect({ reconnect }: { reconnect: boolean }) {
+function AdminConnect({ dropped }: { dropped: AdminPhoneNumber[] }) {
   const codes = useOwnProducerCodes()
   const [picked, setPicked] = useState<number | undefined>()
   const responsible = picked ?? codes[0]?.id
@@ -115,7 +148,7 @@ function AdminConnect({ reconnect }: { reconnect: boolean }) {
           El número queda a cargo de tu código <span className="font-medium text-ink">{codes[0].code}</span>.
         </p>
       )}
-      <ConectarWhatsapp responsibleProducerCodeId={responsible} label={reconnect ? 'Reconectar número' : undefined} />
+      <ConnectNumber dropped={dropped} responsibleProducerCodeId={responsible} />
     </div>
   )
 }
@@ -127,6 +160,7 @@ function NumberForm({ existing, onDone }: { existing: AdminPhoneNumber | null; o
 
   const [phoneNumberId, setPhoneNumberId] = useState(existing?.phoneNumberId ?? '')
   const [number, setNumber] = useState(existing?.number ?? '')
+  const [branchName, setBranchName] = useState(existing?.branchName ?? '')
   const [responsible, setResponsible] = useState<number | undefined>(existing?.responsibleCode?.id)
   const [served, setServed] = useState<number[]>(existing?.servedCodes.map(c => c.id) ?? [])
 
@@ -137,6 +171,7 @@ function NumberForm({ existing, onDone }: { existing: AdminPhoneNumber | null; o
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
     const body = {
+      branchName: branchName.trim(),
       responsibleProducerCodeId: responsible,
       servedCodeIds: served,
     }
@@ -190,6 +225,8 @@ function NumberForm({ existing, onDone }: { existing: AdminPhoneNumber | null; o
           onChange={e => setNumber(e.target.value)}
         />
       </div>
+
+      <BranchNameField id="number-form-branch" required number={number} value={branchName} onChange={setBranchName} />
 
       <div className="flex flex-col gap-2">
         <Label>Código responsable (facturación)</Label>
@@ -263,6 +300,11 @@ export function NumerosView() {
   const [deleteTarget, setDeleteTarget] = useState<AdminPhoneNumber | null>(null)
   const [assistantId, setAssistantId] = useState<number | null>(null)
   const [assistantOpen, setAssistantOpen] = useState(false)
+  // ?numero=ID (the assistant's links) opens that number's assistant.
+  const clearLinkedNumber = useLinkedId('numero', id => {
+    setAssistantId(id)
+    setAssistantOpen(true)
+  })
 
   if (!roleLoading && !canView) {
     return (
@@ -273,8 +315,8 @@ export function NumerosView() {
     )
   }
 
-  // The client is billed in tokens: the API sends no amounts in USD to tenants.
-  const totalTokens = (numbers ?? []).reduce((sum, n) => sum + n.usage.tokens, 0)
+  // Each number's messages of the month; plans and amounts are in Facturación.
+  const totalMessages = (numbers ?? []).reduce((sum, n) => sum + n.usage.messages, 0)
   const disconnected = (numbers ?? []).filter(n => n.disconnectedAt)
   const columns = isSuperAdmin ? 5 : 4
 
@@ -288,8 +330,8 @@ export function NumerosView() {
           </h1>
           <p className="mt-1.5 text-[14px] text-muted-foreground">
             {isSuperAdmin
-              ? 'Números de WhatsApp, código responsable y consumo del mes: tokens y uso de la IA.'
-              : 'Los números de WhatsApp a tu cargo y los tokens que consumieron en el mes.'}
+              ? 'Números de WhatsApp, código responsable y consumo del mes: mensajes y uso de la IA.'
+              : 'Los números de WhatsApp a tu cargo y los mensajes que enviaron en el mes.'}
           </p>
         </div>
         {isSuperAdmin && (
@@ -324,11 +366,7 @@ export function NumerosView() {
               </p>
             </div>
           )}
-          {isSuperAdmin ? (
-            <ConectarWhatsapp label={disconnected.length > 0 ? 'Reconectar número' : undefined} />
-          ) : (
-            <AdminConnect reconnect={disconnected.length > 0} />
-          )}
+          {isSuperAdmin ? <ConnectNumber dropped={disconnected} /> : <AdminConnect dropped={disconnected} />}
         </Card>
       )}
 
@@ -347,7 +385,8 @@ export function NumerosView() {
           />
         </div>
         <p className="text-[13px] text-muted-foreground">
-          1 token = 1 mensaje enviado por el asistente o desde el panel. Se factura a mes vencido.
+          Cuenta cada mensaje que envía el asistente, la oficina desde el panel o un aviso. Los planes están en
+          Facturación.
         </p>
       </div>
       {isError && (
@@ -363,9 +402,9 @@ export function NumerosView() {
       )}
       <Card className="mb-4 flex items-center justify-between border-line-2 p-4">
         <span className="text-[13px] text-muted-foreground">
-          Tokens del mes · {period} ({isSuperAdmin ? 'todos los números' : 'tus números'})
+          Mensajes del mes · {period} ({isSuperAdmin ? 'todos los números' : 'tus números'})
         </span>
-        <span className="font-display text-[20px] text-ink">{numbers && !isError ? int(totalTokens) : '—'}</span>
+        <span className="font-display text-[20px] text-ink">{numbers && !isError ? int(totalMessages) : '—'}</span>
       </Card>
 
       <Card className="overflow-hidden border-line-2 py-0 shadow-sm">
@@ -379,11 +418,11 @@ export function NumerosView() {
                 Responsable
               </TableHead>
               <TableHead className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
-                Tokens del mes
+                Mensajes del mes
               </TableHead>
               {isSuperAdmin && (
                 <TableHead className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
-                  Uso de IA (OpenAI)
+                  Uso de IA
                 </TableHead>
               )}
               <TableHead className="w-24 pr-5" />
@@ -420,8 +459,9 @@ export function NumerosView() {
               <TableRow key={n.id}>
                 <TableCell className="pl-5">
                   <div className="flex flex-col">
-                    <span className="text-[14px] font-medium text-ink">{n.number}</span>
+                    <span className="text-[14px] font-medium text-ink">{numberLabel(n)}</span>
                     <span className="font-mono text-[11px] text-muted-foreground">{n.phoneNumberId}</span>
+                    <MetaPortfolioLine portfolio={n.portfolio} />
                     <div className="mt-1 flex flex-wrap gap-1">
                       {n.disconnectedAt && (
                         <Badge variant="destructive" title={n.disconnectReasonLabel ?? undefined}>
@@ -455,6 +495,15 @@ export function NumerosView() {
                           {n.assistant.botName ?? 'Asistente propio'}
                         </Badge>
                       )}
+                      {n.usage.planPaused && (
+                        <Badge
+                          className="gap-1 bg-amber/15 text-ink-3"
+                          title="Llegó al límite de su plan este mes: se elige en Inicio o en Facturación si sigue en el plan siguiente"
+                        >
+                          <PowerOff className="size-3" />
+                          En pausa por el plan
+                        </Badge>
+                      )}
                       {n.botEnabled === false && (
                         <Badge
                           className="gap-1 bg-destructive/10 text-destructive"
@@ -473,18 +522,16 @@ export function NumerosView() {
                     : '—'}
                 </TableCell>
                 <TableCell className="text-[13px]">
-                  <span className="font-medium text-ink">{int(n.usage.tokens)}</span>
-                  <div className="text-[11px] text-muted-foreground">mensajes enviados</div>
+                  <span className="font-medium text-ink">{int(n.usage.messages)}</span>
+                  <div className="text-[11px] text-muted-foreground">
+                    {n.usage.plan ? `plan ${n.usage.plan.trial ? 'Prueba' : n.usage.plan.name}` : 'mensajes enviados'}
+                    {n.usage.upgraded && ' · subió de plan'}
+                  </div>
                 </TableCell>
                 {isSuperAdmin && (
                   <TableCell className="text-[13px]">
-                    <span className="text-ink">
-                      {int((n.usage.inputTokens ?? 0) + (n.usage.outputTokens ?? 0))} tokens de OpenAI
-                    </span>
-                    <div className="text-[11px] text-muted-foreground">
-                      {int(n.usage.openaiCalls ?? 0)} llamadas · {int(n.usage.inputTokens ?? 0)} de entrada ·{' '}
-                      {int(n.usage.outputTokens ?? 0)} de salida
-                    </div>
+                    <span className="text-ink">{int(n.usage.openaiCalls ?? 0)} consultas a la IA</span>
+                    <div className="text-[11px] text-muted-foreground">respuestas que no resolvieron los menús</div>
                   </TableCell>
                 )}
                 <TableCell className="pr-5">
@@ -498,6 +545,7 @@ export function NumerosView() {
                           ? 'Nombre, personas, horario y datos propios de este número'
                           : 'Ver el asistente de este número'
                       }
+                      data-help="numero-asistente"
                       onClick={() => {
                         setAssistantId(n.id)
                         setAssistantOpen(true)
@@ -554,15 +602,23 @@ export function NumerosView() {
         </DialogContent>
       </Dialog>
 
-      <NumberAssistantSheet numberId={assistantId} open={assistantOpen} onOpenChange={setAssistantOpen} />
+      <NumberAssistantSheet
+        numberId={assistantId}
+        open={assistantOpen}
+        onOpenChange={open => {
+          setAssistantOpen(open)
+          if (!open) clearLinkedNumber()
+        }}
+      />
 
       <AlertDialog open={!!deleteTarget} onOpenChange={open => !open && setDeleteTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>¿Dar de baja el número?</AlertDialogTitle>
             <AlertDialogDescription>
-              El bot dejará de atender <span className="font-medium text-ink">{deleteTarget?.number}</span> y su consumo
-              del mes deja de verse acá. Si Meta lo desconectó, no lo des de baja: usá Reconectar número.
+              El bot dejará de atender{' '}
+              <span className="font-medium text-ink">{deleteTarget && numberLabel(deleteTarget)}</span> y su consumo del
+              mes deja de verse acá. Si Meta lo desconectó, no lo des de baja: usá Reconectar número.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

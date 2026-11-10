@@ -18,6 +18,8 @@ export const EMPTY_COVERAGE_DRAFT: CoverageDraft = { isActive: '', highlighted: 
 
 /** What the form edits. Empty text means "the organization's". */
 export interface NumberAssistantDraft {
+  /** The number's branch ("27 de Febrero"); empty = none. Never the organization's. */
+  branchName: string
   botName: string
   staff: string
   ownHours: boolean
@@ -65,8 +67,9 @@ export const splitNames = (value: string): string[] =>
     .map(name => name.trim())
     .filter(Boolean)
 
-export function toNumberAssistantDraft({ own, organization }: NumberAssistant): NumberAssistantDraft {
+export function toNumberAssistantDraft({ own, organization, branchName }: NumberAssistant): NumberAssistantDraft {
   return {
+    branchName: branchName ?? '',
     botName: own.botName ?? '',
     staff: own.staffNames.join(', '),
     ownHours: own.businessHours !== null,
@@ -79,10 +82,25 @@ export function toNumberAssistantDraft({ own, organization }: NumberAssistant): 
   }
 }
 
-/** A draft that gives everything back to the organization. */
-export function emptyNumberAssistantDraft(assistant: NumberAssistant): NumberAssistantDraft {
+/**
+ * The form starts over when what is saved changes (after saving it), but not
+ * when the bot switch flips or a closure changes, which save on their own:
+ * that must not reset what is being edited.
+ */
+export function numberAssistantFormKey(assistant: NumberAssistant): string {
+  return JSON.stringify({
+    ...assistant.own,
+    branchName: assistant.branchName,
+    botEnabled: undefined,
+    closures: undefined,
+  })
+}
+
+/** A draft that gives everything back to the organization; the branch is the number's own, so it stays. */
+export function emptyNumberAssistantDraft(assistant: NumberAssistant, branchName: string): NumberAssistantDraft {
   const draft = toNumberAssistantDraft(assistant)
   return {
+    branchName,
     botName: '',
     staff: '',
     ownHours: false,
@@ -98,6 +116,7 @@ export function numberAssistantChanges(
   draft: NumberAssistantDraft,
 ): UpdateNumberAssistantRequest {
   const changes: UpdateNumberAssistantRequest = {}
+  if (draft.branchName.trim() !== initial.branchName.trim()) changes.branchName = draft.branchName.trim()
   if (draft.botName.trim() !== initial.botName.trim()) changes.botName = draft.botName.trim()
   if (splitNames(draft.staff).join(',') !== splitNames(initial.staff).join(',')) {
     changes.staffNames = splitNames(draft.staff)

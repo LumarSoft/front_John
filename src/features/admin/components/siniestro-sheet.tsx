@@ -2,7 +2,7 @@
 
 import { useState, type ReactNode } from 'react'
 import { toast } from 'sonner'
-import { FileText, Loader2, Paperclip } from 'lucide-react'
+import { CalendarDays, Car, FileText, Loader2, Paperclip } from 'lucide-react'
 import { Button } from '@/src/components/ui/button'
 import { Dialog, DialogContent, DialogTitle } from '@/src/components/ui/dialog'
 import { Input } from '@/src/components/ui/input'
@@ -16,7 +16,14 @@ import {
   type SiniestroEstado,
 } from '@/src/services/siniestros.service'
 import { formatDate } from '../lib/asegurados-ui'
-import { ESTADO_META, ESTADO_ORDER, EstadoBadge, tipoLabel } from '../lib/siniestros-ui'
+import {
+  ESTADO_META,
+  ESTADO_ORDER,
+  EstadoBadge,
+  formatOccurredDate,
+  occurredHour,
+  tipoLabel,
+} from '../lib/siniestros-ui'
 import { useAdminSiniestro, useUpdateAdminSiniestro } from '../hooks/use-admin-siniestro'
 
 interface SiniestroSheetProps {
@@ -38,6 +45,20 @@ function Field({ label, value }: { label: string; value: ReactNode }) {
     <div className="flex flex-col gap-1 rounded-xl border border-line-2 bg-paper px-3.5 py-2.5">
       <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-faint">{label}</span>
       <span className="text-[13.5px] text-ink">{value}</span>
+    </div>
+  )
+}
+
+function KeyFact({ icon, label, value, mono }: { icon: ReactNode; label: string; value: string; mono?: boolean }) {
+  return (
+    <div className="flex items-center gap-3 rounded-xl border border-ember-ring bg-ember-soft px-4 py-3">
+      <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-paper text-ember-2">{icon}</div>
+      <div className="min-w-0">
+        <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-ember-2">{label}</div>
+        <div className={`truncate text-[17px] font-semibold text-ink ${mono ? 'font-mono tracking-wider' : ''}`}>
+          {value}
+        </div>
+      </div>
     </div>
   )
 }
@@ -89,9 +110,9 @@ function SiniestroContent({ siniestro }: { siniestro: AdminSiniestroDetail }) {
   }
 
   const vehiculo = siniestro.policy.vehicle
-  const vehiculoLabel = vehiculo
-    ? [vehiculo.brand, vehiculo.model].filter(Boolean).join(' ') || vehiculo.licensePlate || '—'
-    : '—'
+  const vehiculoLabel = vehiculo ? [vehiculo.brand, vehiculo.model].filter(Boolean).join(' ') : ''
+  const hora = occurredHour(siniestro.description)
+  const fechaHecho = formatOccurredDate(siniestro.occurredAt) + (hora ? ` · ${hora}` : '')
 
   return (
     <>
@@ -109,6 +130,18 @@ function SiniestroContent({ siniestro }: { siniestro: AdminSiniestroDetail }) {
       {/* ── Body (scrollable) ──────────────────────────────────── */}
       <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
         <div className="mx-auto flex max-w-2xl flex-col gap-6">
+          <div className={`grid grid-cols-1 gap-2.5 ${vehiculo ? 'sm:grid-cols-2' : ''}`}>
+            {vehiculo && (
+              <KeyFact
+                icon={<Car className="size-4.5" />}
+                label="Patente"
+                value={vehiculo.licensePlate || 'Sin patente cargada'}
+                mono={!!vehiculo.licensePlate}
+              />
+            )}
+            <KeyFact icon={<CalendarDays className="size-4.5" />} label="Fecha del hecho" value={fechaHecho} />
+          </div>
+
           <section>
             <SectionTitle>Asegurado y póliza</SectionTitle>
             <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
@@ -118,7 +151,6 @@ function SiniestroContent({ siniestro }: { siniestro: AdminSiniestroDetail }) {
               <Field label="Email" value={siniestro.client.email ?? '—'} />
               <Field label="Póliza" value={`#${siniestro.policy.certificateNumber} · ${siniestro.policy.company}`} />
               <Field label="Vehículo" value={vehiculoLabel} />
-              <Field label="Fecha del hecho" value={formatDate(siniestro.occurredAt)} />
             </div>
           </section>
 
@@ -144,7 +176,7 @@ function SiniestroContent({ siniestro }: { siniestro: AdminSiniestroDetail }) {
           )}
 
           {/* ── Gestión ──────────────────────────────────────────── */}
-          <section className="rounded-xl border border-line-2 bg-secondary/20 p-4">
+          <section data-help="siniestro-gestion" className="rounded-xl border border-line-2 bg-secondary/20 p-4">
             <SectionTitle>Gestión del reclamo</SectionTitle>
 
             <div className="flex flex-col gap-1.5">
@@ -186,6 +218,7 @@ function SiniestroContent({ siniestro }: { siniestro: AdminSiniestroDetail }) {
 
             <Button
               type="button"
+              data-help="siniestro-guardar"
               className="mt-4 h-9 w-full"
               disabled={!dirty || update.isPending}
               onClick={handleSave}

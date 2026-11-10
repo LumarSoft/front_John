@@ -1,51 +1,152 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { billingService } from '@/src/services/billing.service'
 import { QUERY_KEYS } from '@/src/lib/query-keys'
-import type { CreateTokenPlanRequest, UpdateTokenPlanRequest } from '@/src/types/api/billing'
+import type { CreatePlanRequest, FeatureRoles, PlanFeatureKey, UpdatePlanRequest } from '@/src/types/api/billing'
 import { useAuth } from '../context/auth-context'
 
 /** How often the consumption bars follow Meta's deliveries. */
 const LIVE_REFRESH_MS = 10_000
 
 /** Every number's plan and month, refreshed while the screen is open. */
-export function useBillingOverview(period?: string) {
+export function useBillingOverview(period?: string, enabled = true) {
   const { token } = useAuth()
 
   return useQuery({
     queryKey: QUERY_KEYS.admin.billing(period),
     queryFn: () => billingService.overview(token as string, period),
-    enabled: !!token,
+    enabled: !!token && enabled,
     placeholderData: keepPreviousData,
     refetchInterval: LIVE_REFRESH_MS,
   })
 }
 
-export function useTokenPlans(enabled = true) {
+/** The functions the organization's plans include (the owner gets them all). */
+export function usePlanFeatures() {
   const { token } = useAuth()
 
   return useQuery({
-    queryKey: QUERY_KEYS.admin.billingPlans,
+    queryKey: QUERY_KEYS.admin.planFeatures,
+    queryFn: () => billingService.features(token as string),
+    enabled: !!token,
+    staleTime: 5 * 60_000,
+  })
+}
+
+/**
+ * Whether the organization's plans include one function, and the cheapest plan that does. Until it is known, or
+ * against an API older than the plan features, the function counts as included: the API has the last word.
+ */
+export function usePlanFeature(key: PlanFeatureKey) {
+  const { data } = usePlanFeatures()
+  return {
+    included: data?.features[key] ?? true,
+    availableIn: data?.availableIn[key] ?? null,
+    /** The plans include it but the user's role has it off: the panel says so instead of naming a plan. */
+    byRole: data?.blockedByRole?.includes(key) ?? false,
+    /** Known to be in no plan at all (nobody can turn it on from Facturación). */
+    nowhere: data !== undefined && !data.features[key] && !data.availableIn[key] && !data.blockedByRole?.includes(key),
+  }
+}
+
+/** Who may use each function besides the plan (owner). */
+export function useFeatureRoles(enabled = true) {
+  const { token } = useAuth()
+
+  return useQuery({
+    queryKey: QUERY_KEYS.owner.featureRoles,
+    queryFn: () => billingService.featureRoles(token as string),
+    enabled: !!token && enabled,
+  })
+}
+
+/** The owner turns a function on or off for a role; every screen that reads the functions refreshes. */
+export function useUpdateFeatureRoles() {
+  const { token } = useAuth()
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ key, data }: { key: PlanFeatureKey; data: Partial<FeatureRoles> }) =>
+      billingService.updateFeatureRoles(token as string, key, data),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.owner.featureRoles })
+      void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.admin.billingAll })
+    },
+  })
+}
+
+/** The SuperAdmin puts a number on a plan; the month and the numbers refresh after it. */
+export function useAssignPlan() {
+  const { token } = useAuth()
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ numberId, planId }: { numberId: number; planId: number }) =>
+      billingService.assignPlan(token as string, numberId, planId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.admin.billingAll })
+      void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.admin.phoneNumbers })
+    },
+  })
+}
+
+/** The office's answer at a number's plan limit; the month, the numbers and the notices refresh after it. */
+export function useResolveLimit() {
+  const { token } = useAuth()
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ numberId, choice }: { numberId: number; choice: 'continue' | 'pause' }) =>
+      billingService.resolveLimit(token as string, numberId, choice),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.admin.billingAll })
+      void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.admin.phoneNumbers })
+      void queryClient.invalidateQueries({ queryKey: ['admin', 'novedades'] })
+    },
+  })
+}
+
+/** The owner's month across the platform: billed, Meta, OpenAI and profit. */
+export function useOwnerBilling(period?: string, enabled = true) {
+  const { token } = useAuth()
+
+  return useQuery({
+    queryKey: QUERY_KEYS.owner.billing(period),
+    queryFn: () => billingService.ownerBilling(token as string, period),
+    enabled: !!token && enabled,
+    placeholderData: keepPreviousData,
+    refetchInterval: LIVE_REFRESH_MS,
+  })
+}
+
+/** The platform's catalog (owner). */
+export function useOwnerPlans(enabled = true) {
+  const { token } = useAuth()
+
+  return useQuery({
+    queryKey: QUERY_KEYS.owner.plans,
     queryFn: () => billingService.plans(token as string),
     enabled: !!token && enabled,
   })
 }
 
-/** Catalog changes; the overview and the catalog refresh after each. */
-export function useBillingActions() {
+/** Catalog changes (owner); every billing screen refreshes after each. */
+export function usePlanActions() {
   const { token } = useAuth()
   const queryClient = useQueryClient()
   const refresh = () => {
+    void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.owner.plans })
+    void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.owner.billingAll })
     void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.admin.billingAll })
     void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.admin.phoneNumbers })
   }
 
   const createPlan = useMutation({
-    mutationFn: (data: CreateTokenPlanRequest) => billingService.createPlan(token as string, data),
+    mutationFn: (data: CreatePlanRequest) => billingService.createPlan(token as string, data),
     onSuccess: refresh,
   })
 
   const updatePlan = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: UpdateTokenPlanRequest }) =>
+    mutationFn: ({ id, data }: { id: number; data: UpdatePlanRequest }) =>
       billingService.updatePlan(token as string, id, data),
     onSuccess: refresh,
   })

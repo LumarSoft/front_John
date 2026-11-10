@@ -4,6 +4,16 @@ import { useCallback, useEffect, useRef, useState, type RefObject } from 'react'
 import type { OnboardWhatsappResponse } from '@/src/types/api/whatsapp-onboarding'
 import { Button } from '@/src/components/ui/button'
 import { useEmbeddedSignupConfig, useOnboardWhatsapp } from '../hooks/use-whatsapp-onboarding'
+import { BranchNameField } from './branch-name-field'
+import {
+  EMPTY_NUMBER_SETUP,
+  NUMBER_SETUP_INPUT_IDS,
+  NumberSetupFields,
+  numberSetupErrors,
+  numberSetupPayload,
+  type NumberSetup,
+  type NumberSetupField,
+} from './number-setup-fields'
 
 /**
  * Launches Meta's Embedded Signup and hands the result to the API.
@@ -15,7 +25,9 @@ import { useEmbeddedSignupConfig, useOnboardWhatsapp } from '../hooks/use-whatsa
  * the callback fires.
  *
  * The code expires 30 SECONDS after the popup closes, so the callback posts it
- * to the backend immediately — no confirmation step in between.
+ * to the backend immediately — no confirmation step in between. That is why
+ * the branch's name and the number's assistant (bot name, whose assistant it
+ * is, people, hours) are asked BEFORE the popup opens, all of them required.
  */
 
 const COEXISTENCE_FEATURE = 'whatsapp_business_app_onboarding'
@@ -63,6 +75,8 @@ interface Props {
   onConnected?: (result: OnboardWhatsappResponse) => void
   /** Button text; "Reconectar número" when Meta dropped a number. */
   label?: string
+  /** What the form starts with: the number being reconnected, as it answers today. */
+  initial?: { branchName: string; setup: NumberSetup }
 }
 
 export function ConectarWhatsapp({
@@ -71,12 +85,18 @@ export function ConectarWhatsapp({
   responsibleProducerCodeId,
   onConnected,
   label = 'Conectar número de WhatsApp',
+  initial,
 }: Props) {
   const { data: config, isLoading: loadingConfig } = useEmbeddedSignupConfig()
   const onboard = useOnboardWhatsapp()
 
   const [sdkReady, setSdkReady] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [branchName, setBranchName] = useState(initial?.branchName ?? '')
+  const [branchError, setBranchError] = useState<string | null>(null)
+  const branchInput = useRef<HTMLInputElement>(null)
+  const [setup, setSetup] = useState<NumberSetup>(initial?.setup ?? EMPTY_NUMBER_SETUP)
+  const [setupErrors, setSetupErrors] = useState<Partial<Record<NumberSetupField, string>>>({})
   const session = useRef<SessionInfo>({ finished: false })
 
   // ── SDK ──
@@ -168,6 +188,22 @@ export function ConectarWhatsapp({
 
   const launch = useCallback(() => {
     if (!window.FB || !config?.configId) return
+    const name = branchName.trim()
+    if (!name) {
+      setBranchError('Escribí el nombre de la sucursal antes de conectar el número.')
+      branchInput.current?.focus()
+      return
+    }
+    // Everything about the assistant is required before Meta opens: a number
+    // that starts without it greets as the head office.
+    const errors = numberSetupErrors(setup)
+    setSetupErrors(errors)
+    if (Object.keys(errors).length) {
+      const first = (Object.keys(errors) as NumberSetupField[])[0]
+      if (first !== 'weekly') document.getElementById(NUMBER_SETUP_INPUT_IDS[first])?.focus()
+      setError('Completá los datos del asistente antes de conectar el número.')
+      return
+    }
     setError(null)
     session.current = { finished: false }
 
@@ -209,6 +245,8 @@ export function ConectarWhatsapp({
               isCoexistence: coexistence,
               pin,
               responsibleProducerCodeId,
+              branchName: name,
+              ...numberSetupPayload(setup),
             },
             {
               onSuccess: result => onConnected?.(result),
@@ -230,7 +268,7 @@ export function ConectarWhatsapp({
         },
       },
     )
-  }, [config, coexistence, pin, responsibleProducerCodeId, onboard, onConnected])
+  }, [config, branchName, setup, coexistence, pin, responsibleProducerCodeId, onboard, onConnected])
 
   if (loadingConfig) return null
 
@@ -248,6 +286,32 @@ export function ConectarWhatsapp({
 
   return (
     <div className="flex flex-col gap-2">
+      <div className="mb-2 flex max-w-xl flex-col gap-6">
+        {initial && (
+          <p className="text-[13px] text-muted-foreground">
+            Los datos vienen cargados con lo que el número usa hoy. Cambiá solo lo que haga falta: lo demás queda como
+            estaba (CBU, titular, banco, líneas y feriados incluidos).
+          </p>
+        )}
+        <BranchNameField
+          id="connect-branch-name"
+          inputRef={branchInput}
+          value={branchName}
+          error={branchError}
+          onChange={value => {
+            setBranchName(value)
+            if (value.trim()) setBranchError(null)
+          }}
+        />
+        <NumberSetupFields
+          value={setup}
+          errors={setupErrors}
+          onChange={value => {
+            setSetup(value)
+            if (Object.keys(setupErrors).length) setSetupErrors(numberSetupErrors(value))
+          }}
+        />
+      </div>
       <Button onClick={launch} disabled={!sdkReady || onboard.isPending} className="w-fit">
         {onboard.isPending ? 'Conectando…' : label}
       </Button>

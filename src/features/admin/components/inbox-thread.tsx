@@ -33,6 +33,7 @@ import { firstUnreadId, OUTGOING_FILE_ACCEPT, outgoingFileProblem, isSameDay } f
 import { ApiError } from '@/src/lib/api-client'
 import { InboxAttachmentPreview } from './inbox-attachment-preview'
 import { InboxAvatar } from './inbox-avatar'
+import { BlockedClaimBadge } from './blocked-claim-badge'
 import { InboxContactDialog } from './inbox-contact-dialog'
 import { DayDivider, InboxMessageBubble, InboxNotice } from './inbox-message-bubble'
 import { InboxSearchPanel } from './inbox-search-panel'
@@ -285,6 +286,7 @@ export function InboxThread({ conversation, onOpenClient, onBack }: Props) {
             {!conversation.botPaused && (
               <button
                 type="button"
+                data-help="chat-tomar"
                 onClick={() => takeover.mutate()}
                 disabled={takeover.isPending}
                 className="flex h-9 items-center gap-1.5 rounded-full bg-(--wa-green) px-4 text-[14px] font-medium text-(--wa-on-green) transition-colors hover:bg-(--wa-green-dark) disabled:opacity-60"
@@ -307,6 +309,7 @@ export function InboxThread({ conversation, onOpenClient, onBack }: Props) {
             </button>
             <DropdownMenu>
               <DropdownMenuTrigger
+                data-help="chat-menu"
                 aria-label="Opciones del chat"
                 className="rounded-full p-2 text-(--wa-icon) outline-none hover:bg-(--wa-tint) data-[state=open]:bg-(--wa-tint-strong)"
               >
@@ -324,7 +327,11 @@ export function InboxThread({ conversation, onOpenClient, onBack }: Props) {
                 {conversation.botPaused && (
                   <>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onSelect={() => release.mutate()} disabled={release.isPending}>
+                    <DropdownMenuItem
+                      data-help="chat-devolver"
+                      onSelect={() => release.mutate()}
+                      disabled={release.isPending}
+                    >
                       <UserX className="size-4" /> Devolver al bot
                     </DropdownMenuItem>
                   </>
@@ -333,6 +340,15 @@ export function InboxThread({ conversation, onOpenClient, onBack }: Props) {
             </DropdownMenu>
           </div>
         </header>
+
+        {conversation.blockedClaim && (
+          <div className="flex shrink-0 items-center gap-2 border-b border-l border-(--wa-line) bg-(--wa-panel) px-4 py-1.5">
+            <BlockedClaimBadge reason={conversation.blockedClaim} />
+            <span className="min-w-0 truncate text-[12.5px] text-(--wa-text-2)">
+              El bot no tomó la denuncia: revisá el caso con el cliente.
+            </span>
+          </div>
+        )}
 
         {/* Messages */}
         <div className="wa-wallpaper relative min-h-0 flex-1">
@@ -454,6 +470,7 @@ export function InboxThread({ conversation, onOpenClient, onBack }: Props) {
               />
               <textarea
                 ref={inputRef}
+                data-help="chat-escribir"
                 onPaste={handlePaste}
                 value={text}
                 onChange={e => setText(e.target.value)}
@@ -485,6 +502,7 @@ export function InboxThread({ conversation, onOpenClient, onBack }: Props) {
             <span className="text-[14px] text-(--wa-text-2)">El bot está atendiendo este chat.</span>
             <button
               type="button"
+              data-help="chat-tomar"
               onClick={() => takeover.mutate()}
               disabled={takeover.isPending}
               className="flex items-center gap-1.5 text-[14px] font-medium text-(--wa-green-dark) hover:underline disabled:opacity-60"

@@ -1,3 +1,5 @@
+import type { WeeklySchedule } from './business-hours'
+
 /** Ids the browser needs to launch Embedded Signup. Never includes the app secret. */
 export interface EmbeddedSignupConfig {
   appId: string | null
@@ -13,6 +15,18 @@ export interface OnboardWhatsappRequest {
   /** May be omitted by Meta's Coexistence finish event; the API resolves it. */
   phoneNumberId?: string
   number?: string
+  /** What the office calls the branch; the panel always asks for it before connecting. */
+  branchName?: string
+  /** The number's assistant, asked with the branch name: how the bot is called… */
+  botName?: string
+  /** …whose assistant it says it is ("Vanesa Aguilar")… */
+  presentationName?: string
+  /** …the alias customers transfer to… */
+  transferAlias?: string
+  /** …the people of this office… */
+  staffNames?: string[]
+  /** …and when the office answers. */
+  businessHours?: WeeklySchedule
   isCoexistence?: boolean
   pin?: string
   responsibleProducerCodeId?: number

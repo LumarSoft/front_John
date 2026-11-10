@@ -1,5 +1,6 @@
 import type { AdminRole } from './auth'
-import type { TokenPlan } from './phone-numbers'
+import type { BilledPlan } from './billing'
+import type { MetaPortfolio } from './phone-numbers'
 
 export interface OrganizationCode {
   id: number
@@ -28,16 +29,14 @@ export interface PhoneNumberUsage {
   metaCostUsd: number
   /** What the number costs us (OpenAI + Meta). Measured. */
   totalCostUsd: number
-  /** Messages the platform sent this month: one token each. */
-  tokens: number
-  /** Free tokens applied this month (a new account's first month). */
-  trialTokens: number
-  plan: TokenPlan
-  prorated: boolean
-  /** What the platform invoices the organization for the month (the plan's cost). */
+  /** Messages the platform sent this month. */
+  messages: number
+  assignedPlan: BilledPlan | null
+  plan: BilledPlan
+  upgraded: boolean
+  /** What the platform invoices the organization for the month. */
   billedUsd: number
-  /** What the organization resells the month for to its productor. */
-  resaleUsd: number
+  /** Billed minus Meta (OpenAI is prepaid). */
   marginUsd: number
 }
 
@@ -45,20 +44,25 @@ export interface OrganizationNumber {
   id: number
   phoneNumberId: string
   number: string
+  /** The branch the number belongs to, as the office calls it ("27 de Febrero"); absent on older APIs. */
+  branchName?: string | null
   isActive: boolean
   responsibleCode: { id: number; code: string; holderName: string | null } | null
   servedCodes: Array<{ id: number; code: string }>
+  portfolio?: MetaPortfolio | null
   budget: { monthlyBudgetUsd: number | null; exceededAt: string | null }
   usage: PhoneNumberUsage
 }
 
 export interface OrganizationBilling {
   period: string
-  /** The fixed price per token (USD 0.05) and the block past the largest plan. */
-  pricing: { unitPriceUsd: number; blockTokens: number; blockPriceUsd: number; trialTokens: number }
+  /** Messages per block past the largest plan. */
+  blockMessages: number
   activeNumbers: number
-  costUsd: number
+  metaCostUsd: number
+  openaiCostUsd: number
   billedUsd: number
+  /** Billed minus Meta (OpenAI is prepaid). */
   marginUsd: number
 }
 
@@ -67,6 +71,8 @@ export interface OrganizationUser {
   email: string
   role: AdminRole
   createdAt: string
+  /** Codes granted to an ADMIN (empty for a SUPERADMIN, who sees them all); absent on older APIs. */
+  codes?: Array<{ id: number; code: string; holderName: string | null }>
 }
 
 export interface OrganizationSummary {
@@ -75,6 +81,7 @@ export interface OrganizationSummary {
   slug: string
   masterCode: string | null
   botName: string | null
+  logoUrl?: string | null
   isActive: boolean
   createdAt: string
   counts: {
@@ -91,6 +98,7 @@ export interface OrganizationDetail {
   slug: string
   masterCode: string | null
   botName: string | null
+  logoUrl?: string | null
   isActive: boolean
   createdAt: string
   codes: OrganizationCode[]
@@ -131,6 +139,8 @@ export interface CreateOrgUserRequest {
   email: string
   password: string
   role: AssignableRole
+  /** Codes of the organization an ADMIN will see; ignored for a SUPERADMIN. */
+  producerCodeIds?: number[]
 }
 
 export interface UpdateOrgUserRequest {

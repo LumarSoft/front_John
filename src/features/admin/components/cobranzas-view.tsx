@@ -26,6 +26,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/src/
 import { useDebouncedValue } from '@/src/hooks/use-debounced-value'
 import type { CobranzaCliente, CobranzaEstadoFilter, CobranzasStats } from '@/src/types/api/cobranzas'
 import { useCobranzas } from '../hooks/use-cobranzas'
+import { usePanelBrand } from '../hooks/use-panel-brand'
 import { useCobranzasStats } from '../hooks/use-cobranzas-stats'
 import { ScopeFilter, type ScopeFilterValue } from './scope-filter'
 import { useScopeFilterState } from '../hooks/use-scope-filter-state'
@@ -40,6 +41,7 @@ import {
 import { AseguradoSheet } from './asegurado-sheet'
 import { ExpiredPoliciesTab } from './expired-policies-tab'
 import { Tabs, TabsList, TabsTrigger } from '@/src/components/ui/tabs'
+import { useUrlTab } from '../hooks/use-panel-link'
 
 const PAGE_SIZE = 25
 
@@ -113,6 +115,7 @@ function MontoCell({ client }: { client: CobranzaCliente }) {
 
 function CobranzaRow({ client, onSelect }: { client: CobranzaCliente; onSelect: () => void }) {
   const fullName = `${client.lastName}, ${client.firstName}`
+  const { signature } = usePanelBrand()
   return (
     <TableRow
       role="button"
@@ -181,9 +184,14 @@ function CobranzaRow({ client, onSelect }: { client: CobranzaCliente; onSelect: 
                     asChild
                     size="icon"
                     variant="ghost"
+                    data-help="cobranza-whatsapp"
                     className="size-8 rounded-full text-ink-3 hover:bg-ember-soft hover:text-ember-2"
                   >
-                    <a href={buildCobranzaWhatsappUrl(client.phone, client)} target="_blank" rel="noopener noreferrer">
+                    <a
+                      href={buildCobranzaWhatsappUrl(client.phone, { ...client, signature })}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
                       <WhatsAppIcon className="size-4" />
                       <span className="sr-only">Recordar pago por WhatsApp</span>
                     </a>
@@ -385,7 +393,7 @@ export function CobranzasView() {
   const [page, setPage] = useState(1)
   const [selectedId, setSelectedId] = useState<number | null>(null)
   // "Cuotas" is the debt worklist; "Pólizas vencidas" the renewals one. Both share the filters above.
-  const [tab, setTab] = useState<CobranzasTab>('cuotas')
+  const [tab, setTab] = useUrlTab<CobranzasTab>(['cuotas', 'vencidas'], 'cuotas')
 
   const handleSearch = (value: string) => {
     setSearchInput(value)
@@ -464,7 +472,9 @@ export function CobranzasView() {
       <Tabs value={tab} onValueChange={v => setTab(v as CobranzasTab)} className="mb-5">
         <TabsList>
           <TabsTrigger value="cuotas">Cuotas</TabsTrigger>
-          <TabsTrigger value="vencidas">Pólizas vencidas</TabsTrigger>
+          <TabsTrigger value="vencidas" data-help="cobranzas-vencidas">
+            Pólizas vencidas
+          </TabsTrigger>
         </TabsList>
       </Tabs>
 

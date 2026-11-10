@@ -17,7 +17,7 @@ export interface UpdateConfigRequest {
  * A field never configured is null.
  */
 export interface BotProfile {
-  /** How the bot names the organization ("John Pellegrini Management Group"). */
+  /** How the bot names the organization ("Seguros del Litoral"). */
   orgName: string | null
   orgShortName: string | null
   orgLegalName: string | null
