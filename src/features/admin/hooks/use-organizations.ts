@@ -46,6 +46,11 @@ export function useOrganizationMutations(orgId?: number) {
       organizationsService.setActive(token as string, id, isActive),
     onSuccess: invalidate,
   })
+  const setPlan = useMutation({
+    mutationFn: ({ id, planId }: { id: number; planId: number | null }) =>
+      organizationsService.setPlan(token as string, id, planId),
+    onSuccess: invalidate,
+  })
   const addCode = useMutation({
     mutationFn: ({ id, data }: { id: number; data: CreateProducerCodeRequest }) =>
       organizationsService.addCode(token as string, id, data),
@@ -78,5 +83,5 @@ export function useOrganizationMutations(orgId?: number) {
     onSuccess: invalidate,
   })
 
-  return { create, setActive, addCode, updateCode, addSuperAdmin, addUser, updateUser, removeUser }
+  return { create, setActive, setPlan, addCode, updateCode, addSuperAdmin, addUser, updateUser, removeUser }
 }
