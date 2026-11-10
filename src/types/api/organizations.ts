@@ -101,10 +101,27 @@ export interface OrganizationDetail {
   logoUrl?: string | null
   isActive: boolean
   createdAt: string
+  /** The plan the owner put the organization on, or null (automatic). Missing from an older API. */
+  planId?: number | null
+  /** The plan in effect with no number and for its next number: the chosen one, or the automatic one. */
+  startingPlan?: OrganizationStartingPlan | null
   codes: OrganizationCode[]
   users: OrganizationUser[]
   numbers: OrganizationNumber[]
   billing: OrganizationBilling
+}
+
+export interface OrganizationStartingPlan {
+  id: number
+  name: string
+  /** The free first-month plan of a new account. */
+  trial: boolean
+}
+
+export interface SetOrganizationPlanResponse {
+  id: number
+  planId: number | null
+  startingPlan: OrganizationStartingPlan | null
 }
 
 export interface CreateOrganizationRequest {

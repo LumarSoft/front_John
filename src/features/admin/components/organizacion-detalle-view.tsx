@@ -16,6 +16,7 @@ import { useOrganization, useOrganizationMutations } from '../hooks/use-organiza
 import { useOrganizationLogo } from '../hooks/use-organization-logo'
 import { initialsOf } from '../lib/org-brand'
 import { LogoUploader } from './logo-uploader'
+import { OrganizacionPlan } from './organizacion-plan'
 import { BillingSummary, CodesTable, NumbersSection, UsersSection } from './organizacion-secciones'
 import { OrganizacionTriunfo } from './organizacion-triunfo'
 import { OrganizacionTriunfoErrores } from './organizacion-triunfo-errores'
@@ -142,6 +143,8 @@ export function OrganizacionDetalleView({ orgId }: { orgId: number }) {
           canEdit
         />
       </section>
+
+      <OrganizacionPlan org={org} />
 
       <BillingSummary billing={org.billing} />
 
