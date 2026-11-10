@@ -101,6 +101,23 @@ export interface AdminSiniestroVehiculo {
   model: string | null
 }
 
+export type CoverageLevel = 'ok' | 'warning' | 'danger'
+
+export interface CoverageIssue {
+  code: 'CANCELLED' | 'CANCELLED_AFTER' | 'BEFORE_START' | 'AFTER_END' | 'OTHER_POLICY' | 'UNPAID_INSTALLMENTS'
+  level: 'warning' | 'danger'
+  title: string
+  detail: string
+  /** The day the issue hinges on ("YYYY-MM-DD"), when there is one. */
+  date: string | null
+}
+
+/** Whether the claim's policy covered the day of the incident; `level` is the worst of its issues. */
+export interface ClaimCoverageCheck {
+  level: CoverageLevel
+  issues: CoverageIssue[]
+}
+
 export interface AdminSiniestroDetail {
   id: number
   type: SiniestroTipo
@@ -126,6 +143,8 @@ export interface AdminSiniestroDetail {
     riskType: AdminRiskType
     vehicle: AdminSiniestroVehiculo | null
   }
+  /** Absent from an API older than the check. */
+  coverageCheck?: ClaimCoverageCheck
 }
 
 export interface UpdateSiniestroInput {
