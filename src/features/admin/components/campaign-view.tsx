@@ -9,7 +9,7 @@ import { useCampaigns } from '../hooks/use-campaigns'
 import { useRole } from '../hooks/use-role'
 import { campaignPageByKind } from '../lib/campaign-pages'
 import { sendBlockedReason } from '../lib/campaigns-format'
-import { CampaignChips, CampaignSwitch } from './campaign-controls'
+import { CampaignChips, CampaignHowItWorks, CampaignSwitch } from './campaign-controls'
 import { CampaignClientsTab } from './campaign-clients-tab'
 import { CampaignMessageTab } from './campaign-message-tab'
 import { useUrlTab } from '../hooks/use-panel-link'
@@ -42,7 +42,7 @@ export function CampaignView({ kind }: { kind: CampaignKind }) {
 
   return (
     <div className="mx-auto w-full max-w-6xl px-5 py-8 md:px-8 md:py-10">
-      <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
+      <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0 max-w-2xl">
           <div className="text-[10.5px] font-medium uppercase tracking-[0.3em] text-ember-2">Campañas</div>
           <h1 className="mt-2 font-display text-[clamp(26px,3.5vw,36px)] tracking-[-0.035em] text-ink">
@@ -60,13 +60,15 @@ export function CampaignView({ kind }: { kind: CampaignKind }) {
         {campaign && <CampaignSwitch campaign={campaign} />}
       </div>
 
-      {isError && <p className="text-[14px] text-destructive">No se pudo cargar la campaña.</p>}
-      {isLoading && <Skeleton className="h-[320px] rounded-xl" />}
+      {campaign?.howItWorks && <CampaignHowItWorks steps={campaign.howItWorks} />}
+
+      {isError && <p className="mt-6 text-[14px] text-destructive">No se pudo cargar la campaña.</p>}
+      {isLoading && <Skeleton className="mt-6 h-[320px] rounded-xl" />}
 
       {campaign && (
         <>
           {blocked && (
-            <p className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[12.5px] text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300">
+            <p className="mt-4 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[12.5px] text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300">
               <Info className="mt-0.5 size-4 shrink-0" />
               {blocked}
             </p>
