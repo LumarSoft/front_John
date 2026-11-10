@@ -73,6 +73,8 @@ export interface Campaign {
   kind: CampaignKind
   label: string
   description: string
+  /** How the campaign works, in a few sentences with the organization's settings (missing from an older API). */
+  howItWorks?: string[]
   enabled: boolean
   /** 0–100, integer. */
   discountPercent: number

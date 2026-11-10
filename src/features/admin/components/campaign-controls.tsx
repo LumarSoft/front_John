@@ -1,4 +1,4 @@
-import { Lock, Users } from 'lucide-react'
+import { Lightbulb, Lock, Users } from 'lucide-react'
 import { toast } from 'sonner'
 import { ApiError } from '@/src/lib/api-client'
 import type { Campaign } from '@/src/types/api/campaigns'
@@ -7,6 +7,24 @@ import { campaignReview, REVIEW_CLASSES, REVIEW_LABELS } from '../lib/campaigns-
 import { PanelSwitch } from './panel-switch'
 
 const CHIP = 'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium'
+
+/** "Cómo funciona": who the campaign finds, when it writes again and what the office does, under the page's title. */
+export function CampaignHowItWorks({ steps }: { steps: string[] }) {
+  if (!steps.length) return null
+  return (
+    <section className="mt-4 rounded-xl border border-line-2 bg-secondary/40 px-4 py-3.5">
+      <h2 className="flex items-center gap-1.5 text-[12px] font-medium uppercase tracking-[0.12em] text-ink-3">
+        <Lightbulb className="size-3.5 text-ember-2" />
+        Cómo funciona
+      </h2>
+      <ul className="mt-2 flex list-disc flex-col gap-1.5 pl-4 text-[13px] leading-relaxed text-ink-3 marker:text-faint">
+        {steps.map(step => (
+          <li key={step}>{step}</li>
+        ))}
+      </ul>
+    </section>
+  )
+}
 
 /** The campaign's on/off switch, with what it says next to it. */
 export function CampaignSwitch({ campaign }: { campaign: Campaign }) {
