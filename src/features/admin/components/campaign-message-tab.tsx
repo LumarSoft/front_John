@@ -16,7 +16,7 @@ import { Input } from '@/src/components/ui/input'
 import { Label } from '@/src/components/ui/label'
 import { ApiError } from '@/src/lib/api-client'
 import type { Campaign, CampaignTemplate } from '@/src/types/api/campaigns'
-import { useCampaignEditor } from '../hooks/use-campaign-editor'
+import { pickedOptions, useCampaignEditor } from '../hooks/use-campaign-editor'
 import { REVIEW_CLASSES, REVIEW_LABELS } from '../lib/campaigns-format'
 
 const failed = (error: unknown, fallback: string) =>
@@ -76,6 +76,7 @@ export function CampaignMessageTab({ campaign }: { campaign: Campaign }) {
     setPercent,
     settings,
     setSetting,
+    toggleOption,
     preview,
     error: draftError,
     dirty,
@@ -154,23 +155,43 @@ export function CampaignMessageTab({ campaign }: { campaign: Campaign }) {
             />
             <p className="text-[12px] text-muted-foreground">Va en el lugar de {'{porcentaje}'}.</p>
           </div>
-          {campaign.settingFields.map(field => (
-            <div key={field.key} className="flex flex-col gap-2">
-              <Label htmlFor={`campaign-${campaign.kind}-${field.key}`}>{field.label}</Label>
-              <Input
-                id={`campaign-${campaign.kind}-${field.key}`}
-                type={field.type === 'number' ? 'number' : 'text'}
-                inputMode={field.type === 'number' ? 'numeric' : undefined}
-                min={field.min}
-                max={field.max}
-                value={settings[field.key] ?? ''}
-                onChange={e => setSetting(field.key, e.target.value)}
-                placeholder={field.type === 'codes' ? 'A, B, B1' : undefined}
-                className="border-line-2"
-              />
-              <p className="text-[12px] text-muted-foreground">{field.help}</p>
-            </div>
-          ))}
+          {campaign.settingFields.map(field =>
+            field.type === 'options' ? (
+              <fieldset key={field.key} className="flex flex-col gap-2 sm:col-span-2">
+                <legend className="mb-2 text-sm font-medium leading-none">{field.label}</legend>
+                <div className="flex flex-wrap gap-x-5 gap-y-2">
+                  {(field.options ?? []).map(option => (
+                    <label key={option.value} className="flex items-center gap-1.5 text-[13px] text-ink-3">
+                      <input
+                        type="checkbox"
+                        checked={pickedOptions(field, settings[field.key] ?? '').includes(option.value)}
+                        onChange={() => toggleOption(field, option.value)}
+                        className="size-4 accent-ember"
+                      />
+                      {option.label}
+                    </label>
+                  ))}
+                </div>
+                <p className="text-[12px] text-muted-foreground">{field.help}</p>
+              </fieldset>
+            ) : (
+              <div key={field.key} className="flex flex-col gap-2">
+                <Label htmlFor={`campaign-${campaign.kind}-${field.key}`}>{field.label}</Label>
+                <Input
+                  id={`campaign-${campaign.kind}-${field.key}`}
+                  type={field.type === 'number' ? 'number' : 'text'}
+                  inputMode={field.type === 'number' ? 'numeric' : undefined}
+                  min={field.min}
+                  max={field.max}
+                  value={settings[field.key] ?? ''}
+                  onChange={e => setSetting(field.key, e.target.value)}
+                  placeholder={field.type === 'codes' ? 'A, B, B1' : field.type === 'days' ? '15, 7' : undefined}
+                  className="border-line-2"
+                />
+                <p className="text-[12px] text-muted-foreground">{field.help}</p>
+              </div>
+            ),
+          )}
         </div>
 
         <div className="flex flex-wrap items-center gap-3">

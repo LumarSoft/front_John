@@ -16,10 +16,14 @@ export interface CampaignTemplate {
   reason: string | null
 }
 
-/** What a campaign's client list can be narrowed by besides the scope and the search. */
-export type CampaignFilter = 'coverage' | 'reason'
+/**
+ * What a campaign's client list can be narrowed by besides the scope and the
+ * search. `gap` is what the client lacks: a protection (Mejora de coberturas)
+ * or a product (Venta cruzada).
+ */
+export type CampaignFilter = 'coverage' | 'reason' | 'gap'
 
-/** Why Triunfo cancelled a policy (Bajas y anulaciones). */
+/** Why a policy was lost (Bajas y anulaciones): Triunfo's cancellation, or it ran out unrenewed. */
 export type CancellationReason =
   | 'falta_pago'
   | 'venta'
@@ -28,6 +32,7 @@ export type CancellationReason =
   | 'cambio_compania'
   | 'siniestro'
   | 'rescision'
+  | 'no_renovada'
   | 'otros'
 
 /** The column a campaign's client list is sorted by: its date (Motivo), the client, the vehicle or the last message. */
@@ -43,12 +48,19 @@ export interface CampaignSort {
 export interface CampaignSettingField {
   key: string
   label: string
-  /** `codes`: a list of coverage codes (["A", "B", "B1"]), edited as comma-separated text. */
-  type: 'number' | 'codes'
+  /**
+   * `codes`: a list of coverage codes (["A", "B", "B1"]) and `days`: a list of
+   * whole days ([15, 7], may be empty), both edited as comma-separated text;
+   * `options`: some of `options`, at least one.
+   */
+  type: 'number' | 'codes' | 'days' | 'options'
   min?: number
   max?: number
+  options?: Array<{ value: string; label: string }>
   help: string
 }
+
+export type CampaignSettingValue = number | string[] | number[]
 
 export interface CampaignPlaceholder {
   /** Without braces: "nombre" is written `{nombre}` in the message. */
@@ -67,7 +79,7 @@ export interface Campaign {
   /** The message, with `{nombre}`, `{porcentaje}`, `{bien}`, `{vencimiento}`. */
   body: string
   placeholders: CampaignPlaceholder[]
-  settings: Record<string, number | string[]>
+  settings: Record<string, CampaignSettingValue>
   settingFields: CampaignSettingField[]
   /** Missing from an older API. */
   filters?: CampaignFilter[]
@@ -92,7 +104,7 @@ export interface UpdateCampaignRequest {
   enabled?: boolean
   discountPercent?: number
   body?: string
-  settings?: Record<string, number | string[]>
+  settings?: Record<string, CampaignSettingValue>
 }
 
 export type CampaignMessageStatus = 'SENDING' | 'SENT' | 'FAILED' | 'MARKED'
@@ -129,6 +141,19 @@ export interface CampaignOpportunity {
   wonPremium: number | null
 }
 
+/**
+ * The next contact of a campaign that writes more than once (the second
+ * contact of a quote, the reminders of a renewal): `due` puts the client back
+ * on the to-do and lets the campaign write again.
+ */
+export interface CampaignFollowUp {
+  step: number
+  of: number
+  due: boolean
+  /** "Segundo contacto", "Recordatorio: faltan 7 días". */
+  label: string
+}
+
 export interface CampaignCandidate {
   /** Policy id (quote id in `quote_followup`): what send, mark, opt-out, assign and the opportunity take. */
   id: number
@@ -144,6 +169,15 @@ export interface CampaignCandidate {
   values?: Record<string, string>
   lastMessage: { status: CampaignMessageStatus; sentAt: string | null; createdAt: string; error: string | null } | null
   optedOut: boolean
+  /** Who said so: the client in the chat, or the office for them (missing from an older API). */
+  optedOutBy?: 'client' | 'office' | null
+  /** Null for a first contact or a campaign that writes once (missing from an older API). */
+  followUp?: CampaignFollowUp | null
+  /** What the client lacks: protections, the insured sum, products (missing from an older API). */
+  gaps?: Array<{ value: string; label: string }>
+  /** Cotizaciones sin cerrar: the lowest instalment quoted and the insurer (missing from an older API). */
+  amount?: number | null
+  company?: string | null
   /** Who follows it and where it stands; null until somebody contacts or assigns it (missing from an older API). */
   opportunity?: CampaignOpportunity | null
   /** Bajas y anulaciones: what the client told the bot when asking to cancel (missing from an older API). */
@@ -158,6 +192,10 @@ export interface CampaignCandidatesQuery extends Omit<CobranzasScopeQuery, 'paym
   /** A coverage code ("A", "C2 Full"). */
   coverage?: string
   reason?: CancellationReason
+  /** What the client lacks ("granizo", "home"…). */
+  gap?: string
+  /** Only who can be written to now: never contacted, or with a follow-up due. */
+  due?: boolean
   status?: OpportunityFilter
   assignedToId?: number
   /** Only the opportunities the user follows. */
@@ -185,6 +223,8 @@ export interface CampaignCandidatesResponse {
   /** The choices of the campaign's filters in the scope, with how many each has; null when it has none. */
   filters?: {
     coverages: CampaignFilterOption[] | null
+    /** Missing from an older API. */
+    gaps?: Array<CampaignFilterOption & { label: string }> | null
     reasons: Array<CampaignFilterOption<CancellationReason> & { label: string }> | null
   }
 }
@@ -202,6 +242,23 @@ export interface MarkCampaignResponse {
 
 export interface OptOutCampaignResponse {
   optedOut: number
+}
+
+export interface OptInCampaignResponse {
+  restored: number
+}
+
+/** "Crear tarea": one task per chosen client for one person of the office. */
+export interface CreateCampaignTasksRequest {
+  ids: number[]
+  assignedToId: number
+  /** YYYY-MM-DD. */
+  dueDate?: string
+  note?: string
+}
+
+export interface CreateCampaignTasksResponse {
+  created: number
 }
 
 export interface AssignOpportunitiesRequest {

@@ -19,6 +19,7 @@ export const CANCELLATION_REASON_LABELS: Record<CancellationReason, string> = {
   cambio_compania: 'Cambio de compañía',
   siniestro: 'Siniestro',
   rescision: 'Rescisión',
+  no_renovada: 'Venció y no se renovó',
   otros: 'Otros motivos',
 }
 
@@ -153,6 +154,15 @@ export function parseCodes(text: string): string[] {
     .map(code => code.trim().toUpperCase())
     .filter(Boolean)
   return [...new Set(codes)]
+}
+
+/** "15, 7 15" → [15, 7]: the days of a setting, as typed, longest first; NaN for what is not a whole number. */
+export function parseDays(text: string): number[] {
+  const days = text
+    .split(/[,;\s]+/)
+    .filter(Boolean)
+    .map(day => (/^\d+$/.test(day) ? Number(day) : Number.NaN))
+  return [...new Set(days)].sort((a, b) => b - a)
 }
 
 const SKIP_LABELS: Record<CampaignSkipReason, string> = {
