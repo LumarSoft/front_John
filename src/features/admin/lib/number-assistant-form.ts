@@ -1,8 +1,30 @@
 import type { WeeklySchedule } from '@/src/types/api/business-hours'
-import type { BotProfile } from '@/src/types/api/config'
+import { TRANSFER_BY_OFFICE, type BotProfile, type UpdateBotProfileRequest } from '@/src/types/api/config'
 import type { CoverageOverride, NumberAssistant, UpdateNumberAssistantRequest } from '@/src/types/api/phone-numbers'
 
 type ProfileField = keyof BotProfile
+
+/** The bank account customers transfer to: inherited, or the number's own, as a whole. */
+export const ACCOUNT_FIELDS = [
+  'transferAlias',
+  'transferCbu',
+  'transferHolder',
+  'transferBank',
+] as const satisfies ReadonlyArray<ProfileField>
+
+const TRANSFER_KEYS: ReadonlyArray<ProfileField> = ['transferMode', ...ACCOUNT_FIELDS]
+
+/**
+ * What the bot gives a customer who wants to transfer on this number: the
+ * organization's account, one of its own, or none because the office passes
+ * the data in the chat (Roldán does not hand out an alias).
+ */
+export type TransferChoice = 'organization' | 'own' | 'office'
+
+export function transferChoiceOf(profile: BotProfile): TransferChoice {
+  if (profile.transferMode === TRANSFER_BY_OFFICE) return 'office'
+  return ACCOUNT_FIELDS.some(key => profile[key]) ? 'own' : 'organization'
+}
 
 /** A yes/no the number may leave to the organization (''). */
 export type Choice = '' | 'yes' | 'no'
@@ -25,6 +47,8 @@ export interface NumberAssistantDraft {
   ownHours: boolean
   weekly: WeeklySchedule
   profile: Record<ProfileField, string>
+  /** Which account the bot gives; with 'own', the account fields of `profile`. */
+  transfer: TransferChoice
   /** One entry per organization coverage, keyed by code. */
   coverages: Record<string, CoverageDraft>
   /** Whether the number offers each motorcycle coverage, keyed by code; '' = as the organization. */
@@ -98,6 +122,7 @@ export function toNumberAssistantDraft({ own, organization, branchName }: Number
     profile: Object.fromEntries(
       (Object.keys(own.botProfile) as ProfileField[]).map(key => [key, own.botProfile[key] ?? '']),
     ) as Record<ProfileField, string>,
+    transfer: transferChoiceOf(own.botProfile),
     coverages: coverageDrafts({ own, organization } as NumberAssistant),
     motoCoverages: motoCoverageDrafts({ own, organization } as NumberAssistant),
   }
@@ -127,10 +152,34 @@ export function emptyNumberAssistantDraft(assistant: NumberAssistant, branchName
     ownHours: false,
     weekly: assistant.organization.businessHours,
     profile: Object.fromEntries(Object.keys(draft.profile).map(key => [key, ''])) as Record<ProfileField, string>,
+    transfer: 'organization',
     coverages: Object.fromEntries(Object.keys(draft.coverages).map(code => [code, EMPTY_COVERAGE_DRAFT])),
     motoCoverages: Object.fromEntries(Object.keys(draft.motoCoverages).map(code => [code, '' as Choice])),
   }
 }
+
+/**
+ * The transfer as the API takes it: going back to the organization's clears the
+ * number's own; the office passing the data clears its account on the API; an
+ * account of its own goes as a whole.
+ */
+function transferChanges(initial: NumberAssistantDraft, draft: NumberAssistantDraft): UpdateBotProfileRequest {
+  if (draft.transfer === 'office') return initial.transfer === 'office' ? {} : { transferMode: TRANSFER_BY_OFFICE }
+  if (draft.transfer === 'organization') {
+    if (initial.transfer === 'organization') return {}
+    return { transferMode: '', ...Object.fromEntries(ACCOUNT_FIELDS.map(key => [key, ''])) }
+  }
+  const changed = ACCOUNT_FIELDS.filter(
+    key => initial.transfer !== 'own' || draft.profile[key].trim() !== initial.profile[key].trim(),
+  )
+  const changes: UpdateBotProfileRequest = Object.fromEntries(changed.map(key => [key, draft.profile[key].trim()]))
+  if (initial.transfer === 'office') changes.transferMode = ''
+  return changes
+}
+
+/** An account of its own needs at least the alias or the CBU. */
+export const ownAccountMissing = (draft: NumberAssistantDraft): boolean =>
+  draft.transfer === 'own' && !draft.profile.transferAlias.trim() && !draft.profile.transferCbu.trim()
 
 /** Only what changed between the saved settings and the form, as the API takes it. */
 export function numberAssistantChanges(
@@ -149,9 +198,13 @@ export function numberAssistantChanges(
   if (hoursChanged) changes.businessHours = draft.ownHours ? draft.weekly : null
 
   const profile = (Object.keys(draft.profile) as ProfileField[]).filter(
-    key => draft.profile[key].trim() !== initial.profile[key].trim(),
+    key => !TRANSFER_KEYS.includes(key) && draft.profile[key].trim() !== initial.profile[key].trim(),
   )
-  if (profile.length) changes.botProfile = Object.fromEntries(profile.map(key => [key, draft.profile[key].trim()]))
+  const botProfile: UpdateBotProfileRequest = {
+    ...Object.fromEntries(profile.map(key => [key, draft.profile[key].trim()])),
+    ...transferChanges(initial, draft),
+  }
+  if (Object.keys(botProfile).length) changes.botProfile = botProfile
 
   const overrides = coverageOverridesOf(draft.coverages)
   if (JSON.stringify(overrides) !== JSON.stringify(coverageOverridesOf(initial.coverages))) {

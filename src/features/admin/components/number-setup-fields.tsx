@@ -4,8 +4,10 @@ import { Bot, Clock, Landmark, Users } from 'lucide-react'
 import { Input } from '@/src/components/ui/input'
 import { Label } from '@/src/components/ui/label'
 import { WEEKDAY_LABEL, WEEKDAYS, type WeeklySchedule } from '@/src/types/api/business-hours'
+import { TRANSFER_BY_OFFICE } from '@/src/types/api/config'
+import type { OnboardWhatsappRequest } from '@/src/types/api/whatsapp-onboarding'
 import type { NumberAssistant } from '@/src/types/api/phone-numbers'
-import { splitNames } from '../lib/number-assistant-form'
+import { splitNames, transferChoiceOf } from '../lib/number-assistant-form'
 import { firstInvalidDay } from '../lib/weekly-schedule'
 import { WeeklyScheduleFields } from './weekly-schedule-fields'
 
@@ -16,6 +18,8 @@ export interface NumberSetup {
   presentationName: string
   /** The alias customers transfer to. */
   transferAlias: string
+  /** The branch gives no alias: the bot says the office passes the data in the chat. */
+  transferByOffice: boolean
   /** Comma-separated names of the people of this office. */
   staff: string
   weekly: WeeklySchedule
@@ -29,6 +33,7 @@ export const EMPTY_NUMBER_SETUP: NumberSetup = {
   botName: '',
   presentationName: '',
   transferAlias: '',
+  transferByOffice: false,
   staff: '',
   weekly: EMPTY_WEEK,
 }
@@ -38,6 +43,7 @@ export const NUMBER_SETUP_INPUT_IDS: Record<Exclude<NumberSetupField, 'weekly'>,
   botName: 'setup-bot-name',
   presentationName: 'setup-presentation',
   transferAlias: 'setup-transfer-alias',
+  transferByOffice: 'setup-transfer-by-office',
   staff: 'setup-staff',
 }
 
@@ -51,7 +57,9 @@ export function numberSetupErrors(setup: NumberSetup): Partial<Record<NumberSetu
   const errors: Partial<Record<NumberSetupField, string>> = {}
   if (!setup.botName.trim()) errors.botName = 'Escribí cómo se llama el bot en este número.'
   if (!setup.presentationName.trim()) errors.presentationName = 'Escribí de quién se presenta como asistente.'
-  if (!setup.transferAlias.trim()) errors.transferAlias = 'Escribí el alias al que transfieren los clientes.'
+  if (!setup.transferByOffice && !setup.transferAlias.trim()) {
+    errors.transferAlias = 'Escribí el alias al que transfieren los clientes, o marcá que no dan alias.'
+  }
   if (splitNames(setup.staff).length === 0) errors.staff = 'Escribí al menos una persona de la oficina.'
   const invalid = firstInvalidDay(setup.weekly)
   if (invalid) errors.weekly = `Revisá ${WEEKDAY_LABEL[invalid]}: el inicio debe ser anterior al fin.`
@@ -66,23 +74,31 @@ export function numberSetupErrors(setup: NumberSetup): Partial<Record<NumberSetu
  */
 export function numberSetupFrom({ own, organization }: NumberAssistant): NumberSetup {
   const p = own.botProfile
-  // The transfer account goes as a whole: with any field of its own, the number uses only its own.
-  const ownAccount = Boolean(p.transferAlias || p.transferCbu || p.transferHolder || p.transferBank)
+  // The transfer goes as a whole: with an account of its own, or the office passing the data, only the number's.
+  const transfer = transferChoiceOf(p) === 'organization' ? organization.botProfile : p
   return {
     botName: own.botName ?? organization.botName ?? '',
     presentationName: p.orgName ?? organization.botProfile.orgName ?? organization.name,
-    transferAlias: (ownAccount ? p.transferAlias : organization.botProfile.transferAlias) ?? '',
+    transferAlias: transfer.transferAlias ?? '',
+    transferByOffice: transfer.transferMode === TRANSFER_BY_OFFICE,
     staff: (own.staffNames.length ? own.staffNames : organization.staffNames).join(', '),
     weekly: own.businessHours ?? organization.businessHours,
   }
 }
 
 /** The setup as the API takes it. */
-export function numberSetupPayload(setup: NumberSetup) {
+export function numberSetupPayload(
+  setup: NumberSetup,
+): Pick<
+  OnboardWhatsappRequest,
+  'botName' | 'presentationName' | 'transferMode' | 'transferAlias' | 'staffNames' | 'businessHours'
+> {
   return {
     botName: setup.botName.trim(),
     presentationName: setup.presentationName.trim(),
-    transferAlias: setup.transferAlias.trim(),
+    ...(setup.transferByOffice
+      ? { transferMode: TRANSFER_BY_OFFICE }
+      : { transferMode: '', transferAlias: setup.transferAlias.trim() }),
     staffNames: splitNames(setup.staff),
     businessHours: setup.weekly,
   }
@@ -166,18 +182,30 @@ export function NumberSetupFields({ value, onChange, errors = {} }: Props) {
           <Landmark className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             id={NUMBER_SETUP_INPUT_IDS.transferAlias}
-            required
+            required={!value.transferByOffice}
+            disabled={value.transferByOffice}
             maxLength={60}
-            placeholder="Ej: TRUENO.VUELO.DELTA"
+            placeholder={value.transferByOffice ? 'La oficina pasa los datos' : 'Ej: TRUENO.VUELO.DELTA'}
             className="h-10 pl-9"
             aria-invalid={errors.transferAlias ? true : undefined}
-            value={value.transferAlias}
+            value={value.transferByOffice ? '' : value.transferAlias}
             onChange={e => set('transferAlias', e.target.value)}
           />
         </div>
+        <label className="flex cursor-pointer items-center gap-2 text-[13px] text-ink">
+          <input
+            id={NUMBER_SETUP_INPUT_IDS.transferByOffice}
+            type="checkbox"
+            className="size-4 accent-ember-2"
+            checked={value.transferByOffice}
+            onChange={e => set('transferByOffice', e.target.checked)}
+          />
+          En esta sucursal no damos alias: los datos los pasa la oficina por el chat
+        </label>
         <Hint>
-          El alias que el bot da cuando un cliente quiere pagar por transferencia. El CBU, el titular y el banco se
-          completan después en Asistente.
+          {value.transferByOffice
+            ? 'Si un cliente quiere pagar por transferencia, el bot le dice que la oficina le pasa los datos y les avisa en Asuntos pendientes.'
+            : 'El alias que el bot da cuando un cliente quiere pagar por transferencia. El CBU, el titular y el banco se completan después en Asistente.'}
         </Hint>
         <FieldError message={errors.transferAlias} />
       </div>
