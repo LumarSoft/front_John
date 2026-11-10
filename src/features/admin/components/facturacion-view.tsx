@@ -116,7 +116,7 @@ function PlanSelect({ row, plans }: { row: BillingNumber; plans: PlanOffer[] }) 
           )}
           {paid.map(plan => (
             <option key={plan.id} value={plan.id}>
-              {plan.name} · {int(plan.messages)} mensajes · {usd(plan.priceUsd)}
+              {plan.name} · {int(plan.messages)} mensajes
             </option>
           ))}
         </select>
@@ -128,7 +128,7 @@ function PlanSelect({ row, plans }: { row: BillingNumber; plans: PlanOffer[] }) 
 function NumberCard({ row, plans, canAssign }: { row: BillingNumber; plans: PlanOffer[]; canAssign: boolean }) {
   const planLabel = row.plan.trial
     ? `Prueba · ${int(row.plan.includedMessages)} mensajes gratis`
-    : `${row.plan.name} · ${int(row.plan.includedMessages)} mensajes · ${usd(row.plan.priceUsd)}`
+    : `${row.plan.name} · ${int(row.plan.includedMessages)} mensajes`
   return (
     <Card className="flex flex-col gap-4 border-line-2 p-4 shadow-sm">
       <div className="min-w-0">
@@ -180,17 +180,13 @@ function NumberCard({ row, plans, canAssign }: { row: BillingNumber; plans: Plan
               <span>
                 Al llegar a los {int(row.includedMessages)} mensajes, el asistente se pausa y se puede pasar a{' '}
                 <span className="font-medium text-ink">{row.nextPlan.name}</span> ({int(row.nextPlan.messages)}{' '}
-                mensajes, {usd(row.nextPlan.priceUsd)}).
+                mensajes).
               </span>
             ) : (
               <span>Todavía no hay planes.</span>
             )}
           </span>
         )}
-        <span className="flex items-baseline justify-between gap-3 pt-1">
-          <span>Precio del plan</span>
-          <span className="text-[13.5px] font-semibold text-ink">{price(row.billedUsd)} por mes</span>
-        </span>
       </div>
     </Card>
   )
@@ -206,14 +202,6 @@ function ConsumptionTab({ canAssign }: { canAssign: boolean }) {
     <>
       <div className="mb-4 flex flex-wrap items-end justify-between gap-4">
         <MonthPicker value={period} onChange={setPeriod} />
-        {data?.totalBilledUsd !== undefined && (
-          <Card className="flex items-center gap-4 border-line-2 px-4 py-3">
-            <span className="text-[13px] text-muted-foreground">
-              Total a pagar · {int(numbers.length)} {numbers.length === 1 ? 'número' : 'números'}
-            </span>
-            <span className="font-display text-[20px] text-ink">{usd(data.totalBilledUsd)}</span>
-          </Card>
-        )}
       </div>
       {isLoading && (
         <div className="grid gap-3 md:grid-cols-2">
@@ -237,8 +225,7 @@ function ConsumptionTab({ canAssign }: { canAssign: boolean }) {
       )}
       {largest && data && (
         <p className="mt-4 text-[12px] text-muted-foreground">
-          Pasado el plan {largest.name}, se pueden sumar de a {int(data.blockMessages)} mensajes por{' '}
-          {usd(Math.round(((data.blockMessages * largest.priceUsd) / largest.messages) * 100) / 100)} al mes.
+          Pasado el plan {largest.name}, se pueden sumar de a {int(data.blockMessages)} mensajes por mes.
         </p>
       )}
     </>
@@ -253,22 +240,22 @@ function OfferTab() {
   return (
     <>
       <p className="mb-4 max-w-xl text-[13px] text-muted-foreground">
-        Los planes y sus precios los define Lumarsoft. Elegís el plan de cada número en Consumo. Cuando un número llega
-        a los mensajes de su plan, su asistente se pausa y te avisamos para que elijas si pasa al plan siguiente.
+        Los planes los define Lumarsoft, que también te informa sus precios. Elegís el plan de cada número en Consumo.
+        Cuando un número llega a los mensajes de su plan, su asistente se pausa y te avisamos para que elijas si pasa al
+        plan siguiente.
       </p>
       <Card className="overflow-hidden border-line-2 py-0 shadow-sm">
         <Table>
           <TableHeader>
             <TableRow className="border-line-2 hover:bg-transparent">
               <TableHead className={`h-11 pl-5 ${HEAD}`}>Plan</TableHead>
-              <TableHead className={`text-right ${HEAD}`}>Mensajes por mes</TableHead>
-              <TableHead className={`pr-5 text-right ${HEAD}`}>Precio por mes</TableHead>
+              <TableHead className={`pr-5 text-right ${HEAD}`}>Mensajes por mes</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading && (
               <TableRow>
-                <TableCell colSpan={3} className="pl-5">
+                <TableCell colSpan={2} className="pl-5">
                   <Skeleton className="h-4 w-40" />
                 </TableCell>
               </TableRow>
@@ -283,10 +270,7 @@ function OfferTab() {
                     </span>
                   )}
                 </TableCell>
-                <TableCell className="text-right text-[13px] text-ink-3">{int(plan.messages)}</TableCell>
-                <TableCell className="pr-5 text-right text-[13px] font-semibold text-ink">
-                  {price(plan.priceUsd)}
-                </TableCell>
+                <TableCell className="pr-5 text-right text-[13px] text-ink-3">{int(plan.messages)}</TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -593,31 +577,48 @@ function OwnerPlansTab() {
 
 // ─── Dashboard (owner) ─────────────────────────────────────────────────────────
 
-function MoneyCells({ totals }: { totals: OwnerBillingTotals }) {
+/** Per message: the bot's, the office's and notices at one rate, campaign messages at another (OwnerBilling.messageCost). */
+type MessageCost = { messageUsd: number; campaignMessageUsd: number } | null
+
+/** USD with up to four decimals, for a per-message rate. */
+const rate = (n: number) => `USD ${n.toLocaleString('es-AR', { maximumFractionDigits: 4 })}`
+
+/** Bot (and office, and notices) and campaign messages; an older API only splits sent and consumed. */
+const botOf = (t: OwnerBillingTotals) => t.botMessages ?? t.sentMessages ?? t.messages
+const campaignsOf = (t: OwnerBillingTotals) => t.campaignMessages ?? 0
+
+function MoneyCells({ totals, cost }: { totals: OwnerBillingTotals; cost: MessageCost }) {
+  const margin = totals.marginUsd ?? 0
   return (
     <>
-      <TableCell className="text-right text-[13px] text-ink-3">{int(totals.messages)}</TableCell>
+      <TableCell className="text-right text-[13px] text-ink-3">{int(botOf(totals))}</TableCell>
+      <TableCell className="text-right text-[13px] text-ink-3">{int(campaignsOf(totals))}</TableCell>
       <TableCell className="text-right text-[13px] font-semibold text-ink">{usd(totals.billedUsd)}</TableCell>
-      <TableCell className="text-right text-[13px] text-ink-3">{usd(totals.metaCostUsd)}</TableCell>
-      <TableCell
-        className={`text-right text-[13px] font-semibold ${totals.profitUsd < 0 ? 'text-destructive' : 'text-emerald-600 dark:text-emerald-400'}`}
-      >
-        {usd(totals.profitUsd)}
+      <TableCell className="text-right text-[13px] text-ink-3">
+        {cost ? usd(totals.messageCostUsd ?? 0) : '—'}
       </TableCell>
-      <TableCell className="hidden pr-5 text-right text-[13px] text-muted-foreground md:table-cell">
+      <TableCell
+        className={`text-right text-[13px] font-semibold ${!cost ? 'text-muted-foreground' : margin < 0 ? 'text-destructive' : 'text-emerald-600 dark:text-emerald-400'}`}
+      >
+        {cost ? usd(margin) : '—'}
+      </TableCell>
+      <TableCell className="hidden text-right text-[13px] text-muted-foreground lg:table-cell">
+        {usd(totals.metaCostUsd)}
+      </TableCell>
+      <TableCell className="hidden pr-5 text-right text-[13px] text-muted-foreground xl:table-cell">
         {usd(totals.openaiCostUsd)}
       </TableCell>
     </>
   )
 }
 
-function OrganizationRows({ org }: { org: OwnerBillingOrganization }) {
+function OrganizationRows({ org, cost }: { org: OwnerBillingOrganization; cost: MessageCost }) {
   const [open, setOpen] = useState(false)
   const Chevron = open ? ChevronDown : ChevronRight
   return (
     <>
       <TableRow className="cursor-pointer" onClick={() => setOpen(!open)}>
-        <TableCell className="pl-3 text-[14px] font-medium text-ink">
+        <TableCell className="whitespace-normal pl-3 text-[14px] font-medium text-ink">
           <span className="flex items-center gap-1.5">
             <Chevron className="size-4 text-muted-foreground" />
             {org.name}
@@ -629,25 +630,24 @@ function OrganizationRows({ org }: { org: OwnerBillingOrganization }) {
           </span>
         </TableCell>
         <TableCell className="text-right text-[13px] text-ink-3">{int(org.numbers.length)}</TableCell>
-        <MoneyCells totals={org.totals} />
+        <MoneyCells totals={org.totals} cost={cost} />
       </TableRow>
       {open &&
         org.numbers.map(n => (
           <TableRow key={n.id} className="bg-secondary/30">
-            <TableCell className="pl-10 text-[13px] text-ink">
-              <span className="font-mono">{numberLabel(n)}</span>
+            <TableCell className="whitespace-normal pl-10 text-[13px] text-ink">
+              <span className="font-mono whitespace-nowrap">{numberLabel(n)}</span>
               <div className="text-[11.5px] text-muted-foreground">
-                {n.plan.trial ? 'Prueba' : n.plan.name}
+                {n.plan.trial ? 'Prueba' : `${n.plan.name} · ${int(n.plan.includedMessages)} mensajes`}
                 {n.upgraded && ' · subió de plan'}
                 {n.paused && ' · asistente en pausa'}
-                {(n.templateMessages ?? 0) > 0 && ` · ${int(n.templateMessages ?? 0)} plantillas`}
                 {n.metaBillableMessages > 0 && ` · ${int(n.metaBillableMessages)} cobrados por Meta`}
               </div>
             </TableCell>
             <TableCell className="text-right text-[12px] text-muted-foreground">
               {n.responsibleCode ? n.responsibleCode.code : '—'}
             </TableCell>
-            <MoneyCells totals={n} />
+            <MoneyCells totals={n} cost={cost} />
           </TableRow>
         ))}
     </>
@@ -658,14 +658,18 @@ function OwnerDashboardTab() {
   const [period, setPeriod] = useState(thisMonth)
   const { data, isLoading, isError } = useOwnerBilling(period)
   const totals = data?.totals
+  const cost: MessageCost = data?.messageCost ?? null
 
   return (
     <>
       <div className="mb-4 flex flex-wrap items-end justify-between gap-4">
         <MonthPicker value={period} onChange={setPeriod} />
         <p className="max-w-md text-[12.5px] text-muted-foreground">
-          Meta cobra los mensajes de servicio pasados los 1.000 gratis de cada número y las plantillas desde el primero.
-          OpenAI está precargado: se muestra aparte y no entra en la ganancia.
+          {!data
+            ? null
+            : cost
+              ? `Cada mensaje del bot, de la oficina o de un aviso cuesta ${rate(cost.messageUsd)} y cada mensaje de campaña ${rate(cost.campaignMessageUsd)}. La ganancia es lo facturado por el plan menos ese costo. Lo que cobran Meta y OpenAI de verdad se muestra aparte.`
+              : 'El costo por mensaje no está configurado en la API (PARTNER_COST_PER_MESSAGE_USD): no se calculan el costo ni la ganancia.'}
         </p>
       </div>
       {data?.closed && (
@@ -686,23 +690,27 @@ function OwnerDashboardTab() {
             <Kpi
               label="Facturado"
               value={usd(totals.billedUsd)}
-              hint={`${int(totals.activeNumbers)} números activos`}
+              hint={`${int(totals.activeNumbers)} números activos · ${int(totals.upgradedNumbers)} subieron de plan · ${int(totals.pausedNumbers ?? 0)} en pausa`}
+            />
+            <Kpi
+              label="Costo de los mensajes"
+              value={cost ? usd(totals.messageCostUsd ?? 0) : '—'}
+              hint={
+                cost
+                  ? `${int(botOf(totals))} del bot × ${rate(cost.messageUsd)} · ${int(campaignsOf(totals))} de campañas × ${rate(cost.campaignMessageUsd)}`
+                  : 'Sin costo por mensaje configurado'
+              }
+            />
+            <Kpi
+              label="Ganancia"
+              value={cost ? usd(totals.marginUsd ?? 0) : '—'}
+              hint="Facturado menos el costo de los mensajes"
+              tone={!cost ? undefined : (totals.marginUsd ?? 0) < 0 ? 'bad' : 'good'}
             />
             <Kpi
               label="Pago real a Meta"
               value={usd(totals.metaCostUsd)}
-              hint={`${int(totals.metaBillableMessages)} de ${int(totals.messages)} mensajes con cargo`}
-            />
-            <Kpi
-              label="Ganancia"
-              value={usd(totals.profitUsd)}
-              hint="Facturado menos Meta"
-              tone={totals.profitUsd < 0 ? 'bad' : 'good'}
-            />
-            <Kpi
-              label="OpenAI (aparte)"
-              value={usd(totals.openaiCostUsd)}
-              hint={`${int(totals.upgradedNumbers)} ${totals.upgradedNumbers === 1 ? 'número subió' : 'números subieron'} de plan · ${int(totals.pausedNumbers ?? 0)} en pausa`}
+              hint={`${int(totals.metaBillableMessages)} mensajes con cargo · OpenAI aparte: ${usd(totals.openaiCostUsd)}`}
             />
           </>
         )}
@@ -714,30 +722,32 @@ function OwnerDashboardTab() {
             <TableRow className="border-line-2 hover:bg-transparent">
               <TableHead className={`h-11 pl-5 ${HEAD}`}>Organización</TableHead>
               <TableHead className={`text-right ${HEAD}`}>Números</TableHead>
-              <TableHead className={`text-right ${HEAD}`}>Mensajes</TableHead>
+              <TableHead className={`text-right ${HEAD}`}>Bot</TableHead>
+              <TableHead className={`text-right ${HEAD}`}>Campañas</TableHead>
               <TableHead className={`text-right ${HEAD}`}>Facturado</TableHead>
-              <TableHead className={`text-right ${HEAD}`}>Meta</TableHead>
+              <TableHead className={`text-right ${HEAD}`}>Costo</TableHead>
               <TableHead className={`text-right ${HEAD}`}>Ganancia</TableHead>
-              <TableHead className={`hidden pr-5 text-right md:table-cell ${HEAD}`}>OpenAI</TableHead>
+              <TableHead className={`hidden text-right lg:table-cell ${HEAD}`}>Meta real</TableHead>
+              <TableHead className={`hidden pr-5 text-right xl:table-cell ${HEAD}`}>OpenAI</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading && (
               <TableRow>
-                <TableCell colSpan={7} className="pl-5">
+                <TableCell colSpan={9} className="pl-5">
                   <Skeleton className="h-4 w-full" />
                 </TableCell>
               </TableRow>
             )}
             {data?.organizations.length === 0 && (
               <TableRow>
-                <TableCell colSpan={7} className="py-12 text-center text-[14px] text-muted-foreground">
+                <TableCell colSpan={9} className="py-12 text-center text-[14px] text-muted-foreground">
                   No hay organizaciones.
                 </TableCell>
               </TableRow>
             )}
             {data?.organizations.map(org => (
-              <OrganizationRows key={org.id} org={org} />
+              <OrganizationRows key={org.id} org={org} cost={cost} />
             ))}
           </TableBody>
         </Table>
@@ -773,7 +783,7 @@ export function FacturacionView() {
         <h1 className="mt-2 font-display text-[clamp(26px,3.5vw,36px)] tracking-[-0.035em] text-ink">Facturación</h1>
         <p className="mt-1.5 max-w-2xl text-[14px] text-muted-foreground">
           {isOwner
-            ? 'Lo que se factura a cada organización y lo que cobra Meta de verdad, cómo se reparte con el socio comercial y el catálogo de planes que ven todos.'
+            ? 'Lo que se factura a cada organización contra lo que cuestan sus mensajes, cómo se reparte con el socio comercial y el catálogo de planes. Los precios solo los ves vos: las organizaciones ven sus planes por mensajes.'
             : 'Cada número tiene un plan de mensajes por mes: cuenta cada mensaje que envía el asistente, la oficina desde el panel o un aviso. Cuando un número llega al límite de su plan, el asistente se pausa y elegís si pasa al siguiente. Se factura a mes vencido.'}
         </p>
       </div>
