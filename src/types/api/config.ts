@@ -38,3 +38,19 @@ export interface BotProfile {
 
 /** Only the fields sent change; an empty string clears one. */
 export type UpdateBotProfileRequest = Partial<Record<keyof BotProfile, string>>
+
+export type QuoteInsurer = 'triunfo' | 'sancor'
+
+/** One insurer the bot can quote with (GET /admin/config/insurers). */
+export interface QuoteInsurerState {
+  enabled: boolean
+  /** What the bot quotes with it ("Auto", "Hogar"…). */
+  products: string[]
+  /** What the organization lacks to use it; empty when nothing. */
+  problems: string[]
+}
+
+export type QuoteInsurers = Record<QuoteInsurer, QuoteInsurerState>
+
+/** Turning one on makes the API ask that insurer for a token first. */
+export type UpdateQuoteInsurersRequest = Partial<Record<QuoteInsurer, boolean>>
