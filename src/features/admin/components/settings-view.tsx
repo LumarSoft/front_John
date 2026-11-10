@@ -25,6 +25,7 @@ import { PricingPlansSection } from './pricing-plans-section'
 import { BusinessHoursSection } from './business-hours-section'
 import { CoverageSettingsSection } from './coverage-settings-section'
 import { SuperAdminOnlyNote } from './super-admin-only-note'
+import { OwnNumberSettings } from './own-number-settings'
 import { splitNames } from '../lib/number-assistant-form'
 import { useUrlTab } from '../hooks/use-panel-link'
 
@@ -141,7 +142,7 @@ interface OrgNaming {
   shortName: string | null
 }
 
-/** Reminds an admin that this is the whole organization's; their own number's assistant is in Números. */
+/** Reminds the SuperAdmin that this is the whole organization's; each number's own assistant is in Números. */
 function OwnNumberHint() {
   return (
     <div className="flex max-w-xl gap-3 rounded-xl border border-ember-ring bg-ember-soft px-4 py-3 text-[13px] text-ink-3">
@@ -152,6 +153,28 @@ function OwnNumberHint() {
         en{' '}
         <Link href="/admin/numeros" className="font-medium text-ember-2 underline-offset-2 hover:underline">
           Números → Asistente
+        </Link>
+        .
+      </p>
+    </div>
+  )
+}
+
+/**
+ * Tells a branch's admin that this tab is the whole organization's, read only,
+ * and where their own number's version is (Configuración → Asistente).
+ */
+function OrganizationOnlyHint({ what }: { what: string }) {
+  return (
+    <div className="flex max-w-xl gap-3 rounded-xl border border-ember-ring bg-ember-soft px-4 py-3 text-[13px] text-ink-3">
+      <Smartphone className="mt-0.5 size-4 shrink-0 text-ember-2" />
+      <p>
+        Esto es de toda la organización y solo un SuperAdmin lo cambia. {what} se cambia en{' '}
+        <Link
+          href="/admin/configuracion?tab=asistente"
+          className="font-medium text-ember-2 underline-offset-2 hover:underline"
+        >
+          Configuración → Asistente
         </Link>
         .
       </p>
@@ -317,9 +340,29 @@ export function SettingsView() {
   const { data: profile, isLoading, isError } = useProfile()
   const { data: config } = useProducerConfig()
   const { isSuperAdmin, isAdmin } = useRole()
-  // Since 28/10 every admin changes the organization settings, not only the SuperAdmin.
-  const canEditOrg = isSuperAdmin || isAdmin
+  // Only the SuperAdmin changes what applies to every number; a branch's admin changes their own number's
+  // (from 28/10 to 10/11 any admin could, and branches saved their own data as the whole organization's).
+  const canEditOrg = isSuperAdmin
   const [tab, setTab] = useUrlTab(TAB_VALUES, 'cuenta')
+
+  const organizationAssistant = config ? (
+    <div className="space-y-5">
+      {isSuperAdmin && <OwnNumberHint />}
+      <BotConfigForm
+        key={`${config.botName ?? ''}|${(config.staffNames ?? []).join(',')}`}
+        initialName={config.botName ?? ''}
+        initialStaff={config.staffNames ?? []}
+        org={{
+          name: profile?.organization?.displayName ?? 'tu productora',
+          shortName: profile?.organization?.shortName ?? null,
+        }}
+        canEdit={canEditOrg}
+      />
+      <BotProfileSection canEdit={canEditOrg} />
+    </div>
+  ) : (
+    <FormSkeleton />
+  )
 
   return (
     <div className="mx-auto w-full max-w-5xl px-5 py-8 md:px-8 md:py-10">
@@ -353,35 +396,20 @@ export function SettingsView() {
         </TabsContent>
 
         <TabsContent value="asistente" className="mt-6">
-          {config ? (
-            <div className="space-y-5">
-              <OwnNumberHint />
-              <BotConfigForm
-                key={`${config.botName ?? ''}|${(config.staffNames ?? []).join(',')}`}
-                initialName={config.botName ?? ''}
-                initialStaff={config.staffNames ?? []}
-                org={{
-                  name: profile?.organization?.displayName ?? 'tu productora',
-                  shortName: profile?.organization?.shortName ?? null,
-                }}
-                canEdit={canEditOrg}
-              />
-              <BotProfileSection canEdit={canEditOrg} />
-            </div>
-          ) : (
-            <FormSkeleton />
-          )}
+          {isAdmin ? <OwnNumberSettings fallback={organizationAssistant} /> : organizationAssistant}
         </TabsContent>
 
         <TabsContent value="marca" className="mt-6">
           <LogoCard canEdit={isSuperAdmin} />
         </TabsContent>
 
-        <TabsContent value="horarios" className="mt-6">
+        <TabsContent value="horarios" className="mt-6 space-y-5">
+          {isAdmin && <OrganizationOnlyHint what="El horario y los feriados de tu número" />}
           <BusinessHoursSection canEdit={canEditOrg} />
         </TabsContent>
 
-        <TabsContent value="coberturas" className="mt-6">
+        <TabsContent value="coberturas" className="mt-6 space-y-5">
+          {isAdmin && <OrganizationOnlyHint what="Qué coberturas ofrece tu número, cuál recomienda y en qué orden" />}
           <CoverageSettingsSection canEdit={canEditOrg} />
         </TabsContent>
 
