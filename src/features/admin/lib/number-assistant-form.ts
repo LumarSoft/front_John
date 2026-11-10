@@ -27,6 +27,8 @@ export interface NumberAssistantDraft {
   profile: Record<ProfileField, string>
   /** One entry per organization coverage, keyed by code. */
   coverages: Record<string, CoverageDraft>
+  /** Whether the number offers each motorcycle coverage, keyed by code; '' = as the organization. */
+  motoCoverages: Record<string, Choice>
 }
 
 const choiceOf = (value: boolean | null | undefined): Choice => (value == null ? '' : value ? 'yes' : 'no')
@@ -46,6 +48,24 @@ function coverageDrafts({ own, organization }: NumberAssistant): Record<string, 
       ]
     }),
   )
+}
+
+function motoCoverageDrafts({ own, organization }: NumberAssistant): Record<string, Choice> {
+  return Object.fromEntries(
+    (organization.motoCoverages ?? []).map(coverage => [
+      coverage.code,
+      choiceOf(own.motoCoverageSettings?.[coverage.code]),
+    ]),
+  )
+}
+
+/** Only the motorcycle coverages the number sets, as the API takes them. */
+export function motoCoverageOffersOf(motoCoverages: Record<string, Choice>): Record<string, boolean> {
+  const offers: Record<string, boolean> = {}
+  for (const [code, choice] of Object.entries(motoCoverages)) {
+    if (choice !== '') offers[code] = choice === 'yes'
+  }
+  return offers
 }
 
 /** Only the codes and fields the number sets, as the API takes them. */
@@ -79,6 +99,7 @@ export function toNumberAssistantDraft({ own, organization, branchName }: Number
       (Object.keys(own.botProfile) as ProfileField[]).map(key => [key, own.botProfile[key] ?? '']),
     ) as Record<ProfileField, string>,
     coverages: coverageDrafts({ own, organization } as NumberAssistant),
+    motoCoverages: motoCoverageDrafts({ own, organization } as NumberAssistant),
   }
 }
 
@@ -107,6 +128,7 @@ export function emptyNumberAssistantDraft(assistant: NumberAssistant, branchName
     weekly: assistant.organization.businessHours,
     profile: Object.fromEntries(Object.keys(draft.profile).map(key => [key, ''])) as Record<ProfileField, string>,
     coverages: Object.fromEntries(Object.keys(draft.coverages).map(code => [code, EMPTY_COVERAGE_DRAFT])),
+    motoCoverages: Object.fromEntries(Object.keys(draft.motoCoverages).map(code => [code, '' as Choice])),
   }
 }
 
@@ -134,6 +156,11 @@ export function numberAssistantChanges(
   const overrides = coverageOverridesOf(draft.coverages)
   if (JSON.stringify(overrides) !== JSON.stringify(coverageOverridesOf(initial.coverages))) {
     changes.coverageSettings = Object.keys(overrides).length ? overrides : null
+  }
+
+  const motoOffers = motoCoverageOffersOf(draft.motoCoverages)
+  if (JSON.stringify(motoOffers) !== JSON.stringify(motoCoverageOffersOf(initial.motoCoverages))) {
+    changes.motoCoverageSettings = Object.keys(motoOffers).length ? motoOffers : null
   }
   return changes
 }

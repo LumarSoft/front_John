@@ -32,3 +32,24 @@ export function useCoverageSettingsActions() {
 
   return { update, reorder }
 }
+
+export function useMotoCoverages() {
+  const { token } = useAuth()
+
+  return useQuery({
+    queryKey: QUERY_KEYS.admin.motoCoverages,
+    queryFn: () => coverageSettingsService.listMoto(token as string),
+    enabled: !!token,
+  })
+}
+
+export function useUpdateMotoCoverage() {
+  const { token } = useAuth()
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ code, isActive }: { code: string; isActive: boolean }) =>
+      coverageSettingsService.updateMoto(token as string, code, isActive),
+    onSuccess: catalog => queryClient.setQueryData(QUERY_KEYS.admin.motoCoverages, catalog),
+  })
+}
