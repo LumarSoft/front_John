@@ -19,6 +19,7 @@ export const CANCELLATION_REASON_LABELS: Record<CancellationReason, string> = {
   cambio_compania: 'Cambio de compañía',
   siniestro: 'Siniestro',
   rescision: 'Rescisión',
+  no_renovada: 'Venció y no se renovó',
   otros: 'Otros motivos',
 }
 
@@ -146,13 +147,25 @@ export function candidateMessage(campaign: Campaign, candidate: CampaignCandidat
   })
 }
 
-/** "A, b1  B" → ["A", "B1", "B"]: the coverage codes of a setting, as typed. */
+/**
+ * "A, b1; c2  full" → ["A", "B1", "C2 FULL"]: the coverage codes of a setting, as
+ * typed. Commas separate them: a code may have a space ("C2 Full").
+ */
 export function parseCodes(text: string): string[] {
   const codes = text
-    .split(/[,;\s]+/)
-    .map(code => code.trim().toUpperCase())
+    .split(/[,;]+/)
+    .map(code => code.trim().replace(/\s+/g, ' ').toUpperCase())
     .filter(Boolean)
   return [...new Set(codes)]
+}
+
+/** "15, 7 15" → [15, 7]: the days of a setting, as typed, longest first; NaN for what is not a whole number. */
+export function parseDays(text: string): number[] {
+  const days = text
+    .split(/[,;\s]+/)
+    .filter(Boolean)
+    .map(day => (/^\d+$/.test(day) ? Number(day) : Number.NaN))
+  return [...new Set(days)].sort((a, b) => b - a)
 }
 
 const SKIP_LABELS: Record<CampaignSkipReason, string> = {

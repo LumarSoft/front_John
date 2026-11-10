@@ -10,7 +10,10 @@ import type {
   CampaignResultsQuery,
   CampaignResultsResponse,
   CampaignsResponse,
+  CreateCampaignTasksRequest,
+  CreateCampaignTasksResponse,
   MarkCampaignResponse,
+  OptInCampaignResponse,
   OptOutCampaignResponse,
   SendCampaignResponse,
   UpdateCampaignRequest,
@@ -24,6 +27,8 @@ function buildQuery(params: CampaignCandidatesQuery): string {
   if (params.phoneNumberId) search.set('phoneNumberId', String(params.phoneNumberId))
   if (params.coverage) search.set('coverage', params.coverage)
   if (params.reason) search.set('reason', params.reason)
+  if (params.gap) search.set('gap', params.gap)
+  if (params.due) search.set('due', 'true')
   if (params.status) search.set('status', params.status)
   if (params.assignedToId) search.set('assignedToId', String(params.assignedToId))
   if (params.mine) search.set('mine', 'true')
@@ -83,6 +88,28 @@ export const campaignsService = {
       method: 'POST',
       token,
       body: { ids },
+    })
+  },
+
+  /** "Volver a escribirle": takes them off the do-not-write list. */
+  optIn(token: string, kind: CampaignKind, ids: number[]): Promise<OptInCampaignResponse> {
+    return apiRequest<OptInCampaignResponse>(`/admin/campaigns/${kind}/opt-in`, {
+      method: 'POST',
+      token,
+      body: { ids },
+    })
+  },
+
+  /** "Crear tarea": one task per ticked client, and their opportunities, for one person of the office. */
+  createTasks(
+    token: string,
+    kind: CampaignKind,
+    data: CreateCampaignTasksRequest,
+  ): Promise<CreateCampaignTasksResponse> {
+    return apiRequest<CreateCampaignTasksResponse>(`/admin/campaigns/${kind}/tasks`, {
+      method: 'POST',
+      token,
+      body: data,
     })
   },
 
