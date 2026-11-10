@@ -1,27 +1,60 @@
 import { useRef, useState } from 'react'
-import type { Campaign, CampaignSettingField, UpdateCampaignRequest } from '@/src/types/api/campaigns'
+import type {
+  Campaign,
+  CampaignSettingField,
+  CampaignSettingValue,
+  UpdateCampaignRequest,
+} from '@/src/types/api/campaigns'
 import { useCampaignSettingsActions } from './use-campaigns'
-import { exampleValues, parseCodes, renderMessage } from '../lib/campaigns-format'
+import { exampleValues, parseCodes, parseDays, renderMessage } from '../lib/campaigns-format'
 
-type SettingValue = number | string[]
+type SettingValue = CampaignSettingValue
 
-/** A setting as the input shows it: numbers as typed, codes as comma-separated text. */
+/** A setting as the input holds it: numbers as typed, lists (codes, days, options) as comma-separated text. */
 function settingText(value: SettingValue | undefined): string {
   if (Array.isArray(value)) return value.join(', ')
   return value == null ? '' : String(value)
 }
 
-function settingValue(field: CampaignSettingField, text: string): SettingValue {
-  return field.type === 'codes' ? parseCodes(text) : Number(text)
+/** The options of a field that are ticked, in the field's order. */
+export function pickedOptions(field: CampaignSettingField, text: string): string[] {
+  const picked = parseList(text)
+  return (field.options ?? []).map(o => o.value).filter(value => picked.includes(value))
 }
 
+const parseList = (text: string) =>
+  text
+    .split(',')
+    .map(v => v.trim())
+    .filter(Boolean)
+
+function settingValue(field: CampaignSettingField, text: string): SettingValue {
+  if (field.type === 'codes') return parseCodes(text)
+  if (field.type === 'days') return parseDays(text)
+  if (field.type === 'options') return pickedOptions(field, text)
+  return Number(text)
+}
+
+/** Lists compare without case: the API stores coverage codes in capitals ("C2 FULL" for "C2 Full"). */
 function sameSetting(a: SettingValue | undefined, b: SettingValue): boolean {
-  return Array.isArray(a) && Array.isArray(b) ? a.join(',') === b.join(',') : a === b
+  return Array.isArray(a) && Array.isArray(b) ? a.join(',').toUpperCase() === b.join(',').toUpperCase() : a === b
 }
 
 /** Why a setting cannot be saved as typed, or null. */
 function settingError(field: CampaignSettingField, text: string): string | null {
   if (field.type === 'codes') return parseCodes(text).length ? null : `${field.label}: poné al menos un código.`
+  if (field.type === 'options') {
+    return pickedOptions(field, text).length ? null : `${field.label}: elegí al menos una opción.`
+  }
+  if (field.type === 'days') {
+    const days = parseDays(text)
+    if (days.some(d => Number.isNaN(d))) return `${field.label}: escribí días enteros separados por coma.`
+    if (days.length > 5) return `${field.label}: hasta 5 recordatorios.`
+    if (days.some(d => (field.min != null && d < field.min) || (field.max != null && d > field.max))) {
+      return `${field.label}: cada uno va de ${field.min} a ${field.max} días.`
+    }
+    return null
+  }
   const n = Number(text)
   if (text.trim() === '' || !Number.isInteger(n)) return `${field.label}: tiene que ser un número entero.`
   if (field.min != null && n < field.min) return `${field.label}: el mínimo es ${field.min}.`
@@ -78,6 +111,12 @@ export function useCampaignEditor(campaign: Campaign) {
   }
 
   const setSetting = (key: string, text: string) => setSettings(current => ({ ...current, [key]: text }))
+  /** Ticks or unticks one option of an `options` setting. */
+  const toggleOption = (field: CampaignSettingField, value: string) => {
+    const picked = pickedOptions(field, settings[field.key] ?? '')
+    const next = picked.includes(value) ? picked.filter(v => v !== value) : [...picked, value]
+    setSetting(field.key, next.join(', '))
+  }
 
   return {
     textareaRef,
@@ -87,6 +126,7 @@ export function useCampaignEditor(campaign: Campaign) {
     setPercent,
     settings,
     setSetting,
+    toggleOption,
     preview: renderMessage(body, exampleValues(campaign.placeholders, percentError ? '…' : String(percentNumber))),
     error,
     dirty,
