@@ -10,6 +10,11 @@ export interface TriunfoCredentialStatus {
   failingSince: string | null
   /** What Triunfo answered when it refused them. */
   failureMessage: string | null
+  /**
+   * Provisional: without credentials of its own, its auto and moto quotes go out with the default
+   * organization's Triunfo account. Absent on older APIs.
+   */
+  quoteFallback?: boolean
 }
 
 /** Whether Triunfo accepts the organization's credentials, as the office's panel sees it. */

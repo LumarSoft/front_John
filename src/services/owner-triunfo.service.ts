@@ -19,6 +19,13 @@ export const ownerTriunfoService = {
       token,
     }),
 
+  setQuoteFallback: (token: string, organizationId: number, enabled: boolean): Promise<TriunfoCredentialStatus> =>
+    apiRequest<TriunfoCredentialStatus>(`/owner/organizations/${organizationId}/triunfo/quote-fallback`, {
+      method: 'PUT',
+      token,
+      body: { enabled },
+    }),
+
   errors: (token: string, organizationId: number): Promise<TriunfoErrorRow[]> =>
     apiRequest<TriunfoErrorRow[]>(`/owner/organizations/${organizationId}/triunfo/errors`, { token }),
 }
