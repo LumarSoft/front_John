@@ -290,8 +290,7 @@ export function CoverageSettingsSection({ canEdit }: { canEdit: boolean }) {
           Qué coberturas ve el cliente al cotizar, en qué orden y con qué texto. Las coberturas aparecen solas la
           primera vez que Triunfo las cotiza — no se crean a mano. Qué coberturas ofrece Triunfo para cada vehículo y
           año lo decide Triunfo; acá se elige cuáles de esas mostrar. Una cobertura nueva no se ofrece hasta que se
-          carga qué incluye y qué no. En motos se cotizan A, B4, B1 y B con los nombres y textos de Triunfo, y de esas
-          solo las que acá están visibles: una cobertura oculta tampoco sale en la cotización de una moto.
+          carga qué incluye y qué no. Las de motos se eligen aparte, más abajo.
         </CardDescription>
       </CardHeader>
 
