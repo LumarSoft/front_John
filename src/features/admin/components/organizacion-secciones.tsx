@@ -263,12 +263,25 @@ export function CodesTable({
 
 // ── usuarios ───────────────────────────────────────────────
 
-export function UsersSection({ orgId, users }: { orgId: number; users: OrganizationUser[] }) {
+export function UsersSection({
+  orgId,
+  users,
+  codes,
+}: {
+  orgId: number
+  users: OrganizationUser[]
+  codes: OrganizationCode[]
+}) {
   const { addUser, updateUser, removeUser } = useOrganizationMutations(orgId)
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [role, setRole] = useState<AssignableRole>('ADMIN')
+  // Codes the new admin will see (a SuperAdmin sees them all, so none is sent).
+  const [codeIds, setCodeIds] = useState<number[]>([])
+
+  const toggleCode = (id: number) =>
+    setCodeIds(prev => (prev.includes(id) ? prev.filter(c => c !== id) : [...prev, id]))
 
   const submit = (e: FormEvent) => {
     e.preventDefault()
@@ -277,12 +290,13 @@ export function UsersSection({ orgId, users }: { orgId: number; users: Organizat
       return
     }
     addUser.mutate(
-      { id: orgId, data: { email: email.trim(), password, role } },
+      { id: orgId, data: { email: email.trim(), password, role, producerCodeIds: role === 'ADMIN' ? codeIds : [] } },
       {
         onSuccess: () => {
           toast.success('Usuario creado')
           setEmail('')
           setPassword('')
+          setCodeIds([])
         },
         onError: e2 => toast.error(errMsg(e2)),
       },
@@ -330,6 +344,15 @@ export function UsersSection({ orgId, users }: { orgId: number; users: Organizat
             <Badge variant="secondary" className="text-[11px]">
               {u.role === 'SUPERADMIN' ? 'SuperAdmin' : u.role === 'OWNER' ? 'Owner' : 'Admin'}
             </Badge>
+            {u.role === 'ADMIN' &&
+              u.codes &&
+              (u.codes.length > 0 ? (
+                <span className="text-[12px] text-muted-foreground">
+                  Códigos: {u.codes.map(c => c.code).join(', ')}
+                </span>
+              ) : (
+                <span className="text-[12px] text-amber-600 dark:text-amber-400">Sin códigos: no ve nada</span>
+              ))}
 
             {u.role !== 'OWNER' && (
               <div className="ml-auto flex items-center gap-1">
@@ -368,52 +391,88 @@ export function UsersSection({ orgId, users }: { orgId: number; users: Organizat
         {users.length === 0 && <p className="px-3 py-3 text-[13px] text-muted-foreground">Sin usuarios.</p>}
       </div>
 
-      <form onSubmit={submit} className="flex flex-wrap items-end gap-2">
-        <div className="flex flex-[2] flex-col gap-1">
-          <Label htmlFor="nu-email" className="text-[11px]">
-            Correo
-          </Label>
-          <Input
-            id="nu-email"
-            type="email"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            placeholder="usuario@org.com"
-            className="h-9"
-            required
-          />
+      <form onSubmit={submit} className="flex flex-col gap-2">
+        <div className="flex flex-wrap items-end gap-2">
+          <div className="flex flex-[2] flex-col gap-1">
+            <Label htmlFor="nu-email" className="text-[11px]">
+              Correo
+            </Label>
+            <Input
+              id="nu-email"
+              type="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              placeholder="usuario@org.com"
+              className="h-9"
+              required
+            />
+          </div>
+          <div className="flex flex-1 flex-col gap-1">
+            <Label htmlFor="nu-pass" className="text-[11px]">
+              Contraseña
+            </Label>
+            <Input
+              id="nu-pass"
+              type="password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              placeholder="mínimo 6"
+              className="h-9"
+              required
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <Label htmlFor="nu-role" className="text-[11px]">
+              Rol
+            </Label>
+            <select
+              id="nu-role"
+              value={role}
+              onChange={e => setRole(e.target.value as AssignableRole)}
+              className="h-9 rounded-md border border-line-2 bg-transparent px-2 text-[13px] text-ink"
+            >
+              <option value="ADMIN">Admin</option>
+              <option value="SUPERADMIN">SuperAdmin</option>
+            </select>
+          </div>
+          <Button type="submit" size="icon" className="size-9" disabled={busy} aria-label="Crear usuario">
+            <UserPlus className="size-4" />
+          </Button>
         </div>
-        <div className="flex flex-1 flex-col gap-1">
-          <Label htmlFor="nu-pass" className="text-[11px]">
-            Contraseña
-          </Label>
-          <Input
-            id="nu-pass"
-            type="password"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            placeholder="mínimo 6"
-            className="h-9"
-            required
-          />
-        </div>
-        <div className="flex flex-col gap-1">
-          <Label htmlFor="nu-role" className="text-[11px]">
-            Rol
-          </Label>
-          <select
-            id="nu-role"
-            value={role}
-            onChange={e => setRole(e.target.value as AssignableRole)}
-            className="h-9 rounded-md border border-line-2 bg-transparent px-2 text-[13px] text-ink"
-          >
-            <option value="ADMIN">Admin</option>
-            <option value="SUPERADMIN">SuperAdmin</option>
-          </select>
-        </div>
-        <Button type="submit" size="icon" className="size-9" disabled={busy} aria-label="Crear usuario">
-          <UserPlus className="size-4" />
-        </Button>
+
+        {role === 'ADMIN' && (
+          <div className="flex flex-col gap-1">
+            <Label className="text-[11px]">Códigos que ve</Label>
+            <div className="max-h-44 overflow-y-auto rounded-md border border-line-2 p-2">
+              {codes.length === 0 && (
+                <p className="px-1 py-2 text-[13px] text-muted-foreground">La organización todavía no tiene códigos.</p>
+              )}
+              {codes.map(code => (
+                <label
+                  key={code.id}
+                  className="flex cursor-pointer items-center gap-2 rounded px-1.5 py-1.5 hover:bg-secondary"
+                >
+                  <input
+                    type="checkbox"
+                    className="size-4 accent-ember-2"
+                    checked={codeIds.includes(code.id)}
+                    onChange={() => toggleCode(code.id)}
+                  />
+                  <span className="text-[13px] text-ink">
+                    <span className="font-medium">{code.code}</span>
+                    {code.holderName ? <span className="text-muted-foreground"> · {code.holderName}</span> : null}
+                    {!code.isActive && <span className="text-muted-foreground"> · inactivo</span>}
+                  </span>
+                </label>
+              ))}
+            </div>
+            {codeIds.length === 0 && (
+              <p className="text-[12px] text-muted-foreground">
+                Sin códigos no ve nada hasta que un SuperAdmin de la organización se los asigne en Usuarios.
+              </p>
+            )}
+          </div>
+        )}
       </form>
     </section>
   )
