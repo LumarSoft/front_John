@@ -366,8 +366,8 @@ export function NumberAssistantEditor({
                 })}
               </div>
               <p className="text-[12px] text-muted-foreground">
-                Menor orden va primero y la recomendada siempre encabeza la lista. Las motos usan el catálogo fijo de
-                Triunfo.
+                Menor orden va primero y la recomendada siempre encabeza la lista. En motos se cotizan A, B4, B1 y B con
+                los nombres y el orden de Triunfo, y de esas solo las que este número ofrece.
               </p>
             </section>
           )}
