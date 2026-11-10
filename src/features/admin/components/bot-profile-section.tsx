@@ -11,6 +11,7 @@ import { Skeleton } from '@/src/components/ui/skeleton'
 import { ApiError } from '@/src/lib/api-client'
 import type { BotProfile, UpdateBotProfileRequest } from '@/src/types/api/config'
 import { useBotProfile, useUpdateBotProfile } from '../hooks/use-bot-profile'
+import { SuperAdminOnlyNote } from './super-admin-only-note'
 
 type FieldKey = keyof BotProfile
 
@@ -208,7 +209,7 @@ function BotProfileForm({ profile, canEdit }: { profile: BotProfile; canEdit: bo
               )}
             </Button>
           ) : (
-            <p className="text-[12px] text-muted-foreground">Sólo un administrador puede cambiar estos datos.</p>
+            <SuperAdminOnlyNote />
           )}
         </CardFooter>
       </form>
