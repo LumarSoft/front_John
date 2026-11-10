@@ -18,6 +18,8 @@ import type {
   OrganizationUser,
 } from '@/src/types/api/organizations'
 import { useOrganizationMutations } from '../hooks/use-organizations'
+import { numberLabel } from '../lib/number-label'
+import { MetaPortfolioLine } from './meta-portfolio-line'
 
 // ── helpers ────────────────────────────────────────────────
 
@@ -40,13 +42,13 @@ function fecha(iso: string | null) {
 export function BillingSummary({ billing }: { billing: OrganizationBilling }) {
   const cards = [
     { label: 'Números activos', value: int(billing.activeNumbers) },
-    { label: 'Costo real del mes', value: usd(billing.costUsd), hint: 'OpenAI + Meta' },
+    { label: 'Facturado del mes', value: usd(billing.billedUsd), hint: 'Planes de mensajes de sus números' },
     {
-      label: 'Total estimado del mes',
-      value: usd(billing.billedUsd),
-      hint: `USD ${billing.pricing.unitPriceUsd} por token · bloques de ${int(billing.pricing.blockTokens)}`,
+      label: 'Pago real a Meta',
+      value: usd(billing.metaCostUsd),
+      hint: `OpenAI aparte: ${usd(billing.openaiCostUsd)}`,
     },
-    { label: 'Ganancia estimada', value: usd(billing.marginUsd), hint: 'Total menos costo de proveedores' },
+    { label: 'Ganancia', value: usd(billing.marginUsd), hint: 'Facturado menos Meta' },
   ]
 
   return (
@@ -64,7 +66,7 @@ export function BillingSummary({ billing }: { billing: OrganizationBilling }) {
       {billing.marginUsd < 0 && (
         <p className="flex items-center gap-1.5 text-[12px] text-destructive">
           <AlertTriangle className="size-3.5" />
-          El costo supera lo facturado: margen {usd(billing.marginUsd)}
+          Meta cobra más de lo facturado: ganancia {usd(billing.marginUsd)}
         </p>
       )}
     </section>
@@ -83,10 +85,10 @@ export function NumbersSection({ numbers }: { numbers: OrganizationNumber[] }) {
             <TableRow>
               <TableHead>Número</TableHead>
               <TableHead>Código</TableHead>
-              <TableHead className="text-right">OpenAI</TableHead>
-              <TableHead className="text-right">Tokens (mensajes) · plan</TableHead>
-              <TableHead className="text-right">Costo</TableHead>
-              <TableHead className="text-right">Total del mes</TableHead>
+              <TableHead className="text-right">OpenAI (aparte)</TableHead>
+              <TableHead className="text-right">Mensajes · plan</TableHead>
+              <TableHead className="text-right">Meta</TableHead>
+              <TableHead className="text-right">Facturado</TableHead>
               <TableHead className="text-right">Ganancia</TableHead>
             </TableRow>
           </TableHeader>
@@ -98,7 +100,7 @@ export function NumbersSection({ numbers }: { numbers: OrganizationNumber[] }) {
                   <TableCell>
                     <div className="flex items-center gap-1.5">
                       <Phone className="size-3.5 text-muted-foreground" />
-                      <span className="text-[13px] font-medium text-ink">{n.number}</span>
+                      <span className="text-[13px] font-medium text-ink">{numberLabel(n)}</span>
                       {!n.isActive && (
                         <Badge variant="destructive" className="text-[10px]">
                           inactivo
@@ -110,6 +112,7 @@ export function NumbersSection({ numbers }: { numbers: OrganizationNumber[] }) {
                         </Badge>
                       )}
                     </div>
+                    <MetaPortfolioLine portfolio={n.portfolio} />
                     <span className="text-[11px] text-muted-foreground">{n.phoneNumberId}</span>
                   </TableCell>
                   <TableCell className="text-[12px]">
@@ -125,14 +128,18 @@ export function NumbersSection({ numbers }: { numbers: OrganizationNumber[] }) {
                     )}
                   </TableCell>
                   <TableCell className="text-right text-[12px] text-muted-foreground">
-                    {int(n.usage.openaiCalls)} llamadas · {int(llmTokens)} tokens
+                    {usd(n.usage.openaiCostUsd)}
+                    <div className="text-[11px]">
+                      {int(n.usage.openaiCalls)} llamadas · {int(llmTokens)} tokens
+                    </div>
                   </TableCell>
                   <TableCell className="text-right text-[12px] text-muted-foreground">
-                    {int(n.usage.tokens)} · <span className="text-ink">{n.usage.plan.name}</span> (USD{' '}
-                    {int(n.usage.plan.costUsd ?? n.usage.plan.priceUsd)}){n.usage.prorated && ' · prorrateado'}
+                    {int(n.usage.messages)} · <span className="text-ink">{n.usage.plan.name}</span> (
+                    {usd(n.usage.plan.priceUsd)}){n.usage.upgraded && ' · subió'}
                   </TableCell>
                   <TableCell className="text-right text-[12px] text-muted-foreground">
-                    {usd(n.usage.totalCostUsd)}
+                    {usd(n.usage.metaCostUsd)}
+                    <div className="text-[11px]">{int(n.usage.metaBillableMessages)} con cargo</div>
                   </TableCell>
                   <TableCell className="text-right text-[13px] font-medium text-ink">
                     {usd(n.usage.billedUsd)}
@@ -256,12 +263,25 @@ export function CodesTable({
 
 // ── usuarios ───────────────────────────────────────────────
 
-export function UsersSection({ orgId, users }: { orgId: number; users: OrganizationUser[] }) {
+export function UsersSection({
+  orgId,
+  users,
+  codes,
+}: {
+  orgId: number
+  users: OrganizationUser[]
+  codes: OrganizationCode[]
+}) {
   const { addUser, updateUser, removeUser } = useOrganizationMutations(orgId)
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [role, setRole] = useState<AssignableRole>('ADMIN')
+  // Codes the new admin will see (a SuperAdmin sees them all, so none is sent).
+  const [codeIds, setCodeIds] = useState<number[]>([])
+
+  const toggleCode = (id: number) =>
+    setCodeIds(prev => (prev.includes(id) ? prev.filter(c => c !== id) : [...prev, id]))
 
   const submit = (e: FormEvent) => {
     e.preventDefault()
@@ -270,12 +290,13 @@ export function UsersSection({ orgId, users }: { orgId: number; users: Organizat
       return
     }
     addUser.mutate(
-      { id: orgId, data: { email: email.trim(), password, role } },
+      { id: orgId, data: { email: email.trim(), password, role, producerCodeIds: role === 'ADMIN' ? codeIds : [] } },
       {
         onSuccess: () => {
           toast.success('Usuario creado')
           setEmail('')
           setPassword('')
+          setCodeIds([])
         },
         onError: e2 => toast.error(errMsg(e2)),
       },
@@ -323,6 +344,15 @@ export function UsersSection({ orgId, users }: { orgId: number; users: Organizat
             <Badge variant="secondary" className="text-[11px]">
               {u.role === 'SUPERADMIN' ? 'SuperAdmin' : u.role === 'OWNER' ? 'Owner' : 'Admin'}
             </Badge>
+            {u.role === 'ADMIN' &&
+              u.codes &&
+              (u.codes.length > 0 ? (
+                <span className="text-[12px] text-muted-foreground">
+                  Códigos: {u.codes.map(c => c.code).join(', ')}
+                </span>
+              ) : (
+                <span className="text-[12px] text-amber-600 dark:text-amber-400">Sin códigos: no ve nada</span>
+              ))}
 
             {u.role !== 'OWNER' && (
               <div className="ml-auto flex items-center gap-1">
@@ -361,52 +391,88 @@ export function UsersSection({ orgId, users }: { orgId: number; users: Organizat
         {users.length === 0 && <p className="px-3 py-3 text-[13px] text-muted-foreground">Sin usuarios.</p>}
       </div>
 
-      <form onSubmit={submit} className="flex flex-wrap items-end gap-2">
-        <div className="flex flex-[2] flex-col gap-1">
-          <Label htmlFor="nu-email" className="text-[11px]">
-            Correo
-          </Label>
-          <Input
-            id="nu-email"
-            type="email"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            placeholder="usuario@org.com"
-            className="h-9"
-            required
-          />
+      <form onSubmit={submit} className="flex flex-col gap-2">
+        <div className="flex flex-wrap items-end gap-2">
+          <div className="flex flex-[2] flex-col gap-1">
+            <Label htmlFor="nu-email" className="text-[11px]">
+              Correo
+            </Label>
+            <Input
+              id="nu-email"
+              type="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              placeholder="usuario@org.com"
+              className="h-9"
+              required
+            />
+          </div>
+          <div className="flex flex-1 flex-col gap-1">
+            <Label htmlFor="nu-pass" className="text-[11px]">
+              Contraseña
+            </Label>
+            <Input
+              id="nu-pass"
+              type="password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              placeholder="mínimo 6"
+              className="h-9"
+              required
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <Label htmlFor="nu-role" className="text-[11px]">
+              Rol
+            </Label>
+            <select
+              id="nu-role"
+              value={role}
+              onChange={e => setRole(e.target.value as AssignableRole)}
+              className="h-9 rounded-md border border-line-2 bg-transparent px-2 text-[13px] text-ink"
+            >
+              <option value="ADMIN">Admin</option>
+              <option value="SUPERADMIN">SuperAdmin</option>
+            </select>
+          </div>
+          <Button type="submit" size="icon" className="size-9" disabled={busy} aria-label="Crear usuario">
+            <UserPlus className="size-4" />
+          </Button>
         </div>
-        <div className="flex flex-1 flex-col gap-1">
-          <Label htmlFor="nu-pass" className="text-[11px]">
-            Contraseña
-          </Label>
-          <Input
-            id="nu-pass"
-            type="password"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            placeholder="mínimo 6"
-            className="h-9"
-            required
-          />
-        </div>
-        <div className="flex flex-col gap-1">
-          <Label htmlFor="nu-role" className="text-[11px]">
-            Rol
-          </Label>
-          <select
-            id="nu-role"
-            value={role}
-            onChange={e => setRole(e.target.value as AssignableRole)}
-            className="h-9 rounded-md border border-line-2 bg-transparent px-2 text-[13px] text-ink"
-          >
-            <option value="ADMIN">Admin</option>
-            <option value="SUPERADMIN">SuperAdmin</option>
-          </select>
-        </div>
-        <Button type="submit" size="icon" className="size-9" disabled={busy} aria-label="Crear usuario">
-          <UserPlus className="size-4" />
-        </Button>
+
+        {role === 'ADMIN' && (
+          <div className="flex flex-col gap-1">
+            <Label className="text-[11px]">Códigos que ve</Label>
+            <div className="max-h-44 overflow-y-auto rounded-md border border-line-2 p-2">
+              {codes.length === 0 && (
+                <p className="px-1 py-2 text-[13px] text-muted-foreground">La organización todavía no tiene códigos.</p>
+              )}
+              {codes.map(code => (
+                <label
+                  key={code.id}
+                  className="flex cursor-pointer items-center gap-2 rounded px-1.5 py-1.5 hover:bg-secondary"
+                >
+                  <input
+                    type="checkbox"
+                    className="size-4 accent-ember-2"
+                    checked={codeIds.includes(code.id)}
+                    onChange={() => toggleCode(code.id)}
+                  />
+                  <span className="text-[13px] text-ink">
+                    <span className="font-medium">{code.code}</span>
+                    {code.holderName ? <span className="text-muted-foreground"> · {code.holderName}</span> : null}
+                    {!code.isActive && <span className="text-muted-foreground"> · inactivo</span>}
+                  </span>
+                </label>
+              ))}
+            </div>
+            {codeIds.length === 0 && (
+              <p className="text-[12px] text-muted-foreground">
+                Sin códigos no ve nada hasta que un SuperAdmin de la organización se los asigne en Usuarios.
+              </p>
+            )}
+          </div>
+        )}
       </form>
     </section>
   )

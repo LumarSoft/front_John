@@ -84,8 +84,22 @@ Flat config only (`eslint.config.mjs`). No `.eslintrc.*` files.
 ## Multi-organization admin screens
 
 - Configuración → Asistente → "Datos de la productora" edits what the bot says for the organization (`/admin/config/profile`): its name, grúa and claims lines, transfer account, where to pay cash and the claims e-mail.
-- Organizaciones → detalle → "Integración con Triunfo" sets the organization's own Triunfo credentials (owner only, validated by Triunfo before they are saved).
-- Panel branding per organization is not here: the admin panel is moving to its own SaaS app (see `PLAN-SAAS.md` at the repo root); the work is parked on branch `feat/panel-brand`.
+- Organizaciones → detalle → "Integración con Triunfo" sets the organization's own Triunfo credentials (owner only, validated by Triunfo before they are saved). It warns while Triunfo refuses them, and "Errores de Triunfo" below lists every distinct failed call. The office's panel shows a red banner (`TriunfoStatusBanner`) during that outage.
+- Each organization's logo: Configuración → Logo (its SuperAdmin) and Organizaciones → detalle (owner). The sidebar and the printed policy card show it, or the organization's initials without one; WhatsApp texts the office sends are signed with the organization's name (`usePanelBrand()`). Before login and for the owner the panel shows JPMG's mark.
+
+## The admin panel lives in two repos: change both
+
+Polisend (`../polisend`, its `/admin`) is the panel every organization is moving to; this repo's `/admin` stays until JPMG's panel is switched off. Until then, **every change to the admin panel is made here and in Polisend, in the same task**, so both stay as level as possible: same screens, same endpoints, same behaviour. A change that lands in only one of them is half done.
+
+- Porting between them: imports use `@/src/` here and `@/` in Polisend; the rest of the panel code copies over as is.
+- What may differ, and only that: branding (JPMG here, Polisend there) and copy that names who to ask for help or who sets the plans ("Lumarsoft" here, "Polisend" there). If a change makes no sense in one of them, say so instead of silently leaving it out.
+- Before closing a panel task, check the drift from the `JohnPellegrini` folder. It must list only `app-sidebar.tsx`, `facturacion-view.tsx`, `login-form.tsx`, `org-mark.tsx`, `triunfo-status-banner.tsx`, `use-panel-brand.ts`, `org-brand.ts`, `panel-theme.ts` (branding and copy), `query-keys.ts` and `siniestros.service.ts` (this repo also holds the public site's keys and calls); anything else is a change still to port:
+
+  ```bash
+  cd polisend/src && for f in $(git ls-files features/admin services types lib/api-client.ts lib/query-keys.ts hooks); do diff -q <(sed "s#'@/src/#'@/#g" ../../front_John/src/$f 2>/dev/null) $f >/dev/null || echo "$f"; done
+  ```
+
+- Polisend has no Prettier config. A panel file that exists in both repos is ported by copying it, already formatted, from here with the import `sed`, and Prettier is not run on it again in Polisend: with the shorter `@/` imports and another Prettier version (`npx` fetches the latest there) it rewraps lines and the drift check above stops matching. Only a file that exists in Polisend alone is formatted, with this repo's Prettier: `../front_John/node_modules/.bin/prettier --single-quote --no-semi --print-width 120 --arrow-parens avoid` (a bare `prettier --write` turns it into double quotes and semicolons).
 
 ## Admin panel themes
 

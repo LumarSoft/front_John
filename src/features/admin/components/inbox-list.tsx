@@ -12,6 +12,7 @@ import type { InboxConversation, InboxLastMessage } from '@/src/types/api/inbox'
 import { contactDisplayName, formatPhone } from '../lib/inbox-contact'
 import { isMediaPlaceholder, listTime, plainPreview, senderLabel } from '../lib/inbox-format'
 import { InboxAvatar } from './inbox-avatar'
+import { BlockedClaimBadge } from './blocked-claim-badge'
 
 interface Props {
   conversations: InboxConversation[]
@@ -64,6 +65,7 @@ export function InboxList({ conversations, selectedId, onSelect, onDelete }: Pro
           <li key={conv.id} className="group relative">
             <button
               type="button"
+              data-help="chat-item"
               onClick={() => onSelect(conv.id)}
               className={cn(
                 'flex h-[72px] w-full items-center text-left transition-colors',
@@ -119,6 +121,7 @@ export function InboxList({ conversations, selectedId, onSelect, onDelete }: Pro
                   </span>
 
                   <span className="flex shrink-0 items-center gap-1.5">
+                    {conv.blockedClaim && <BlockedClaimBadge reason={conv.blockedClaim} compact />}
                     {isUnread && (
                       <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-(--wa-unread) px-1.5 text-[12px] font-semibold text-(--wa-on-green)">
                         {conv.unreadCount}

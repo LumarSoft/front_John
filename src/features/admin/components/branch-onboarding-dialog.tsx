@@ -14,16 +14,18 @@ import type { ProducerCodeOption } from '@/src/types/api/users'
 import type { OnboardWhatsappResponse } from '@/src/types/api/whatsapp-onboarding'
 import { useCreateProducerCode } from '../hooks/use-create-producer-code'
 import { useCreateUser } from '../hooks/use-create-user'
+import { useAssignPlan, useBillingOverview } from '../hooks/use-billing'
 import { ConectarWhatsapp } from './conectar-whatsapp'
 import { NumberAssistantSheet } from './number-assistant-sheet'
 
-type Step = 'branch' | 'user' | 'number' | 'assistant' | 'done'
+type Step = 'branch' | 'user' | 'number' | 'assistant' | 'plan' | 'done'
 
 const STEPS: { key: Step; label: string }[] = [
   { key: 'branch', label: 'Sucursal' },
   { key: 'user', label: 'Usuario' },
   { key: 'number', label: 'WhatsApp' },
   { key: 'assistant', label: 'Asistente' },
+  { key: 'plan', label: 'Plan' },
 ]
 
 function failed(error: unknown, fallback: string) {
@@ -205,8 +207,11 @@ function NumberStep({
   return (
     <div className="flex flex-col gap-4">
       <p className="text-[13px] text-muted-foreground">
-        El número de WhatsApp de la sucursal, facturado al código {code.code}. Tiene que estar activo en la app WhatsApp
-        Business del celular; Meta pide confirmarlo desde ahí.
+        El número de WhatsApp de la sucursal, facturado al código {code.code}. Antes de conectarlo, completá el nombre
+        con el que se va a ver en el panel y cómo atiende el bot: su nombre, de quién se presenta como asistente, el
+        alias para transferencias, las personas de la oficina y el horario. Son obligatorios: sin ellos el número saluda
+        como la casa central. El número tiene que estar activo en la app WhatsApp Business del celular; Meta pide
+        confirmarlo desde ahí.
       </p>
       <div className="rounded-lg border border-line-2 bg-secondary/40 p-4">
         <ConectarWhatsapp
@@ -233,9 +238,9 @@ function AssistantStep({ numberId, onNext }: { numberId: number; onNext: () => v
   return (
     <div className="flex flex-col gap-4">
       <p className="text-[13px] text-muted-foreground">
-        Cómo atiende el bot en este número: su nombre, las personas de la oficina a las que los clientes pueden
-        escribir, el horario y los feriados, los datos que da (grúa, denuncias, cuenta para transferir, dónde pagar) y
-        qué coberturas ofrece. Lo que no completes toma lo de la organización.
+        El nombre del bot, de quién es asistente, el alias, las personas y el horario ya quedaron guardados con el
+        número. Acá podés completar el resto: los feriados, el CBU, titular y banco de la cuenta, los datos que da
+        (grúa, denuncias, dónde pagar) y qué coberturas ofrece. Lo que no completes toma lo de la organización.
       </p>
       <div className="flex flex-wrap items-center gap-3">
         <Button
@@ -260,7 +265,7 @@ function AssistantStep({ numberId, onNext }: { numberId: number; onNext: () => v
           variant={configured ? 'default' : 'outline'}
           className={configured ? '' : 'border-line-2'}
         >
-          {configured ? 'Continuar' : 'Dejar como la organización'}
+          {configured ? 'Continuar' : 'Continuar sin más cambios'}
         </Button>
       </div>
       <NumberAssistantSheet
@@ -275,19 +280,85 @@ function AssistantStep({ numberId, onNext }: { numberId: number; onNext: () => v
   )
 }
 
+function PlanStep({ numberId, onDone }: { numberId: number; onDone: (planName: string | null) => void }) {
+  const { data, isLoading } = useBillingOverview()
+  const assign = useAssignPlan()
+  const plans = (data?.plans ?? []).filter(plan => !plan.isTrial)
+  const hasTrial = (data?.plans ?? []).some(plan => plan.isTrial)
+  const [selected, setSelected] = useState<number | null>(null)
+  const chosen = plans.find(plan => plan.id === selected) ?? null
+
+  const save = () => {
+    if (!chosen) return
+    assign.mutate(
+      { numberId, planId: chosen.id },
+      {
+        onSuccess: () => onDone(chosen.name),
+        onError: error => failed(error, 'No se pudo asignar el plan'),
+      },
+    )
+  }
+
+  return (
+    <div className="flex flex-col gap-4">
+      <p className="text-[13px] text-muted-foreground">
+        Cuántos mensajes por mes incluye el número. Al llegar a ese límite, el asistente se pausa y te avisamos para que
+        elijas si pasa al plan siguiente.
+        {hasTrial &&
+          ' Una cuenta nueva arranca con el plan de prueba su primer mes; si elegís un plan ahora, cuenta desde ya.'}
+      </p>
+      <div className="flex flex-col gap-2" role="radiogroup" aria-label="Plan del número">
+        {isLoading && <Loader2 className="size-4 animate-spin text-muted-foreground" />}
+        {plans.map(plan => (
+          <button
+            key={plan.id}
+            type="button"
+            role="radio"
+            aria-checked={selected === plan.id}
+            onClick={() => setSelected(plan.id)}
+            className={`flex items-center justify-between rounded-lg border px-4 py-3 text-left transition-colors ${
+              selected === plan.id ? 'border-ember bg-ember-soft' : 'border-line-2 hover:bg-secondary/50'
+            }`}
+          >
+            <span>
+              <span className="block text-[14px] font-medium text-ink">{plan.name}</span>
+              <span className="text-[12px] text-muted-foreground">
+                {plan.messages.toLocaleString('es-AR')} mensajes por mes
+              </span>
+            </span>
+            <span className="text-[14px] font-semibold text-ink">
+              USD {plan.priceUsd.toLocaleString('es-AR', { maximumFractionDigits: 2 })}
+            </span>
+          </button>
+        ))}
+      </div>
+      <div className="flex justify-end gap-2">
+        <Button type="button" variant="outline" onClick={() => onDone(null)} className="border-line-2">
+          Elegir después
+        </Button>
+        <Button type="button" onClick={save} disabled={!chosen || assign.isPending}>
+          {assign.isPending && <Loader2 className="size-4 animate-spin" />}
+          Asignar plan
+        </Button>
+      </div>
+    </div>
+  )
+}
+
 // ─── Dialog ──────────────────────────────────────────────────────────────────────
 
 interface Summary {
   code: ProducerCodeOption | null
   email: string | null
   number: OnboardWhatsappResponse | null
+  plan: string | null
 }
 
 /**
  * The onboarding of a new branch: its code, its administrator, its WhatsApp
  * number and how the bot attends on it, one step at a time. Every step is
- * saved as it goes, so closing early leaves what was done. There is no plan to
- * choose: each month the number's messages place it on its token plan.
+ * saved as it goes, so closing early leaves what was done. The last step puts
+ * the number on a plan of the catalog (or leaves it on the smallest one).
  */
 export function BranchOnboardingDialog({
   open,
@@ -298,11 +369,11 @@ export function BranchOnboardingDialog({
 }) {
   const queryClient = useQueryClient()
   const [step, setStep] = useState<Step>('branch')
-  const [summary, setSummary] = useState<Summary>({ code: null, email: null, number: null })
+  const [summary, setSummary] = useState<Summary>({ code: null, email: null, number: null, plan: null })
 
   const reset = () => {
     setStep('branch')
-    setSummary({ code: null, email: null, number: null })
+    setSummary({ code: null, email: null, number: null, plan: null })
   }
   const close = () => {
     void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.admin.phoneNumbers })
@@ -316,6 +387,7 @@ export function BranchOnboardingDialog({
     user: 'Su administrador',
     number: 'Su número de WhatsApp',
     assistant: 'Cómo atiende el bot',
+    plan: 'Su plan de mensajes',
     done: 'Sucursal lista',
   }
 
@@ -359,7 +431,16 @@ export function BranchOnboardingDialog({
           />
         )}
         {open && step === 'assistant' && summary.number && (
-          <AssistantStep numberId={summary.number.phoneNumberId} onNext={() => setStep('done')} />
+          <AssistantStep numberId={summary.number.phoneNumberId} onNext={() => setStep('plan')} />
+        )}
+        {open && step === 'plan' && summary.number && (
+          <PlanStep
+            numberId={summary.number.phoneNumberId}
+            onDone={plan => {
+              setSummary(s => ({ ...s, plan }))
+              setStep('done')
+            }}
+          />
         )}
         {open && step === 'done' && (
           <div className="flex flex-col gap-4">
@@ -383,7 +464,7 @@ export function BranchOnboardingDialog({
               {summary.number && (
                 <li className="flex items-center gap-2 text-ink">
                   <CreditCard className="size-4 text-muted-foreground" />
-                  Plan de tokens: cada mes queda en el que cubren sus mensajes
+                  {summary.plan ? `Plan ${summary.plan}` : 'Plan: el más chico (se cambia en Facturación)'}
                 </li>
               )}
             </ul>

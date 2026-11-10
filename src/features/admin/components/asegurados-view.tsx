@@ -14,6 +14,7 @@ import type { AdminClientSummary, ClientEstadoFilter, ClientSort, RiskType } fro
 import { useAdminClients } from '../hooks/use-admin-clients'
 import { ScopeFilter, type ScopeFilterValue } from './scope-filter'
 import { useScopeFilterState } from '../hooks/use-scope-filter-state'
+import { useLinkedClient } from '../hooks/use-linked-client'
 import {
   clientStatus,
   cuotaPaymentStatus,
@@ -92,7 +93,7 @@ function ClientRow({ client, onSelect }: { client: AdminClientSummary; onSelect:
   const pagoStatus = cuotaPaymentStatus(client.installmentStats)
 
   return (
-    <TableRow className="group cursor-pointer hover:bg-ember-soft/40" onClick={onSelect}>
+    <TableRow data-help="asegurado-fila" className="group cursor-pointer hover:bg-ember-soft/40" onClick={onSelect}>
       <TableCell className="py-3 pl-5">
         <div className="flex items-center gap-3">
           <div className="relative shrink-0">
@@ -157,7 +158,8 @@ export function AseguradosView() {
   // Opens on the office line for a SuperAdmin; see useScopeFilterState.
   const [scope, setScope] = useScopeFilterState()
   const [page, setPage] = useState(1)
-  const [selectedId, setSelectedId] = useState<number | null>(null)
+  // The open file; `?cliente=ID` (a link of the assistant) opens it too.
+  const { selectedId, open: setSelectedId, close: closeClient } = useLinkedClient()
 
   const handleScope = (value: ScopeFilterValue) => {
     setScope(value)
@@ -210,7 +212,7 @@ export function AseguradosView() {
         </div>
         <div className="flex w-full max-w-xl items-center gap-2">
           <ScopeFilter value={scope} onChange={handleScope} className="shrink-0" />
-          <div className="relative flex-1">
+          <div data-help="asegurados-buscar" className="relative flex-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Buscar nombre, DNI, email, patente…"
@@ -355,7 +357,7 @@ export function AseguradosView() {
         </div>
       )}
 
-      <AseguradoSheet clientId={selectedId} onClose={() => setSelectedId(null)} />
+      <AseguradoSheet clientId={selectedId} onClose={closeClient} />
     </div>
   )
 }

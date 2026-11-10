@@ -22,6 +22,7 @@ import { useTaskVisit } from '../hooks/use-task-visit'
 import { personName } from '../lib/tasks-format'
 import { TaskCard } from './task-card'
 import { TaskFormDialog } from './task-form-dialog'
+import { useUrlTab } from '../hooks/use-panel-link'
 
 const VIEWS: { key: TaskView; label: string; superAdminOnly?: boolean }[] = [
   { key: 'mine', label: 'Para mí' },
@@ -32,7 +33,11 @@ const VIEWS: { key: TaskView; label: string; superAdminOnly?: boolean }[] = [
 export function TasksView() {
   const { data: profile } = useProfile()
   const isSuperAdmin = profile?.role === 'SUPERADMIN'
-  const [view, setView] = useState<TaskView>('mine')
+  const [view, setView] = useUrlTab<TaskView>(
+    isSuperAdmin ? ['mine', 'created', 'all'] : ['mine', 'created'],
+    'mine',
+    'vista',
+  )
   const [status, setStatus] = useState<'open' | 'done'>('open')
   const [personId, setPersonId] = useState<number | ''>('')
   const [editing, setEditing] = useState<Task | 'new' | null>(null)
@@ -71,7 +76,7 @@ export function TasksView() {
             Lo que el equipo se deja para hacer: llamados para devolver, envíos y pendientes que no pasan por el bot.
           </p>
         </div>
-        <Button onClick={() => setEditing('new')}>
+        <Button data-help="tareas-nueva" onClick={() => setEditing('new')}>
           <Plus className="size-4" /> Nueva tarea
         </Button>
       </header>

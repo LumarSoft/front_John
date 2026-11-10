@@ -58,6 +58,17 @@ export function formatDate(iso: string | null): string {
   return new Date(iso).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
+/** The day of the incident: a calendar date stored at midnight UTC, so it is read in UTC. */
+export function formatOccurredDate(iso: string | null): string {
+  if (!iso) return '—'
+  return new Date(iso).toLocaleDateString('es-AR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    timeZone: 'UTC',
+  })
+}
+
 export function ProgressBar({ estado }: { estado: SiniestroEstado }) {
   const meta = ESTADO_META[estado]
   return (

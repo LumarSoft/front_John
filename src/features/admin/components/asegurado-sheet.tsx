@@ -5,6 +5,7 @@ import {
   AlertTriangle,
   ArrowRight,
   Ban,
+  Briefcase,
   Calendar,
   CheckCircle2,
   CreditCard,
@@ -27,14 +28,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/src/components/ui/ta
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/src/components/ui/tooltip'
 import type { AdminClientDetail, AdminCuota, AdminPolizaDetail } from '@/src/types/api/clients'
 import { useAdminClient } from '../hooks/use-admin-client'
+import { usePanelBrand } from '../hooks/use-panel-brand'
 import {
   buildCobranzaWhatsappUrl,
+  clientProducers,
   formatCurrency,
   formatDate,
   initials,
   overdueLabel,
   policyName,
   polizaStatus,
+  producerCodeLabel,
   RiskIcon,
 } from '../lib/asegurados-ui'
 import { AseguradoDocumentosTab } from './asegurado-documentos'
@@ -75,12 +79,13 @@ function whatsappLink(phone: string): string {
   return `https://wa.me/${digits}`
 }
 
-function debtorWhatsappUrl(client: AdminClientDetail): string {
+function debtorWhatsappUrl(client: AdminClientDetail, signature: string): string {
   const debt = computeDebt(client.policies)
   if (!client.phone) return ''
   if (debt.totalDeuda <= 0) return whatsappLink(client.phone)
   return buildCobranzaWhatsappUrl(client.phone, {
     firstName: client.firstName,
+    signature,
     totalDebt: debt.totalDeuda.toFixed(2),
     overdueCount: debt.overdueCount,
     rejectedCount: debt.rejectedCount,
@@ -121,7 +126,7 @@ function ContactButton({ label, href, accent, external, children }: ContactButto
   )
 }
 
-function PolizaCard({ poliza }: { poliza: AdminPolizaDetail }) {
+function PolizaCard({ poliza, showProducer }: { poliza: AdminPolizaDetail; showProducer: boolean }) {
   const status = polizaStatus(poliza)
   const paidCount = poliza.installments.filter(c => c.status === 'paid').length
   const overdueCount = poliza.installments.filter(c => c.status === 'overdue').length
@@ -184,6 +189,12 @@ function PolizaCard({ poliza }: { poliza: AdminPolizaDetail }) {
           <div className="min-w-0">
             <dt className="text-[10.5px] uppercase tracking-[0.1em] text-muted-foreground">Forma de pago</dt>
             <dd className="mt-0.5 break-words text-[12.5px] text-ink-3">{poliza.paymentMethod}</dd>
+          </div>
+        )}
+        {showProducer && poliza.producerCode && (
+          <div className="col-span-2 min-w-0">
+            <dt className="text-[10.5px] uppercase tracking-[0.1em] text-muted-foreground">Productor</dt>
+            <dd className="mt-0.5 break-words text-[12.5px] text-ink-3">{producerCodeLabel(poliza.producerCode)}</dd>
           </div>
         )}
       </dl>
@@ -334,6 +345,7 @@ function PolizaPagosCard({ poliza }: { poliza: AdminPolizaDetail }) {
 }
 
 function PagosTab({ client }: { client: AdminClientDetail }) {
+  const { signature } = usePanelBrand()
   const polizas = client.policies
   const allCuotas = polizas.flatMap(p => p.installments)
   const totalDeuda = allCuotas.filter(c => c.status !== 'paid').reduce((s, c) => s + debtAmount(c.amount), 0)
@@ -402,7 +414,7 @@ function PagosTab({ client }: { client: AdminClientDetail }) {
               size="sm"
               className="h-8 gap-1.5 bg-[#25D366] px-3 text-[12.5px] text-white hover:bg-[#1faa52]"
             >
-              <a href={debtorWhatsappUrl(client)} target="_blank" rel="noopener noreferrer">
+              <a href={debtorWhatsappUrl(client, signature)} target="_blank" rel="noopener noreferrer">
                 <WhatsAppIcon className="size-4" />
                 Recordar por WhatsApp
               </a>
@@ -434,9 +446,16 @@ function PagosTab({ client }: { client: AdminClientDetail }) {
   )
 }
 
-function InfoCell({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: string }) {
+interface InfoCellProps {
+  icon: LucideIcon
+  label: string
+  value: string
+  className?: string
+}
+
+function InfoCell({ icon: Icon, label, value, className }: InfoCellProps) {
   return (
-    <div className="flex items-center gap-3">
+    <div className={`flex items-center gap-3 ${className ?? ''}`}>
       <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-card text-muted-foreground ring-1 ring-line-2">
         <Icon className="size-4" />
       </div>
@@ -452,9 +471,11 @@ function InfoCell({ icon: Icon, label, value }: { icon: LucideIcon; label: strin
 
 export function AseguradoSheet({ clientId, onClose, defaultTab = 'polizas' }: AseguradoSheetProps) {
   const { data: client, isLoading } = useAdminClient(clientId)
+  const { signature } = usePanelBrand()
   const [tab, setTab] = useState<SheetTab>(defaultTab)
   const vigentesCount = client?.policies.filter(p => p.validTo && new Date(p.validTo) >= new Date()).length
   const debt = client ? computeDebt(client.policies) : null
+  const producers = client ? clientProducers(client) : []
 
   return (
     <Dialog
@@ -528,7 +549,7 @@ export function AseguradoSheet({ clientId, onClose, defaultTab = 'polizas' }: As
                     {client.phone && (
                       <ContactButton
                         label={debt && debt.totalDeuda > 0 ? 'Recordar pago por WhatsApp' : 'WhatsApp'}
-                        href={debtorWhatsappUrl(client)}
+                        href={debtorWhatsappUrl(client, signature)}
                         accent
                         external
                       >
@@ -554,6 +575,14 @@ export function AseguradoSheet({ clientId, onClose, defaultTab = 'polizas' }: As
                 <InfoCell icon={Phone} label="Teléfono" value={client.phone ?? '—'} />
                 <InfoCell icon={MapPin} label="Ciudad" value={client.city ?? '—'} />
                 <InfoCell icon={User} label="Cliente desde" value={formatDate(client.createdAt)} />
+                {producers.length > 0 && (
+                  <InfoCell
+                    icon={Briefcase}
+                    label={producers.length === 1 ? 'Productor' : 'Productores'}
+                    value={producers.map(producerCodeLabel).join(', ')}
+                    className="sm:col-span-2"
+                  />
+                )}
               </div>
             </div>
 
@@ -575,6 +604,7 @@ export function AseguradoSheet({ clientId, onClose, defaultTab = 'polizas' }: As
                   Pagos
                 </TabsTrigger>
                 <TabsTrigger
+                  data-help="asegurado-documentos"
                   value="documentos"
                   className="h-8 gap-1.5 rounded-md text-[12.5px] data-[state=active]:bg-background data-[state=active]:text-ink data-[state=active]:shadow-sm"
                 >
@@ -595,7 +625,7 @@ export function AseguradoSheet({ clientId, onClose, defaultTab = 'polizas' }: As
                   ) : (
                     <div className="space-y-3 pb-6">
                       {client.policies.map(p => (
-                        <PolizaCard key={p.id} poliza={p} />
+                        <PolizaCard key={p.id} poliza={p} showProducer={producers.length > 1} />
                       ))}
                     </div>
                   )}

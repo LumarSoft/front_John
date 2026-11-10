@@ -11,6 +11,7 @@ import { Skeleton } from '@/src/components/ui/skeleton'
 import { ApiError } from '@/src/lib/api-client'
 import type { BotProfile, UpdateBotProfileRequest } from '@/src/types/api/config'
 import { useBotProfile, useUpdateBotProfile } from '../hooks/use-bot-profile'
+import { SuperAdminOnlyNote } from './super-admin-only-note'
 
 type FieldKey = keyof BotProfile
 
@@ -25,6 +26,8 @@ export interface FieldSpec {
 
 export interface FieldGroup {
   title: string
+  /** Anchor for the assistant's guides: `config-<help>` here, `numero-<help>` in a number's sheet. */
+  help?: string
   description: string
   fields: FieldSpec[]
 }
@@ -33,6 +36,7 @@ export interface FieldGroup {
 export const BOT_PROFILE_GROUPS: FieldGroup[] = [
   {
     title: 'Cómo se presenta',
+    help: 'presentacion',
     description: 'El nombre de la productora con el que el asistente saluda y responde.',
     fields: [
       {
@@ -54,6 +58,7 @@ export const BOT_PROFILE_GROUPS: FieldGroup[] = [
   },
   {
     title: 'Asistencia y denuncias',
+    help: 'asistencia',
     description: 'Los teléfonos que el asistente da cuando piden una grúa o quieren denunciar por teléfono.',
     fields: [
       {
@@ -81,6 +86,7 @@ export const BOT_PROFILE_GROUPS: FieldGroup[] = [
   },
   {
     title: 'Pagos',
+    help: 'pagos',
     description: 'Lo que el asistente responde cuando preguntan cómo o dónde pagar una cuota.',
     fields: [
       {
@@ -104,6 +110,7 @@ export const BOT_PROFILE_GROUPS: FieldGroup[] = [
   },
   {
     title: 'Cotizaciones',
+    help: 'cotizaciones',
     description: 'Lo que el asistente agrega al final de cada cotización que manda por WhatsApp.',
     fields: [
       {
@@ -162,7 +169,12 @@ function BotProfileForm({ profile, canEdit }: { profile: BotProfile; canEdit: bo
         </CardHeader>
         <CardContent className="flex flex-col gap-7">
           {BOT_PROFILE_GROUPS.map(group => (
-            <fieldset key={group.title} className="flex flex-col gap-4" disabled={!canEdit}>
+            <fieldset
+              key={group.title}
+              data-help={group.help && `config-${group.help}`}
+              className="flex flex-col gap-4"
+              disabled={!canEdit}
+            >
               <div>
                 <legend className="text-[13.5px] font-semibold text-ink">{group.title}</legend>
                 <p className="mt-0.5 text-[12.5px] text-muted-foreground">{group.description}</p>
@@ -197,7 +209,7 @@ function BotProfileForm({ profile, canEdit }: { profile: BotProfile; canEdit: bo
               )}
             </Button>
           ) : (
-            <p className="text-[12px] text-muted-foreground">Sólo un administrador puede cambiar estos datos.</p>
+            <SuperAdminOnlyNote />
           )}
         </CardFooter>
       </form>

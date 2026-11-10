@@ -31,6 +31,7 @@ import type {
   ExpiryNoticeSkipReason,
   SendExpiryNoticesResponse,
 } from '@/src/types/api/expired-policies'
+import { usePlanFeature } from '../hooks/use-billing'
 import { useExpiredPolicies, useExpiredPolicyActions } from '../hooks/use-expired-policies'
 import { useProfile } from '../hooks/use-profile'
 import { formatDate, initials, policyName, RISK_LABELS, RiskIcon } from '../lib/asegurados-ui'
@@ -471,6 +472,7 @@ export function ExpiredPoliciesTab({
     pageSize: PAGE_SIZE,
   })
   const { hide, unhide, send, mark } = useExpiredPolicyActions()
+  const notices = usePlanFeature('expiry_notices')
 
   const rows = data?.data ?? []
   const total = data?.total ?? 0
@@ -571,11 +573,11 @@ export function ExpiredPoliciesTab({
               <TooltipProvider delayDuration={150}>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <span>
+                    <span data-help="vencidas-enviar">
                       <Button
                         type="button"
                         size="sm"
-                        disabled={selected.length === 0 || !templateReady || send.isPending}
+                        disabled={selected.length === 0 || !notices.included || !templateReady || send.isPending}
                         onClick={() => setConfirmSend(true)}
                         className="h-9 text-[12.5px]"
                       >
@@ -584,8 +586,18 @@ export function ExpiredPoliciesTab({
                       </Button>
                     </span>
                   </TooltipTrigger>
-                  {!templateReady && (
-                    <TooltipContent>La plantilla de WhatsApp todavía está en revisión de Meta.</TooltipContent>
+                  {!notices.included ? (
+                    <TooltipContent className="max-w-xs">
+                      {notices.byRole
+                        ? 'Tu usuario no tiene habilitado el envío de avisos de pólizas vencidas. Lo define el soporte de la plataforma.'
+                        : `El plan de tus números no incluye el envío de avisos de pólizas vencidas${
+                            notices.availableIn ? `: está desde el plan ${notices.availableIn}` : ''
+                          }. El plan de cada número se elige en Facturación.`}
+                    </TooltipContent>
+                  ) : (
+                    !templateReady && (
+                      <TooltipContent>La plantilla de WhatsApp todavía está en revisión de Meta.</TooltipContent>
+                    )
                   )}
                 </Tooltip>
               </TooltipProvider>
@@ -632,7 +644,7 @@ export function ExpiredPoliciesTab({
           <TableHeader>
             <TableRow className="border-line-2 hover:bg-transparent">
               {!showHidden && (
-                <TableHead className="h-11 w-10 pl-4 pr-0">
+                <TableHead data-help="vencidas-tildar" className="h-11 w-10 pl-4 pr-0">
                   <input
                     type="checkbox"
                     checked={allSelected}

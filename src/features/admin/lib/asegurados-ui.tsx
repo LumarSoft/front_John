@@ -1,5 +1,11 @@
 import { Car, Home, LifeBuoy, Shield, Store } from 'lucide-react'
-import type { AdminPolizaSummary, EstadoVigencia, RiskType } from '@/src/types/api/clients'
+import type {
+  AdminClientDetail,
+  AdminPolizaSummary,
+  AdminProducerCode,
+  EstadoVigencia,
+  RiskType,
+} from '@/src/types/api/clients'
 
 export const RISK_LABELS: Record<RiskType, string> = {
   auto: 'Automotor',
@@ -139,6 +145,23 @@ export function formatCurrency(amount: string | null | undefined): string {
   }).format(parseFloat(amount))
 }
 
+/** "8074 · PELLEGRINI JOHN": a código de productor as the panel names it everywhere. */
+export function producerCodeLabel(producerCode: AdminProducerCode): string {
+  return producerCode.holderName ? `${producerCode.code} · ${producerCode.holderName}` : producerCode.code
+}
+
+/**
+ * The producers a client's cartera belongs to: the codes of its policies, the client's own first, or the
+ * code the client came in under when it has no policies.
+ */
+export function clientProducers(client: AdminClientDetail): AdminProducerCode[] {
+  const own = client.producerCode ?? null
+  const byId = new Map<number, AdminProducerCode>()
+  for (const p of client.policies) if (p.producerCode) byId.set(p.producerCode.id, p.producerCode)
+  if (byId.size === 0) return own ? [own] : []
+  return [...byId.values()].sort((a, b) => Number(b.id === own?.id) - Number(a.id === own?.id))
+}
+
 export function initials(firstName: string, lastName: string): string {
   return `${firstName[0] ?? ''}${lastName[0] ?? ''}`.toUpperCase()
 }
@@ -161,6 +184,8 @@ export function overdueLabel(dueDate: string | null | undefined): string | null 
 
 interface CobranzaReminderInput {
   firstName: string
+  /** The organization the office writes for; empty = the message is not signed. */
+  signature: string
   totalDebt: string
   overdueCount: number
   rejectedCount: number
@@ -179,7 +204,7 @@ export function buildCobranzaWhatsappUrl(phone: string, input: CobranzaReminderI
     parts.push(`${input.pendingCount} ${input.pendingCount === 1 ? 'cuota pendiente' : 'cuotas pendientes'}`)
   const detalle = parts.length ? ` (${parts.join(', ')})` : ''
   const message =
-    `Hola ${input.firstName}, te escribimos de John Pellegrini Seguros. ` +
+    `Hola ${input.firstName}, te escribimos${input.signature ? ` de ${input.signature}` : ''}. ` +
     `Queríamos recordarte que figura un saldo pendiente de ${formatCurrency(input.totalDebt)}${detalle}. ` +
     `¿Coordinamos el pago? ¡Gracias!`
   return `https://wa.me/${digits}?text=${encodeURIComponent(message)}`

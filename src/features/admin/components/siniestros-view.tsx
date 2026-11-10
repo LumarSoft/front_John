@@ -20,13 +20,14 @@ import { Skeleton } from '@/src/components/ui/skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/src/components/ui/table'
 import { useDebouncedValue } from '@/src/hooks/use-debounced-value'
 import type { AdminSiniestroDetail, SiniestroEstadoFilter } from '@/src/services/siniestros.service'
-import { formatDate, initials, RISK_LABELS, RiskIcon } from '../lib/asegurados-ui'
-import { EstadoBadge, tipoLabel } from '../lib/siniestros-ui'
+import { initials, RISK_LABELS, RiskIcon } from '../lib/asegurados-ui'
+import { EstadoBadge, formatOccurredDate, tipoLabel } from '../lib/siniestros-ui'
 import { useAdminSiniestros } from '../hooks/use-admin-siniestros'
 import { useAdminSiniestrosStats } from '../hooks/use-admin-siniestros-stats'
 import { SiniestroSheet } from './siniestro-sheet'
 import { ScopeFilter, type ScopeFilterValue } from './scope-filter'
 import { useScopeFilterState } from '../hooks/use-scope-filter-state'
+import { useLinkedId } from '../hooks/use-panel-link'
 
 const PAGE_SIZE = 25
 
@@ -41,6 +42,7 @@ function SiniestroRow({ siniestro, onSelect }: { siniestro: AdminSiniestroDetail
     <TableRow
       role="button"
       tabIndex={0}
+      data-help="siniestro-fila"
       aria-label={`Gestionar siniestro de ${fullName}`}
       className="group cursor-pointer hover:bg-ember-soft/40 focus-visible:bg-ember-soft/40 focus-visible:outline-none"
       onClick={onSelect}
@@ -60,7 +62,12 @@ function SiniestroRow({ siniestro, onSelect }: { siniestro: AdminSiniestroDetail
           </Avatar>
           <div className="min-w-0">
             <div className="truncate text-[14px] font-medium text-ink">{fullName}</div>
-            <div className="text-[12px] text-muted-foreground">DNI {siniestro.client.dni}</div>
+            <div className="text-[12px] text-muted-foreground">
+              DNI {siniestro.client.dni}
+              {vehiculo?.licensePlate && (
+                <span className="ml-1.5 font-mono font-medium tracking-wider text-ink-3">{vehiculo.licensePlate}</span>
+              )}
+            </div>
           </div>
         </div>
       </TableCell>
@@ -75,17 +82,14 @@ function SiniestroRow({ siniestro, onSelect }: { siniestro: AdminSiniestroDetail
           </span>
           <div className="min-w-0">
             {vehiculoLabel && <div className="truncate text-[13px] text-ink-3">{vehiculoLabel}</div>}
-            <div className="text-[11.5px] text-muted-foreground">
-              #{siniestro.policy.certificateNumber}
-              {vehiculo?.licensePlate ? ` · ${vehiculo.licensePlate}` : ''}
-            </div>
+            <div className="text-[11.5px] text-muted-foreground">#{siniestro.policy.certificateNumber}</div>
           </div>
         </div>
       </TableCell>
 
       <TableCell>
         <div className="text-[13px] text-ink-3">{tipoLabel(siniestro.type)}</div>
-        <div className="text-[11.5px] text-muted-foreground">{formatDate(siniestro.occurredAt)}</div>
+        <div className="text-[11.5px] text-muted-foreground">{formatOccurredDate(siniestro.occurredAt)}</div>
       </TableCell>
 
       <TableCell>
@@ -210,6 +214,8 @@ export function SiniestrosView() {
   const [scope, setScope] = useScopeFilterState()
   const [page, setPage] = useState(1)
   const [selectedId, setSelectedId] = useState<number | null>(null)
+  // ?siniestro=ID (the assistant's links) opens that claim.
+  const clearLinkedClaim = useLinkedId('siniestro', setSelectedId)
 
   const handleSearch = (value: string) => {
     setSearchInput(value)
@@ -254,7 +260,7 @@ export function SiniestrosView() {
           <div className="relative flex-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Buscar nombre, DNI, certificado o N°…"
+              placeholder="Buscar nombre, DNI, patente, certificado o N°…"
               value={searchInput}
               onChange={e => handleSearch(e.target.value)}
               className="h-10 border-line-2 px-9 text-[13px]"
@@ -307,11 +313,15 @@ export function SiniestrosView() {
         <Table>
           <TableHeader>
             <TableRow className="border-line-2 hover:bg-transparent">
-              <TableHead className="h-11 pl-5 text-[11px] uppercase tracking-[0.12em] text-faint">Asegurado</TableHead>
+              <TableHead className="h-11 pl-5 text-[11px] uppercase tracking-[0.12em] text-faint">
+                Asegurado / Patente
+              </TableHead>
               <TableHead className="hidden text-[11px] uppercase tracking-[0.12em] text-faint md:table-cell">
                 Póliza
               </TableHead>
-              <TableHead className="text-[11px] uppercase tracking-[0.12em] text-faint">Tipo / Fecha</TableHead>
+              <TableHead className="text-[11px] uppercase tracking-[0.12em] text-faint">
+                Tipo / Fecha del hecho
+              </TableHead>
               <TableHead className="text-[11px] uppercase tracking-[0.12em] text-faint">Estado</TableHead>
               <TableHead className="pr-5 text-right text-[11px] uppercase tracking-[0.12em] text-faint">
                 N° compañía
@@ -419,7 +429,13 @@ export function SiniestrosView() {
         </div>
       )}
 
-      <SiniestroSheet siniestroId={selectedId} onClose={() => setSelectedId(null)} />
+      <SiniestroSheet
+        siniestroId={selectedId}
+        onClose={() => {
+          setSelectedId(null)
+          clearLinkedClaim()
+        }}
+      />
     </div>
   )
 }

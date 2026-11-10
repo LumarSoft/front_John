@@ -1,10 +1,22 @@
-export type NovedadType = 'siniestro' | 'handoff' | 'baja_poliza' | 'lead' | 'solicitud'
+/**
+ * `plan`: a number moved up a plan, or passed the largest one (refId = the number).
+ * `triunfo`: Triunfo refuses the organization's credentials; resolved on its own when they work again.
+ */
+export type NovedadType = 'siniestro' | 'handoff' | 'baja_poliza' | 'lead' | 'solicitud' | 'plan' | 'triunfo'
 
 export interface NovedadClient {
   id: number
   firstName: string
   lastName: string
   dni: string
+}
+
+/** Why the bot refused to file a claim and sent it to the office ("denuncia frenada"). */
+export type BlockedClaimReason = 'NO_POLICY' | 'REJECTED_PAYMENT' | 'OVERDUE_INSTALLMENTS'
+export const BLOCKED_CLAIM_LABELS: Record<BlockedClaimReason, string> = {
+  NO_POLICY: 'Denuncia frenada: sin póliza vigente',
+  REJECTED_PAYMENT: 'Denuncia frenada: pago rechazado',
+  OVERDUE_INSTALLMENTS: 'Denuncia frenada: cuotas vencidas',
 }
 
 export type MatterCategory = 'baja' | 'pagos' | 'cotizacion' | 'siniestro' | 'documentos' | 'other'
@@ -33,6 +45,8 @@ export interface NovedadItem {
   body: string | null
   readAt: string | null
   createdAt: string
+  /** Set on a claim the bot refused to file (absent on older APIs). */
+  blockedClaimReason?: BlockedClaimReason | null
   client: NovedadClient | null
 }
 

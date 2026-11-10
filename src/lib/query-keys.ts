@@ -1,3 +1,5 @@
+import type { CampaignCandidatesQuery, CampaignKind, CampaignResultsQuery } from '@/src/types/api/campaigns'
+import type { BalanceQuery } from '@/src/types/api/balance'
 import type { AdminClientsQuery } from '@/src/types/api/clients'
 import type { CobranzasQuery } from '@/src/types/api/cobranzas'
 import type { VehicleType } from '@/src/types/api/cotizador'
@@ -21,6 +23,7 @@ export const QUERY_KEYS = {
   },
   admin: {
     dashboard: ['admin', 'dashboard'] as const,
+    balance: (params: BalanceQuery) => ['admin', 'balance', params] as const,
     profile: ['admin', 'profile'] as const,
     config: ['admin', 'config'] as const,
     botProfile: ['admin', 'config', 'profile'] as const,
@@ -40,7 +43,7 @@ export const QUERY_KEYS = {
     expiredPoliciesAll: ['admin', 'cobranzas', 'vencidas'] as const,
     billingAll: ['admin', 'billing'] as const,
     billing: (period?: string) => ['admin', 'billing', 'overview', period ?? 'current'] as const,
-    billingPlans: ['admin', 'billing', 'plans'] as const,
+    planFeatures: ['admin', 'billing', 'features'] as const,
     expiredPolicies: (params?: ExpiredPoliciesQuery) =>
       ['admin', 'cobranzas', 'vencidas', 'list', params ?? {}] as const,
     novedades: (params?: NovedadesQuery) => ['admin', 'novedades', 'list', params ?? {}] as const,
@@ -62,14 +65,32 @@ export const QUERY_KEYS = {
     tasks: (params: TasksQuery) => ['admin', 'tasks', 'list', params] as const,
     tasksStats: ['admin', 'tasks', 'stats'] as const,
     taskPeople: ['admin', 'tasks', 'people'] as const,
+    campaignsAll: ['admin', 'campaigns'] as const,
+    campaigns: ['admin', 'campaigns', 'list'] as const,
+    campaignCandidates: (kind: CampaignKind, params: CampaignCandidatesQuery) =>
+      ['admin', 'campaigns', 'candidates', kind, params] as const,
+    campaignResults: (params: CampaignResultsQuery) => ['admin', 'campaigns', 'results', params] as const,
     rejectionsAll: ['admin', 'rejections'] as const,
     rejectionImports: ['admin', 'rejections', 'list'] as const,
     rejectionImport: (id: number) => ['admin', 'rejections', 'detail', id] as const,
+    triunfoStatus: ['admin', 'triunfo', 'status'] as const,
+    status: ['admin', 'status'] as const,
+    assistantConversations: ['admin', 'assistant', 'conversations'] as const,
+    assistantConversation: (id: number) => ['admin', 'assistant', 'conversations', id] as const,
   },
   owner: {
     organizations: ['owner', 'organizations'] as const,
     organization: (id: number) => ['owner', 'organizations', id] as const,
     organizationTriunfo: (id: number) => ['owner', 'organizations', id, 'triunfo'] as const,
+    organizationTriunfoErrors: (id: number) => ['owner', 'organizations', id, 'triunfo', 'errors'] as const,
+    plans: ['owner', 'plans'] as const,
+    featureRoles: ['owner', 'plans', 'feature-roles'] as const,
+    templates: ['owner', 'templates'] as const,
+    billingAll: ['owner', 'billing'] as const,
+    billing: (period?: string) => ['owner', 'billing', period ?? 'current'] as const,
+    settlementAll: ['owner', 'settlement'] as const,
+    settlement: (period?: string) => ['owner', 'settlement', 'month', period ?? 'current'] as const,
+    settlementSeries: ['owner', 'settlement', 'series'] as const,
     improvementsAll: ['owner', 'improvements'] as const,
     improvements: (params?: OwnerImprovementsQuery) => ['owner', 'improvements', 'list', params ?? {}] as const,
     proposalsAll: ['owner', 'improvement-proposals'] as const,

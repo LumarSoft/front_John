@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from 'react'
 import Link from 'next/link'
-import { Bot, Clock, KeyRound, Loader2, Mail, ShieldCheck, Smartphone, Tags, UserRound } from 'lucide-react'
+import { Bot, Clock, ImageIcon, KeyRound, Loader2, Mail, ShieldCheck, Smartphone, Tags, UserRound } from 'lucide-react'
 import { toast } from 'sonner'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/src/components/ui/card'
 import { Button } from '@/src/components/ui/button'
@@ -17,12 +17,17 @@ import { useUpdateProfile } from '../hooks/use-update-profile'
 import { useProducerConfig } from '../hooks/use-producer-config'
 import { useUpdateProducerConfig } from '../hooks/use-update-producer-config'
 import { useRole } from '../hooks/use-role'
+import { useOwnLogo } from '../hooks/use-organization-logo'
+import { usePanelBrand } from '../hooks/use-panel-brand'
+import { LogoUploader } from './logo-uploader'
 import { BotProfileSection } from './bot-profile-section'
 import { PricingPlansSection } from './pricing-plans-section'
 import { BusinessHoursSection } from './business-hours-section'
 import { CoverageSettingsSection } from './coverage-settings-section'
 import { SuperAdminOnlyNote } from './super-admin-only-note'
+import { OwnNumberSettings } from './own-number-settings'
 import { splitNames } from '../lib/number-assistant-form'
+import { useUrlTab } from '../hooks/use-panel-link'
 
 function SettingsForm({ initialEmail, initialName }: { initialEmail: string; initialName: string }) {
   const updateProfile = useUpdateProfile()
@@ -131,13 +136,13 @@ function SettingsForm({ initialEmail, initialName }: { initialEmail: string; ini
 }
 
 /** "Mili, Milagros" → ["Mili", "Milagros"]. */
-/** How the bot names the organization: "John Pellegrini Management Group (JPMG)". */
+/** How the bot names the organization: its name and an optional short name ("Seguros del Litoral (SDL)"). */
 interface OrgNaming {
   name: string
   shortName: string | null
 }
 
-/** Reminds an admin that this is the whole organization's; their own number's assistant is in Números. */
+/** Reminds the SuperAdmin that this is the whole organization's; each number's own assistant is in Números. */
 function OwnNumberHint() {
   return (
     <div className="flex max-w-xl gap-3 rounded-xl border border-ember-ring bg-ember-soft px-4 py-3 text-[13px] text-ink-3">
@@ -148,6 +153,28 @@ function OwnNumberHint() {
         en{' '}
         <Link href="/admin/numeros" className="font-medium text-ember-2 underline-offset-2 hover:underline">
           Números → Asistente
+        </Link>
+        .
+      </p>
+    </div>
+  )
+}
+
+/**
+ * Tells a branch's admin that this tab is the whole organization's, read only,
+ * and where their own number's version is (Configuración → Asistente).
+ */
+function OrganizationOnlyHint({ what }: { what: string }) {
+  return (
+    <div className="flex max-w-xl gap-3 rounded-xl border border-ember-ring bg-ember-soft px-4 py-3 text-[13px] text-ink-3">
+      <Smartphone className="mt-0.5 size-4 shrink-0 text-ember-2" />
+      <p>
+        Esto es de toda la organización y solo un SuperAdmin lo cambia. {what} se cambia en{' '}
+        <Link
+          href="/admin/configuracion?tab=asistente"
+          className="font-medium text-ember-2 underline-offset-2 hover:underline"
+        >
+          Configuración → Asistente
         </Link>
         .
       </p>
@@ -195,7 +222,7 @@ function BotConfigForm({
     : `Soy el asistente de ${org.name}${org.shortName ? ` (${org.shortName})` : ''}`
 
   return (
-    <Card className="max-w-xl border-line-2 shadow-sm">
+    <Card data-help="config-bot" className="max-w-xl border-line-2 shadow-sm">
       <form onSubmit={handleSubmit} className="contents">
         <CardHeader>
           <CardTitle className="font-display text-[18px]">Asistente de WhatsApp</CardTitle>
@@ -265,10 +292,34 @@ function BotConfigForm({
 const TABS = [
   { value: 'cuenta', label: 'Cuenta', icon: UserRound },
   { value: 'asistente', label: 'Asistente', icon: Bot },
+  { value: 'marca', label: 'Logo', icon: ImageIcon },
   { value: 'horarios', label: 'Horarios', icon: Clock },
   { value: 'precios', label: 'Precios', icon: Tags },
   { value: 'coberturas', label: 'Coberturas', icon: ShieldCheck },
 ] as const
+
+const TAB_VALUES = TABS.map(tab => tab.value)
+
+/** The organization's logo: the panel's sidebar and the printable policy card. Only the SuperAdmin changes it. */
+function LogoCard({ canEdit }: { canEdit: boolean }) {
+  const brand = usePanelBrand()
+  const { upload, remove } = useOwnLogo()
+  return (
+    <Card className="max-w-xl border-line-2 shadow-sm">
+      <CardHeader>
+        <CardTitle className="font-display text-[18px]">Logo de la organización</CardTitle>
+        <CardDescription>
+          Se ve en el panel y en la credencial que se imprime para los asegurados. PNG, JPG o WebP de hasta 2 MB; se
+          guarda en un cuadrado. Sin logo se muestran las iniciales.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-3">
+        <LogoUploader brand={brand} upload={upload} remove={remove} canEdit={canEdit} />
+        {!canEdit && <SuperAdminOnlyNote />}
+      </CardContent>
+    </Card>
+  )
+}
 
 function FormSkeleton() {
   return (
@@ -289,8 +340,29 @@ export function SettingsView() {
   const { data: profile, isLoading, isError } = useProfile()
   const { data: config } = useProducerConfig()
   const { isSuperAdmin, isAdmin } = useRole()
-  // Since 28/10 every admin changes the organization settings, not only the SuperAdmin.
-  const canEditOrg = isSuperAdmin || isAdmin
+  // Only the SuperAdmin changes what applies to every number; a branch's admin changes their own number's
+  // (from 28/10 to 10/11 any admin could, and branches saved their own data as the whole organization's).
+  const canEditOrg = isSuperAdmin
+  const [tab, setTab] = useUrlTab(TAB_VALUES, 'cuenta')
+
+  const organizationAssistant = config ? (
+    <div className="space-y-5">
+      {isSuperAdmin && <OwnNumberHint />}
+      <BotConfigForm
+        key={`${config.botName ?? ''}|${(config.staffNames ?? []).join(',')}`}
+        initialName={config.botName ?? ''}
+        initialStaff={config.staffNames ?? []}
+        org={{
+          name: profile?.organization?.displayName ?? 'tu productora',
+          shortName: profile?.organization?.shortName ?? null,
+        }}
+        canEdit={canEditOrg}
+      />
+      <BotProfileSection canEdit={canEditOrg} />
+    </div>
+  ) : (
+    <FormSkeleton />
+  )
 
   return (
     <div className="mx-auto w-full max-w-5xl px-5 py-8 md:px-8 md:py-10">
@@ -302,10 +374,15 @@ export function SettingsView() {
         </p>
       </div>
 
-      <Tabs defaultValue="cuenta">
+      <Tabs value={tab} onValueChange={value => setTab(value as (typeof TAB_VALUES)[number])}>
         <TabsList variant="line" className="h-auto max-w-full flex-wrap justify-start gap-1">
           {TABS.map(tab => (
-            <TabsTrigger key={tab.value} value={tab.value} className="gap-1.5 px-3 py-1.5 text-[13.5px]">
+            <TabsTrigger
+              key={tab.value}
+              value={tab.value}
+              data-help={`config-${tab.value}`}
+              className="gap-1.5 px-3 py-1.5 text-[13.5px]"
+            >
               <tab.icon className="size-4" />
               {tab.label}
             </TabsTrigger>
@@ -319,31 +396,20 @@ export function SettingsView() {
         </TabsContent>
 
         <TabsContent value="asistente" className="mt-6">
-          {config ? (
-            <div className="space-y-5">
-              <OwnNumberHint />
-              <BotConfigForm
-                key={`${config.botName ?? ''}|${(config.staffNames ?? []).join(',')}`}
-                initialName={config.botName ?? ''}
-                initialStaff={config.staffNames ?? []}
-                org={{
-                  name: profile?.organization?.displayName ?? 'tu productora',
-                  shortName: profile?.organization?.shortName ?? null,
-                }}
-                canEdit={canEditOrg}
-              />
-              <BotProfileSection canEdit={canEditOrg} />
-            </div>
-          ) : (
-            <FormSkeleton />
-          )}
+          {isAdmin ? <OwnNumberSettings fallback={organizationAssistant} /> : organizationAssistant}
         </TabsContent>
 
-        <TabsContent value="horarios" className="mt-6">
+        <TabsContent value="marca" className="mt-6">
+          <LogoCard canEdit={isSuperAdmin} />
+        </TabsContent>
+
+        <TabsContent value="horarios" className="mt-6 space-y-5">
+          {isAdmin && <OrganizationOnlyHint what="El horario y los feriados de tu número" />}
           <BusinessHoursSection canEdit={canEditOrg} />
         </TabsContent>
 
-        <TabsContent value="coberturas" className="mt-6">
+        <TabsContent value="coberturas" className="mt-6 space-y-5">
+          {isAdmin && <OrganizationOnlyHint what="Qué coberturas ofrece tu número, cuál recomienda y en qué orden" />}
           <CoverageSettingsSection canEdit={canEditOrg} />
         </TabsContent>
 

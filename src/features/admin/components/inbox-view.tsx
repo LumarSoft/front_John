@@ -35,6 +35,7 @@ import { ScopeFilter } from './scope-filter'
 import { useScopeFilterState } from '../hooks/use-scope-filter-state'
 import type { InboxConversation } from '@/src/types/api/inbox'
 import { contactDisplayName } from '../lib/inbox-contact'
+import { AssistantLauncher } from './assistant-launcher'
 
 type InboxFilter = 'all' | 'unread' | 'pending' | 'taken'
 
@@ -147,6 +148,7 @@ export function InboxView() {
           <SidebarTrigger className="text-(--wa-icon) hover:bg-(--wa-tint)" />
           <h2 className="text-[22px] font-bold text-(--wa-text)">Chats</h2>
           <div className="ml-auto flex min-w-0 items-center gap-1">
+            <AssistantLauncher compact />
             <ScopeFilter
               value={scope}
               onChange={setScope}

@@ -15,6 +15,17 @@ export function useOrganizationTriunfo(organizationId: number) {
   })
 }
 
+/** OWNER: the organization's failed calls to Triunfo, latest first. */
+export function useOrganizationTriunfoErrors(organizationId: number) {
+  const { token } = useAuth()
+
+  return useQuery({
+    queryKey: QUERY_KEYS.owner.organizationTriunfoErrors(organizationId),
+    queryFn: () => ownerTriunfoService.errors(token as string, organizationId),
+    enabled: !!token,
+  })
+}
+
 export function useOrganizationTriunfoActions(organizationId: number) {
   const { token } = useAuth()
   const queryClient = useQueryClient()
@@ -28,6 +39,10 @@ export function useOrganizationTriunfoActions(organizationId: number) {
     mutationFn: () => ownerTriunfoService.remove(token as string, organizationId),
     onSuccess: status => queryClient.setQueryData(key, status),
   })
+  const setQuoteFallback = useMutation({
+    mutationFn: (enabled: boolean) => ownerTriunfoService.setQuoteFallback(token as string, organizationId, enabled),
+    onSuccess: status => queryClient.setQueryData(key, status),
+  })
 
-  return { save, remove }
+  return { save, remove, setQuoteFallback }
 }

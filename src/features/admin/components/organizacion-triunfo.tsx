@@ -11,6 +11,7 @@ import { Skeleton } from '@/src/components/ui/skeleton'
 import { ApiError } from '@/src/lib/api-client'
 import type { TriunfoCredentialStatus } from '@/src/types/api/triunfo'
 import { useOrganizationTriunfo, useOrganizationTriunfoActions } from '../hooks/use-organization-triunfo'
+import { formatDayTime } from '../lib/triunfo-errors'
 
 function statusLine(status: TriunfoCredentialStatus): { ok: boolean; text: string } {
   if (status.configured) {
@@ -21,6 +22,11 @@ function statusLine(status: TriunfoCredentialStatus): { ok: boolean; text: strin
     }
   }
   if (status.usesDefaultSettings) return { ok: true, text: 'Usa las credenciales del servidor (TRIUNFO_*).' }
+  if (status.quoteFallback)
+    return {
+      ok: false,
+      text: 'Sin credenciales propias: cotiza autos y motos con la cuenta principal, de forma provisoria. No sincroniza su cartera ni baja documentos de Triunfo.',
+    }
   return {
     ok: false,
     text: 'Sin credenciales: no cotiza, no sincroniza su cartera y no baja documentos de Triunfo.',
@@ -34,7 +40,7 @@ function statusLine(status: TriunfoCredentialStatus): { ok: boolean; text: strin
  */
 export function OrganizacionTriunfo({ orgId }: { orgId: number }) {
   const { data: status, isLoading } = useOrganizationTriunfo(orgId)
-  const { save, remove } = useOrganizationTriunfoActions(orgId)
+  const { save, remove, setQuoteFallback } = useOrganizationTriunfoActions(orgId)
   const [productor, setProductor] = useState('')
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -56,19 +62,37 @@ export function OrganizacionTriunfo({ orgId }: { orgId: number }) {
 
   if (isLoading || !status) return <Skeleton className="h-40" />
   const line = statusLine(status)
+  // Configured is not working: no green check while Triunfo refuses them.
+  const healthy = line.ok && !status.failingSince
 
   return (
     <section className="flex flex-col gap-3">
       <h2 className="text-[15px] font-semibold text-ink">Integración con Triunfo</h2>
       <Card className="flex flex-col gap-5 p-5">
         <p className={`flex items-start gap-2 text-[13px] ${line.ok ? 'text-muted-foreground' : 'text-destructive'}`}>
-          {line.ok ? (
+          {healthy ? (
             <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
-          ) : (
+          ) : line.ok ? null : (
             <TriangleAlert className="mt-0.5 size-4 shrink-0" />
           )}
           {line.text}
         </p>
+
+        {status.failingSince && (
+          <p
+            role="alert"
+            className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-[13px] text-red-900 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-200"
+          >
+            <TriangleAlert className="mt-0.5 size-4 shrink-0" />
+            <span>
+              <span className="font-semibold">
+                Triunfo rechaza estas credenciales desde el {formatDayTime(status.failingSince)}
+              </span>
+              {status.failureMessage ? `: «${status.failureMessage}»` : ''}. Probablemente cambiaron la contraseña en
+              TriunfoNet: cargá la nueva acá abajo y todo vuelve a andar.
+            </span>
+          </p>
+        )}
 
         <form onSubmit={submit} className="flex flex-wrap items-end gap-2">
           <div className="flex flex-col gap-1">
@@ -138,6 +162,37 @@ export function OrganizacionTriunfo({ orgId }: { orgId: number }) {
         <p className="text-[12px] text-muted-foreground">
           Se validan con Triunfo antes de guardarse y la contraseña queda cifrada: nunca se vuelve a mostrar.
         </p>
+
+        {!status.configured && !status.usesDefaultSettings && (
+          <div className="flex flex-col gap-1 border-t border-line-2 pt-4">
+            <label className="flex cursor-pointer items-center gap-2 text-[13px] text-ink">
+              <input
+                type="checkbox"
+                className="size-4 accent-ember-2"
+                checked={status.quoteFallback ?? false}
+                disabled={setQuoteFallback.isPending}
+                onChange={e =>
+                  setQuoteFallback.mutate(e.target.checked, {
+                    onSuccess: next =>
+                      toast.success(
+                        next.quoteFallback
+                          ? 'Cotiza con la cuenta principal hasta tener la propia'
+                          : 'Ya no cotiza con la cuenta principal',
+                      ),
+                    onError: error =>
+                      toast.error(error instanceof ApiError ? error.message : 'No se pudo guardar. Intentá de nuevo.'),
+                  })
+                }
+              />
+              Cotizar con la cuenta principal mientras llegan sus credenciales
+            </label>
+            <p className="text-[12px] text-muted-foreground">
+              Provisorio. Las cotizaciones de autos y motos de esta organización salen con la cuenta de Triunfo de la
+              organización principal y quedan registradas en Triunfo a su nombre. La cartera y los documentos siguen
+              esperando las credenciales propias. Se desactiva solo al guardarlas.
+            </p>
+          </div>
+        )}
       </Card>
     </section>
   )

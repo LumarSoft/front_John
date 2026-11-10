@@ -33,6 +33,7 @@ function SolicitudTableRow({ item, onOpen }: { item: SolicitudListItem; onOpen: 
     <tr
       role="button"
       tabIndex={0}
+      data-help="solicitud-fila"
       onClick={() => onOpen(item)}
       onKeyDown={e => {
         if (e.key === 'Enter' || e.key === ' ') {
