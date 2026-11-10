@@ -103,6 +103,13 @@ export interface OrganizationCoverage {
   needsReview: boolean
 }
 
+/** A motorcycle coverage as the organization offers it (the moto catalog is fixed). */
+export interface OrganizationMotoCoverage {
+  code: string
+  name: string
+  isActive: boolean
+}
+
 export interface BotStatusChangeInfo {
   botEnabled: boolean
   at: string
@@ -139,6 +146,8 @@ export interface NumberAssistant {
     botEnabled?: boolean
     /** How this number offers the organization's coverages (absent on older APIs). */
     coverageSettings?: CoverageOverrides
+    /** Which motorcycle coverages this number offers its own way, by code (absent on older APIs). */
+    motoCoverageSettings?: Record<string, boolean>
     /** The number's holidays and closures, upcoming or under way (absent on older APIs). */
     closures?: Closure[]
   }
@@ -146,6 +155,8 @@ export interface NumberAssistant {
     name: string
     businessHours: WeeklySchedule
     coverages?: OrganizationCoverage[]
+    /** The motorcycle catalog as the organization offers it (absent on older APIs). */
+    motoCoverages?: OrganizationMotoCoverage[]
   }
   /** Who last flipped the number's own switch (absent on older APIs). */
   lastBotStatusChange?: BotStatusChangeInfo | null
@@ -161,6 +172,8 @@ export interface UpdateNumberAssistantRequest {
   botProfile?: UpdateBotProfileRequest
   /** Only the codes and fields the number changes; null = every coverage as the organization's. */
   coverageSettings?: Record<string, Partial<CoverageOverride>> | null
+  /** Only the motorcycle coverages the number offers its own way; null = all as the organization's. */
+  motoCoverageSettings?: Record<string, boolean> | null
 }
 
 export interface CreatePhoneNumberRequest {

@@ -24,6 +24,7 @@ import { BotProfileSection } from './bot-profile-section'
 import { PricingPlansSection } from './pricing-plans-section'
 import { BusinessHoursSection } from './business-hours-section'
 import { CoverageSettingsSection } from './coverage-settings-section'
+import { MotoCoverageSettingsSection } from './moto-coverage-settings-section'
 import { SuperAdminOnlyNote } from './super-admin-only-note'
 import { OwnNumberSettings } from './own-number-settings'
 import { splitNames } from '../lib/number-assistant-form'
@@ -411,6 +412,7 @@ export function SettingsView() {
         <TabsContent value="coberturas" className="mt-6 space-y-5">
           {isAdmin && <OrganizationOnlyHint what="Qué coberturas ofrece tu número, cuál recomienda y en qué orden" />}
           <CoverageSettingsSection canEdit={canEditOrg} />
+          <MotoCoverageSettingsSection canEdit={canEditOrg} />
         </TabsContent>
 
         <TabsContent value="precios" className="mt-6">

@@ -366,9 +366,45 @@ export function NumberAssistantEditor({
                 })}
               </div>
               <p className="text-[12px] text-muted-foreground">
-                Menor orden va primero y la recomendada siempre encabeza la lista. Las motos usan el catálogo fijo de
-                Triunfo.
+                Menor orden va primero y la recomendada siempre encabeza la lista. Las de motos se eligen aparte, acá
+                abajo.
               </p>
+            </section>
+          )}
+
+          {organization.motoCoverages && organization.motoCoverages.length > 0 && (
+            <section className="flex flex-col gap-4">
+              <SectionTitle
+                title="Coberturas de motos que ofrece este número"
+                description="Las motos se cotizan con estas coberturas, con los nombres y textos de Triunfo. Acá elegís cuáles ofrece este número en una moto, aparte de las de auto; lo que dejes «como la organización» sigue sus cambios."
+              />
+              <div className="flex flex-col gap-2">
+                {organization.motoCoverages.map(coverage => (
+                  <div
+                    key={coverage.code}
+                    className="flex flex-col gap-2 rounded-xl border border-line-2 p-3 sm:flex-row sm:items-center sm:justify-between"
+                  >
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-[13.5px] font-semibold text-ink">{coverage.name}</span>
+                      <span className="text-[11.5px] text-muted-foreground">{coverage.code}</span>
+                    </div>
+                    <label className="flex flex-col gap-1 text-[12px] text-muted-foreground sm:w-64">
+                      Ofrecer en motos
+                      <select
+                        className={selectClasses}
+                        value={draft.motoCoverages[coverage.code] ?? ''}
+                        onChange={e =>
+                          set('motoCoverages', { ...draft.motoCoverages, [coverage.code]: e.target.value as Choice })
+                        }
+                      >
+                        <option value="">Como la organización ({coverage.isActive ? 'sí' : 'no'})</option>
+                        <option value="yes">Sí</option>
+                        <option value="no">No</option>
+                      </select>
+                    </label>
+                  </div>
+                ))}
+              </div>
             </section>
           )}
         </fieldset>
