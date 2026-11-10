@@ -22,6 +22,11 @@ function statusLine(status: TriunfoCredentialStatus): { ok: boolean; text: strin
     }
   }
   if (status.usesDefaultSettings) return { ok: true, text: 'Usa las credenciales del servidor (TRIUNFO_*).' }
+  if (status.quoteFallback)
+    return {
+      ok: false,
+      text: 'Sin credenciales propias: cotiza autos y motos con la cuenta principal, de forma provisoria. No sincroniza su cartera ni baja documentos de Triunfo.',
+    }
   return {
     ok: false,
     text: 'Sin credenciales: no cotiza, no sincroniza su cartera y no baja documentos de Triunfo.',
@@ -35,7 +40,7 @@ function statusLine(status: TriunfoCredentialStatus): { ok: boolean; text: strin
  */
 export function OrganizacionTriunfo({ orgId }: { orgId: number }) {
   const { data: status, isLoading } = useOrganizationTriunfo(orgId)
-  const { save, remove } = useOrganizationTriunfoActions(orgId)
+  const { save, remove, setQuoteFallback } = useOrganizationTriunfoActions(orgId)
   const [productor, setProductor] = useState('')
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -157,6 +162,37 @@ export function OrganizacionTriunfo({ orgId }: { orgId: number }) {
         <p className="text-[12px] text-muted-foreground">
           Se validan con Triunfo antes de guardarse y la contraseña queda cifrada: nunca se vuelve a mostrar.
         </p>
+
+        {!status.configured && !status.usesDefaultSettings && (
+          <div className="flex flex-col gap-1 border-t border-line-2 pt-4">
+            <label className="flex cursor-pointer items-center gap-2 text-[13px] text-ink">
+              <input
+                type="checkbox"
+                className="size-4 accent-ember-2"
+                checked={status.quoteFallback ?? false}
+                disabled={setQuoteFallback.isPending}
+                onChange={e =>
+                  setQuoteFallback.mutate(e.target.checked, {
+                    onSuccess: next =>
+                      toast.success(
+                        next.quoteFallback
+                          ? 'Cotiza con la cuenta principal hasta tener la propia'
+                          : 'Ya no cotiza con la cuenta principal',
+                      ),
+                    onError: error =>
+                      toast.error(error instanceof ApiError ? error.message : 'No se pudo guardar. Intentá de nuevo.'),
+                  })
+                }
+              />
+              Cotizar con la cuenta principal mientras llegan sus credenciales
+            </label>
+            <p className="text-[12px] text-muted-foreground">
+              Provisorio. Las cotizaciones de autos y motos de esta organización salen con la cuenta de Triunfo de la
+              organización principal y quedan registradas en Triunfo a su nombre. La cartera y los documentos siguen
+              esperando las credenciales propias. Se desactiva solo al guardarlas.
+            </p>
+          </div>
+        )}
       </Card>
     </section>
   )

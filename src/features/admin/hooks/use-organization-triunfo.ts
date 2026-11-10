@@ -39,6 +39,10 @@ export function useOrganizationTriunfoActions(organizationId: number) {
     mutationFn: () => ownerTriunfoService.remove(token as string, organizationId),
     onSuccess: status => queryClient.setQueryData(key, status),
   })
+  const setQuoteFallback = useMutation({
+    mutationFn: (enabled: boolean) => ownerTriunfoService.setQuoteFallback(token as string, organizationId, enabled),
+    onSuccess: status => queryClient.setQueryData(key, status),
+  })
 
-  return { save, remove }
+  return { save, remove, setQuoteFallback }
 }
