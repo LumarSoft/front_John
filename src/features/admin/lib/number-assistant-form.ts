@@ -82,6 +82,20 @@ export function toNumberAssistantDraft({ own, organization, branchName }: Number
   }
 }
 
+/**
+ * The form starts over when what is saved changes (after saving it), but not
+ * when the bot switch flips or a closure changes, which save on their own:
+ * that must not reset what is being edited.
+ */
+export function numberAssistantFormKey(assistant: NumberAssistant): string {
+  return JSON.stringify({
+    ...assistant.own,
+    branchName: assistant.branchName,
+    botEnabled: undefined,
+    closures: undefined,
+  })
+}
+
 /** A draft that gives everything back to the organization; the branch is the number's own, so it stays. */
 export function emptyNumberAssistantDraft(assistant: NumberAssistant, branchName: string): NumberAssistantDraft {
   const draft = toNumberAssistantDraft(assistant)
