@@ -5,7 +5,7 @@ import { AlertCircle, Plus, ShieldAlert, Paperclip, Calendar } from 'lucide-reac
 import { Skeleton } from '@/src/components/ui/skeleton'
 import { type Siniestro } from '@/src/services/siniestros.service'
 import { useSiniestros } from '../hooks/use-portal-data'
-import { TIPO_ICONS, TIPO_LABELS, ESTADO_META, ProgressBar, formatDate } from './siniestro-shared'
+import { TIPO_ICONS, TIPO_LABELS, ESTADO_META, ProgressBar, formatOccurredDate } from './siniestro-shared'
 
 // ─── Siniestro card ──────────────────────────────────────
 
@@ -48,7 +48,7 @@ function SiniestroCard({ siniestro }: { siniestro: Siniestro }) {
       <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] text-faint">
         <span className="inline-flex items-center gap-1">
           <Calendar className="h-3.5 w-3.5" />
-          Hecho del {formatDate(siniestro.occurredAt)}
+          Hecho del {formatOccurredDate(siniestro.occurredAt)}
         </span>
         {adjuntosCount > 0 && (
           <span className="inline-flex items-center gap-1">
