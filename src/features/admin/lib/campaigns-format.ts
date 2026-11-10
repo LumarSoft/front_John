@@ -147,11 +147,14 @@ export function candidateMessage(campaign: Campaign, candidate: CampaignCandidat
   })
 }
 
-/** "A, b1  B" → ["A", "B1", "B"]: the coverage codes of a setting, as typed. */
+/**
+ * "A, b1; c2  full" → ["A", "B1", "C2 FULL"]: the coverage codes of a setting, as
+ * typed. Commas separate them: a code may have a space ("C2 Full").
+ */
 export function parseCodes(text: string): string[] {
   const codes = text
-    .split(/[,;\s]+/)
-    .map(code => code.trim().toUpperCase())
+    .split(/[,;]+/)
+    .map(code => code.trim().replace(/\s+/g, ' ').toUpperCase())
     .filter(Boolean)
   return [...new Set(codes)]
 }
