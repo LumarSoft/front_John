@@ -5,7 +5,7 @@ import { AlertCircle, ArrowLeft, Calendar, Clock, FileText, ImageIcon, Paperclip
 import { Skeleton } from '@/src/components/ui/skeleton'
 import { adjuntoUrl, type Adjunto } from '@/src/services/siniestros.service'
 import { useSiniestro } from '../hooks/use-portal-data'
-import { TIPO_ICONS, TIPO_LABELS, ESTADO_META, ProgressBar, formatDate } from './siniestro-shared'
+import { TIPO_ICONS, TIPO_LABELS, ESTADO_META, ProgressBar, formatDate, formatOccurredDate } from './siniestro-shared'
 
 function isImage(adjunto: Adjunto): boolean {
   return adjunto.mimeType.startsWith('image/')
@@ -128,7 +128,7 @@ export function SiniestroDetailView({ id }: { id: number }) {
             <Calendar className="h-3.5 w-3.5" />
             Fecha del hecho
           </p>
-          <p className="mt-1 text-[14px] font-semibold text-ink">{formatDate(siniestro.occurredAt)}</p>
+          <p className="mt-1 text-[14px] font-semibold text-ink">{formatOccurredDate(siniestro.occurredAt)}</p>
         </div>
         <div className="rounded-xl border border-line-2 bg-paper px-4 py-3">
           <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
