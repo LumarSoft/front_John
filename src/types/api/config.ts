@@ -12,6 +12,10 @@ export interface UpdateConfigRequest {
   staffNames?: string[]
 }
 
+/** The only transfer mode: the bot gives no account and the office passes the data. */
+export const TRANSFER_BY_OFFICE = 'office'
+export type TransferMode = typeof TRANSFER_BY_OFFICE
+
 /**
  * What the bot says that is particular to the organization (GET /admin/config/profile).
  * A field never configured is null.
@@ -26,6 +30,12 @@ export interface BotProfile {
   claimsPhone: string | null
   /** Null → "Rapipago o Pago Fácil". */
   cashPaymentPlaces: string | null
+  /**
+   * 'office': the bot gives no account, the office passes the data in the chat
+   * (the account fields are then null). Null: the account below, or a number's
+   * organization's. Absent on older APIs.
+   */
+  transferMode?: TransferMode | null
   transferAlias: string | null
   transferCbu: string | null
   transferHolder: string | null
