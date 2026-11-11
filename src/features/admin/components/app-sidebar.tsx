@@ -271,13 +271,14 @@ function NavGroupBlock({
       >
         <group.icon />
         <span>{group.label}</span>
-        {!open && total > 0 ? (
-          <CountBadge count={total} />
-        ) : (
+        {/* The arrow always shows the block unfolds; closed, its pending count goes before it. */}
+        <span className="ml-auto flex items-center gap-1.5">
+          {!open && total > 0 && <CountBadge count={total} />}
           <ChevronRight
-            className={`ml-auto size-4 text-muted-foreground transition-transform duration-200 ease-out motion-reduce:transition-none ${open ? 'rotate-90' : ''}`}
+            aria-hidden
+            className={`size-4 shrink-0 text-muted-foreground transition-transform duration-200 ease-out motion-reduce:transition-none ${open ? 'rotate-90' : ''}`}
           />
-        )}
+        </span>
       </SidebarMenuButton>
       {/* Always rendered so it can unfold and fold: the grid row goes from 0fr to 1fr. Closed, it is
           hidden from screen readers and out of the tab order. */}
