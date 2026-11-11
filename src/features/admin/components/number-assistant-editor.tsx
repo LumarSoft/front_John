@@ -20,13 +20,14 @@ import { Label } from '@/src/components/ui/label'
 import { ApiError } from '@/src/lib/api-client'
 import { cn } from '@/src/lib/utils'
 import { WEEKDAY_LABEL } from '@/src/types/api/business-hours'
-import type { BotProfile } from '@/src/types/api/config'
 import type { NumberAssistant } from '@/src/types/api/phone-numbers'
 import { useSetNumberBotStatus, useUpdateNumberAssistant } from '../hooks/use-number-assistant'
 import {
+  ACCOUNT_FIELDS,
   EMPTY_COVERAGE_DRAFT,
   emptyNumberAssistantDraft,
   numberAssistantChanges,
+  ownAccountMissing,
   splitNames,
   toNumberAssistantDraft,
   type Choice,
@@ -38,6 +39,7 @@ import { firstInvalidDay } from '../lib/weekly-schedule'
 import { BOT_PROFILE_GROUPS } from './bot-profile-section'
 import { BranchNameField } from './branch-name-field'
 import { NumberClosures } from './number-closures'
+import { NumberTransferFields } from './number-transfer-fields'
 import { WeeklyScheduleFields } from './weekly-schedule-fields'
 
 function SectionTitle({ title, description }: { title: string; description: string }) {
@@ -49,13 +51,7 @@ function SectionTitle({ title, description }: { title: string; description: stri
   )
 }
 
-// The transfer account is inherited as a whole: with any field of its own, the number uses only its own.
-const ACCOUNT_FIELDS: ReadonlyArray<keyof BotProfile> = [
-  'transferAlias',
-  'transferCbu',
-  'transferHolder',
-  'transferBank',
-]
+const isAccountField = (key: string): boolean => (ACCOUNT_FIELDS as ReadonlyArray<string>).includes(key)
 
 const choiceClasses = (selected: boolean): string =>
   cn(
@@ -165,10 +161,6 @@ export function NumberAssistantEditor({
   const set = <K extends keyof NumberAssistantDraft>(key: K, value: NumberAssistantDraft[K]) =>
     setDraft(prev => ({ ...prev, [key]: value }))
 
-  const ownAccount = ACCOUNT_FIELDS.some(key => draft.profile[key].trim())
-  const inherited = (key: keyof BotProfile): string | null =>
-    ownAccount && ACCOUNT_FIELDS.includes(key) ? null : organization.botProfile[key]
-
   const name = draft.botName.trim() || organization.botName
   const orgName = draft.profile.orgName.trim() || organization.botProfile.orgName || organization.name
   const preview = name ? `Soy ${name}, el asistente de ${orgName}` : `Soy el asistente de ${orgName}`
@@ -179,6 +171,10 @@ export function NumberAssistantEditor({
     const invalid = draft.ownHours ? firstInvalidDay(draft.weekly) : null
     if (invalid) {
       toast.error(`Revisá ${WEEKDAY_LABEL[invalid]}: el inicio debe ser anterior al fin.`)
+      return
+    }
+    if (ownAccountMissing(draft)) {
+      toast.error('Para una cuenta propia, cargá al menos el alias o el CBU.')
       return
     }
     update.mutate(changes, {
@@ -280,25 +276,30 @@ export function NumberAssistantEditor({
           {BOT_PROFILE_GROUPS.map(group => (
             <section key={group.title} data-help={group.help && `numero-${group.help}`} className="flex flex-col gap-4">
               <SectionTitle title={group.title} description={group.description} />
-              {group.fields.map(field => (
-                <div key={field.key} className="flex flex-col gap-2">
-                  <Label htmlFor={`number-${field.key}`}>{field.label}</Label>
-                  <Input
-                    id={`number-${field.key}`}
-                    type={field.type ?? 'text'}
-                    maxLength={field.maxLength}
-                    placeholder={inherited(field.key) ?? field.placeholder}
-                    className="h-10"
-                    value={draft.profile[field.key]}
-                    onChange={e => set('profile', { ...draft.profile, [field.key]: e.target.value })}
-                  />
-                </div>
-              ))}
-              {group.fields.some(field => ACCOUNT_FIELDS.includes(field.key)) && (
-                <p className="text-[12px] text-muted-foreground">
-                  Si cargás una cuenta propia, el asistente da solo los datos de cuenta que cargues acá: nunca los
-                  mezcla con los de la organización.
-                </p>
+              {group.fields
+                .filter(field => !isAccountField(field.key))
+                .map(field => (
+                  <div key={field.key} className="flex flex-col gap-2">
+                    <Label htmlFor={`number-${field.key}`}>{field.label}</Label>
+                    <Input
+                      id={`number-${field.key}`}
+                      type={field.type ?? 'text'}
+                      maxLength={field.maxLength}
+                      placeholder={organization.botProfile[field.key] ?? field.placeholder}
+                      className="h-10"
+                      value={draft.profile[field.key]}
+                      onChange={e => set('profile', { ...draft.profile, [field.key]: e.target.value })}
+                    />
+                  </div>
+                ))}
+              {group.fields.some(field => isAccountField(field.key)) && (
+                <NumberTransferFields
+                  choice={draft.transfer}
+                  account={draft.profile}
+                  organization={organization.botProfile}
+                  onChoice={transfer => set('transfer', transfer)}
+                  onAccount={(field, value) => set('profile', { ...draft.profile, [field]: value })}
+                />
               )}
             </section>
           ))}

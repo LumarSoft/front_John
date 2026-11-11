@@ -28,6 +28,7 @@ import { SiniestroSheet } from './siniestro-sheet'
 import { ScopeFilter, type ScopeFilterValue } from './scope-filter'
 import { useScopeFilterState } from '../hooks/use-scope-filter-state'
 import { useLinkedId } from '../hooks/use-panel-link'
+import { ClaimCoverageBadge } from './claim-coverage-banner'
 
 const PAGE_SIZE = 25
 
@@ -61,7 +62,10 @@ function SiniestroRow({ siniestro, onSelect }: { siniestro: AdminSiniestroDetail
             </AvatarFallback>
           </Avatar>
           <div className="min-w-0">
-            <div className="truncate text-[14px] font-medium text-ink">{fullName}</div>
+            <div className="flex items-center gap-2">
+              <div className="truncate text-[14px] font-medium text-ink">{fullName}</div>
+              <ClaimCoverageBadge check={siniestro.coverageCheck} />
+            </div>
             <div className="text-[12px] text-muted-foreground">
               DNI {siniestro.client.dni}
               {vehiculo?.licensePlate && (

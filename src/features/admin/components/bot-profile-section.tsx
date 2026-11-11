@@ -101,7 +101,7 @@ export const BOT_PROFILE_GROUPS: FieldGroup[] = [
         label: 'Alias para transferir',
         placeholder: 'Ej: SEGUROS.NORTE.PAGOS',
         maxLength: 60,
-        hint: 'Sin alias ni CBU, el asistente dice que la oficina pasa los datos.',
+        hint: 'Sin alias ni CBU, el asistente dice que la oficina pasa los datos por el chat y le avisa a la oficina.',
       },
       { key: 'transferCbu', label: 'CBU', placeholder: '22 dígitos', maxLength: 30 },
       { key: 'transferHolder', label: 'Titular de la cuenta', placeholder: 'Ej: Seguros Norte SRL', maxLength: 160 },

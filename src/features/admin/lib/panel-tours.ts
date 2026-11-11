@@ -253,7 +253,7 @@ export const TOURS = {
       },
       {
         target: 'numero-pagos',
-        text: 'La cuenta propia de este número. Vacía, usa la de la organización (la ves de gris). Con un dato propio, usa solo su cuenta.',
+        text: 'Cuenta para transferir de este número: la de la organización, una propia (usa solo sus datos) o ninguna, si la sucursal no da alias y los datos los pasa la oficina por el chat.',
       },
     ],
   },
