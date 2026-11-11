@@ -1,5 +1,5 @@
 import type { Closure, WeeklySchedule } from './business-hours'
-import type { BilledPlan } from './billing'
+import type { BilledPlan, UnpricedPlan } from './billing'
 import type { BotProfile, UpdateBotProfileRequest } from './config'
 
 export interface PhoneNumberCodeRef {
@@ -10,17 +10,18 @@ export interface PhoneNumberCodeRef {
 
 /**
  * A number's month. The API sends each role its own part: every role gets the
- * messages, the plan and what the month adds up to, the SuperAdmin also the
- * activity, and only the OWNER what Meta and OpenAI cost and the profit.
+ * messages and the plan, the SuperAdmin also the activity, and only the OWNER
+ * the plan's price, what the month is billed, what Meta and OpenAI cost and the profit.
  */
 export interface PhoneNumberUsage {
   period: string
   /** Messages the platform sent this month. */
   messages: number
   /** The plan the number is on, and the one the month is billed on. */
-  assignedPlan?: BilledPlan | null
-  plan?: BilledPlan
+  assignedPlan?: UnpricedPlan<BilledPlan> | null
+  plan?: UnpricedPlan<BilledPlan>
   upgraded?: boolean
+  /** Owner only. */
   billedUsd?: number
   /** Its assistant is paused this month for reaching the plan. */
   planPaused?: boolean

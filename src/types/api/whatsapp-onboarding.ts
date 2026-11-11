@@ -21,8 +21,9 @@ export interface OnboardWhatsappRequest {
   botName?: string
   /** …whose assistant it says it is ("Vanesa Aguilar")… */
   presentationName?: string
-  /** …the alias customers transfer to… */
+  /** …the alias customers transfer to, or 'office' when the branch gives none and the office passes the data… */
   transferAlias?: string
+  transferMode?: 'office' | ''
   /** …the people of this office… */
   staffNames?: string[]
   /** …and when the office answers. */

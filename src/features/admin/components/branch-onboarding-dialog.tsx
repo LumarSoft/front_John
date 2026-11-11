@@ -326,9 +326,6 @@ function PlanStep({ numberId, onDone }: { numberId: number; onDone: (planName: s
                 {plan.messages.toLocaleString('es-AR')} mensajes por mes
               </span>
             </span>
-            <span className="text-[14px] font-semibold text-ink">
-              USD {plan.priceUsd.toLocaleString('es-AR', { maximumFractionDigits: 2 })}
-            </span>
           </button>
         ))}
       </div>
