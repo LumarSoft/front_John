@@ -8,6 +8,7 @@ import type {
   OrganizationDetail,
   OrganizationSummary,
   OrganizationUser,
+  SetOrganizationPlanResponse,
   UpdateOrgUserRequest,
   UpdateProducerCodeRequest,
 } from '@/src/types/api/organizations'
@@ -36,6 +37,14 @@ export const organizationsService = {
       method: 'PATCH',
       token,
       body: { isActive },
+    }),
+
+  /** The plan the organization has with no number and its new numbers start on; null = automatic. */
+  setPlan: (token: string, id: number, planId: number | null): Promise<SetOrganizationPlanResponse> =>
+    apiRequest<SetOrganizationPlanResponse>(`/owner/organizations/${id}/plan`, {
+      method: 'PATCH',
+      token,
+      body: { planId },
     }),
 
   addCode: (token: string, id: number, data: CreateProducerCodeRequest): Promise<OrganizationCode> =>
