@@ -75,6 +75,7 @@ export const QUERY_KEYS = {
     rejectionImports: ['admin', 'rejections', 'list'] as const,
     rejectionImport: (id: number) => ['admin', 'rejections', 'detail', id] as const,
     triunfoStatus: ['admin', 'triunfo', 'status'] as const,
+    triunfoCredential: ['admin', 'triunfo', 'credential'] as const,
     status: ['admin', 'status'] as const,
     assistantConversations: ['admin', 'assistant', 'conversations'] as const,
     assistantConversation: (id: number) => ['admin', 'assistant', 'conversations', id] as const,

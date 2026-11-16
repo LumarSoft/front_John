@@ -48,5 +48,6 @@ export interface TriunfoErrorRow {
 export interface SaveTriunfoCredentialRequest {
   productor: string
   username: string
+  /** MD5 of the Triunfo password, in hex: hashed in the browser, the password itself is never sent. */
   password: string
 }

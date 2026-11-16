@@ -2,7 +2,19 @@
 
 import { useState, type FormEvent } from 'react'
 import Link from 'next/link'
-import { Bot, Clock, ImageIcon, KeyRound, Loader2, Mail, ShieldCheck, Smartphone, Tags, UserRound } from 'lucide-react'
+import {
+  Bot,
+  Clock,
+  ImageIcon,
+  KeyRound,
+  Loader2,
+  Mail,
+  PlugZap,
+  ShieldCheck,
+  Smartphone,
+  Tags,
+  UserRound,
+} from 'lucide-react'
 import { toast } from 'sonner'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/src/components/ui/card'
 import { Button } from '@/src/components/ui/button'
@@ -27,6 +39,7 @@ import { CoverageSettingsSection } from './coverage-settings-section'
 import { MotoCoverageSettingsSection } from './moto-coverage-settings-section'
 import { SuperAdminOnlyNote } from './super-admin-only-note'
 import { OwnNumberSettings } from './own-number-settings'
+import { TriunfoSettingsSection } from './triunfo-settings-section'
 import { splitNames } from '../lib/number-assistant-form'
 import { useUrlTab } from '../hooks/use-panel-link'
 
@@ -297,6 +310,7 @@ const TABS = [
   { value: 'horarios', label: 'Horarios', icon: Clock },
   { value: 'precios', label: 'Precios', icon: Tags },
   { value: 'coberturas', label: 'Coberturas', icon: ShieldCheck },
+  { value: 'triunfo', label: 'Triunfo', icon: PlugZap },
 ] as const
 
 const TAB_VALUES = TABS.map(tab => tab.value)
@@ -417,6 +431,10 @@ export function SettingsView() {
 
         <TabsContent value="precios" className="mt-6">
           <PricingPlansSection canEdit={canEditOrg} />
+        </TabsContent>
+
+        <TabsContent value="triunfo" className="mt-6">
+          <TriunfoSettingsSection canEdit={canEditOrg} />
         </TabsContent>
       </Tabs>
     </div>
