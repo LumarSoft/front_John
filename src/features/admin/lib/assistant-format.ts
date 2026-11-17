@@ -15,6 +15,8 @@ export interface ReplyInline {
   recordId?: number
   /** A value written between backticks (an alias, a CBU): shown as a value to copy. */
   code?: boolean
+  /** Set when the piece is a suggested next step (`preguntar:`): tapping it asks its text. */
+  ask?: boolean
 }
 
 /** A paragraph (its lines, kept apart) or a bulleted list (one line per item). */
@@ -33,13 +35,14 @@ const LINK = /\[([^\]]+)\]\(([^)\s]+)\)/g
 const CLIENT_LINK = /^asegurado:(\d+)$/
 const TOUR_LINK = /^recorrido:([a-z-]+)$/
 const SCREEN_LINK = /^pantalla:([a-z0-9-]+)(?:\/(\d+))?$/
+const ASK_LINK = /^preguntar:/
 
 /**
  * The assistant's reply as blocks of plain pieces, so the panel renders it
  * with its own elements and never as HTML: `**negrita**`, `- ` lists, line
  * breaks, `[nombre](asegurado:ID)` links, `[Ir a …](pantalla:ID)` screens and
- * `[Mostrame en pantalla](recorrido:ID)` guides the panel has. Any other link is
- * plain text.
+ * `[Mostrame en pantalla](recorrido:ID)` guides the panel has, and
+ * `[Texto](preguntar:)` suggestions of a next step. Any other link is plain text.
  */
 export function parseReply(reply: string): ReplyBlock[] {
   const blocks: ReplyBlock[] = []
@@ -105,7 +108,14 @@ function linkPiece(text: string, target: string, bold: boolean): ReplyInline {
   if (screen && isScreenId(screen[1])) {
     return { text, bold, screenId: screen[1], ...(screen[2] ? { recordId: Number(screen[2]) } : {}) }
   }
+  if (ASK_LINK.test(target)) return { text: text.trim(), bold, ask: true }
   return { text, bold }
+}
+
+/** Whether a line is only suggestions: the panel lays those out as a row of buttons. */
+export function isSuggestionLine(line: ReplyInline[]): boolean {
+  const pieces = line.filter(piece => piece.text.trim())
+  return pieces.length > 0 && pieces.every(piece => piece.ask)
 }
 
 /** Where a client link of the reply goes: Asegurados with that client's file open. */

@@ -108,6 +108,7 @@ export function AssistantPanel({ open, onOpenChange, assistant, plan, route }: A
     onCancel: assistant.cancel,
     onUndo: streaming ? undefined : (id: number) => void assistant.send(`Deshacé el cambio de la propuesta #${id}`),
     onNavigate: close,
+    onAsk: streaming ? undefined : (question: string) => void assistant.send(question),
   }
 
   return (

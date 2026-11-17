@@ -3,10 +3,10 @@
 import { Fragment, type ReactNode } from 'react'
 import Link from 'next/link'
 import { motion, useReducedMotion } from 'framer-motion'
-import { ArrowRight, Check, Loader2, Pointer } from 'lucide-react'
+import { ArrowRight, Check, CornerDownRight, Loader2, Pointer } from 'lucide-react'
 import { cn } from '@/src/lib/utils'
 import type { AssistantAction, AssistantStep } from '@/src/types/api/assistant'
-import { clientHref, parseReply, replyScreenHref, type ReplyInline } from '../lib/assistant-format'
+import { clientHref, isSuggestionLine, parseReply, replyScreenHref, type ReplyInline } from '../lib/assistant-format'
 import { tourStore } from '../lib/tour-store'
 import { AssistantActionCard } from './assistant-action-card'
 import { AssistantLogo } from './assistant-logo'
@@ -14,10 +14,29 @@ import { AssistantLogo } from './assistant-logo'
 const PILL =
   'my-0.5 inline-flex items-center gap-1.5 rounded-full border border-ember-ring bg-ember-soft px-3 py-1 align-middle text-[12.5px] font-medium text-ember-2 transition-colors hover:bg-ember hover:text-on-ember'
 
-function Inline({ pieces, onNavigate }: { pieces: ReplyInline[]; onNavigate: () => void }) {
+/** A suggested next step: quieter than a link to a screen, since it keeps the person in the chat. */
+const SUGGESTION =
+  'my-0.5 inline-flex items-center gap-1.5 rounded-full border border-line bg-card px-3 py-1 text-left align-middle text-[12.5px] font-medium text-ink-2 transition-colors hover:border-ember-ring hover:bg-ember-soft hover:text-ember-2 disabled:pointer-events-none disabled:opacity-60'
+
+interface InlineProps {
+  pieces: ReplyInline[]
+  onNavigate: () => void
+  /** Asks a suggested next step. Unset while an answer is being written: one question at a time. */
+  onAsk?: (question: string) => void
+}
+
+function Inline({ pieces, onNavigate, onAsk }: InlineProps) {
   return (
     <>
       {pieces.map((piece, i) => {
+        if (piece.ask) {
+          return (
+            <button key={i} type="button" disabled={!onAsk} onClick={() => onAsk?.(piece.text)} className={SUGGESTION}>
+              <CornerDownRight className="size-3.5 shrink-0" />
+              {piece.text}
+            </button>
+          )
+        }
         const text = piece.code ? (
           <code className="rounded-md bg-secondary px-1.5 py-0.5 font-mono text-[12.5px] text-ink">{piece.text}</code>
         ) : piece.bold ? (
@@ -68,7 +87,7 @@ function Inline({ pieces, onNavigate }: { pieces: ReplyInline[]; onNavigate: () 
 }
 
 /** The assistant's reply, rendered from its light markdown with the panel's own elements (never as HTML). */
-export function AssistantReply({ content, onNavigate }: { content: string; onNavigate: () => void }) {
+export function AssistantReply({ content, onNavigate, onAsk }: Omit<InlineProps, 'pieces'> & { content: string }) {
   return (
     <div className="flex flex-col gap-2.5">
       {parseReply(content).map((block, i) =>
@@ -76,16 +95,22 @@ export function AssistantReply({ content, onNavigate }: { content: string; onNav
           <ul key={i} className="flex list-disc flex-col gap-1 pl-4 marker:text-faint">
             {block.lines.map((line, j) => (
               <li key={j}>
-                <Inline pieces={line} onNavigate={onNavigate} />
+                <Inline pieces={line} onNavigate={onNavigate} onAsk={onAsk} />
               </li>
             ))}
           </ul>
+        ) : block.lines.every(isSuggestionLine) ? (
+          <div key={i} className="flex flex-wrap gap-x-1.5 gap-y-1 pt-0.5">
+            {block.lines.map((line, j) => (
+              <Inline key={j} pieces={line.filter(piece => piece.ask)} onNavigate={onNavigate} onAsk={onAsk} />
+            ))}
+          </div>
         ) : (
           <p key={i}>
             {block.lines.map((line, j) => (
               <Fragment key={j}>
                 {j > 0 && <br />}
-                <Inline pieces={line} onNavigate={onNavigate} />
+                <Inline pieces={line} onNavigate={onNavigate} onAsk={onAsk} />
               </Fragment>
             ))}
           </p>
@@ -178,6 +203,8 @@ interface AssistantTurnProps {
   /** Unset while an answer is being written: one question at a time. */
   onUndo?: (id: number) => void
   onNavigate: () => void
+  /** Asks a suggested next step. Unset while an answer is being written. */
+  onAsk?: (question: string) => void
   footer?: ReactNode
 }
 
@@ -192,6 +219,7 @@ export function AssistantTurn({
   onCancel,
   onUndo,
   onNavigate,
+  onAsk,
   footer,
 }: AssistantTurnProps) {
   const working = live && !content && !steps.some(s => s.state === 'running')
@@ -201,7 +229,7 @@ export function AssistantTurn({
       <div className="flex min-w-0 flex-1 flex-col gap-2.5 text-[13.5px] leading-relaxed text-ink-2">
         <Steps steps={steps} live={live} />
         {working && <Thinking />}
-        {content && <AssistantReply content={content} onNavigate={onNavigate} />}
+        {content && <AssistantReply content={content} onNavigate={onNavigate} onAsk={live ? undefined : onAsk} />}
         {actions.map(action => (
           <AssistantActionCard
             key={action.id}
