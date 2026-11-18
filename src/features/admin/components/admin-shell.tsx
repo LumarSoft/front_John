@@ -11,7 +11,7 @@ import { useAuth } from '../context/auth-context'
 import { useRole } from '../hooks/use-role'
 import { CAMPAIGN_PAGES, campaignHref } from '../lib/campaign-pages'
 import { AppSidebar } from './app-sidebar'
-import { AssistantLauncher } from './assistant-launcher'
+import { AssistantFab, AssistantLauncher } from './assistant-launcher'
 import { TourOverlay } from './tour-overlay'
 import { TriunfoStatusBanner } from './triunfo-status-banner'
 import { SectionFocus } from './section-focus'
@@ -96,6 +96,8 @@ export function AdminShell({ children }: { children: ReactNode }) {
           </SidebarInset>
           {/* Outside the top bar: the guide carries on in Whatsapp, which has none. */}
           <TourOverlay />
+          {/* Whatsapp has its own button and its box to write in sits there. */}
+          <AssistantFab hidden={fullScreen} />
           {/* ?seccion= of a link: the exact section lights up once it shows. */}
           <Suspense fallback={null}>
             <SectionFocus />

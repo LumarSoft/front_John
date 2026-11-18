@@ -10,6 +10,7 @@ import { useRole } from '../hooks/use-role'
 import { campaignPageByKind } from '../lib/campaign-pages'
 import { sendBlockedReason } from '../lib/campaigns-format'
 import { CampaignChips, CampaignHowItWorks, CampaignSwitch } from './campaign-controls'
+import { AskAssistantButton } from './assistant-launcher'
 import { CampaignClientsTab } from './campaign-clients-tab'
 import { CampaignMessageTab } from './campaign-message-tab'
 import { useUrlTab } from '../hooks/use-panel-link'
@@ -54,6 +55,11 @@ export function CampaignView({ kind }: { kind: CampaignKind }) {
               <div className="mt-3">
                 <CampaignChips campaign={campaign} />
               </div>
+              <AskAssistantButton
+                className="mt-3"
+                label="¿Por dónde empiezo?"
+                question={`Mirá la campaña ${campaign.label} y decime a quién conviene escribirle primero y por qué.`}
+              />
             </>
           )}
         </div>

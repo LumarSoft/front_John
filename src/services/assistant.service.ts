@@ -32,6 +32,11 @@ export const assistantService = {
     return apiStream<AssistantStreamEvent>('/admin/assistant/messages', { token, body, signal }, onEvent)
   },
 
+  /** The panel opened: the API gets the model ready so the first question answers sooner. */
+  warm(token: string, page: SendAssistantMessageRequest['page']): Promise<void> {
+    return apiRequest<void>('/admin/assistant/warm', { method: 'POST', token, body: { page } })
+  },
+
   /** Runs a change the assistant prepared, with the person's own permissions. */
   confirm(token: string, actionId: number): Promise<ConfirmAssistantActionResponse> {
     return apiRequest<ConfirmAssistantActionResponse>(`/admin/assistant/actions/${actionId}/confirm`, {
